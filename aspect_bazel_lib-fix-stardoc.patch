@@ -1,0 +1,22 @@
+From e0b791d148b8678833c8711ba618b371fa4f6829 Mon Sep 17 00:00:00 2001
+From: Fabian Meumertzheim <fabian@meumertzhe.im>
+Date: Wed, 9 Aug 2023 21:29:48 +0200
+Subject: [PATCH] Fix `update_docs` with Bazel 7 and stardoc 0.6.0
+
+---
+ lib/private/docs.bzl | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/private/docs.bzl b/lib/private/docs.bzl
+index 0aa3acb8..f2a5dce1 100644
+--- a/lib/private/docs.bzl
++++ b/lib/private/docs.bzl
+@@ -58,7 +58,7 @@ def update_docs(name = "update", **kwargs):
+ 
+     update_files = {}
+     for r in native.existing_rules().values():
+-        if r["kind"] == "stardoc":
++        if r["generator_function"] == "stardoc_with_diff_test" and r["generator_name"] == r["name"]:
+             for tag in r["tags"]:
+                 if tag.startswith("package:"):
+                     stardoc_name = r["name"]

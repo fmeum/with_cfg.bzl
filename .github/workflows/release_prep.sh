@@ -6,8 +6,8 @@ set -o errexit -o nounset -o pipefail
 # https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
 TAG=${GITHUB_REF_NAME}
 # The prefix is chosen to match what GitHub generates for source archives
-PREFIX="rules_mylang-${TAG:1}"
-ARCHIVE="rules_mylang-$TAG.tar.gz"
+PREFIX="with_cfg-${TAG:1}"
+ARCHIVE="with_cfg-$TAG.tar.gz"
 git archive --format=tar --prefix=${PREFIX}/ ${TAG} | gzip > $ARCHIVE
 SHA=$(shasum -a 256 $ARCHIVE | awk '{print $1}')
 
@@ -18,7 +18,7 @@ cat << EOF
 2. Add to your \`MODULE.bazel\` file:
 
 \`\`\`starlark
-bazel_dep(name = "com_myorg_rules_mylang", version = "${TAG:1}")
+bazel_dep(name = "fmeum_with_cfg", version = "${TAG:1}")
 \`\`\`
 
 ## Using WORKSPACE
@@ -28,12 +28,11 @@ Paste this snippet into your `WORKSPACE.bazel` file:
 \`\`\`starlark
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 http_archive(
-    name = "com_myorg_rules_mylang",
+    name = "fmeum_with_cfg",
     sha256 = "${SHA}",
     strip_prefix = "${PREFIX}",
-    url = "https://github.com/myorg/rules_mylang/releases/download/${TAG}/${ARCHIVE}",
+    url = "https://github.com/fmeum/with_cfg/releases/download/${TAG}/${ARCHIVE}",
 )
 EOF
 
-awk 'f;/--SNIP--/{f=1}' e2e/smoke/WORKSPACE.bazel
-echo "\`\`\`" 
+echo "\`\`\`"

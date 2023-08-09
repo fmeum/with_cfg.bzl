@@ -1,0 +1,11 @@
+load(":defs.bzl", "cc_define_test")
+
+cc_define_test(
+    name = "dir/hello_world",
+    srcs = ["hello_world_test.cc"],
+    args = [
+        "arg1",
+        "arg2",
+    ],
+    env = {"MY_VAR": "my_value"},
+)

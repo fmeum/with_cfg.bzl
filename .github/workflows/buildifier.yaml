@@ -16,4 +16,4 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: buildifier
-        run: bazel run --enable_bzlmod //.github/workflows:buildifier.check
+        run: bazel run //.github/workflows:buildifier.check

@@ -1,0 +1,7 @@
+load(":defs.bzl", "my_sh_test")
+
+my_sh_test(
+    name = "test",
+    srcs = ["test.sh"],
+    env = {"FOO": "bar"},
+)
