@@ -1,0 +1,20 @@
+load("@buildifier_prebuilt//:rules.bzl", "buildifier")
+
+buildifier(
+    name = "buildifier.check",
+    diff_command = "diff -u",
+    exclude_patterns = [
+        "./.git/*",
+        "./examples/*",
+        "./with_cfg/tests/*",
+    ],
+    lint_mode = "warn",
+    lint_warnings = [
+        "-module-docstring,-provider-params,-function-docstring",
+    ],
+    mode = "diff",
+    target_compatible_with = select({
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+)
