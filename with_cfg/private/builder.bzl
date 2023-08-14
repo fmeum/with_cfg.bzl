@@ -6,8 +6,12 @@ load(":wrapper.bzl", "make_wrapper")
 
 visibility("private")
 
-def make_builder(rule_info, *, values = {}, operations = {}):
-    return struct(
+# buildifier: disable=uninitialized
+def make_builder(rule_info):
+    values = {}
+    operations = {}
+
+    self = struct(
         build = lambda: _build(
             rule_info = rule_info,
             values = values,
@@ -16,18 +20,19 @@ def make_builder(rule_info, *, values = {}, operations = {}):
         extend = lambda setting, value: _extend(
             setting,
             value,
-            rule_info = rule_info,
+            self = self,
             values = values,
             operations = operations,
         ),
         set = lambda setting, value: _set(
             setting,
             value,
-            rule_info = rule_info,
+            self = self,
             values = values,
             operations = operations,
         ),
     )
+    return self
 
 def _build(*, rule_info, values, operations):
     transition = make_transition(operations = operations)
@@ -49,22 +54,18 @@ def _build(*, rule_info, values, operations):
 
     return wrapper, transitioning_alias
 
-def _extend(setting, value, *, rule_info, values, operations):
+def _extend(setting, value, *, self, values, operations):
     validate_and_get_attr_name(setting)
     if setting in values:
         fail("Cannot extend setting '{}' because it has already been added to this builder".format(setting))
-    return make_builder(
-        rule_info,
-        values = values | {setting: value},
-        operations = operations | {setting: "extend"},
-    )
+    values[setting] = value
+    operations[setting] = "extend"
+    return self
 
-def _set(setting, value, *, rule_info, values, operations):
+def _set(setting, value, *, self, values, operations):
     validate_and_get_attr_name(setting)
     if setting in values:
         fail("Cannot set setting '{}' because it has already been added to this builder".format(setting))
-    return make_builder(
-        rule_info,
-        values = values | {setting: value},
-        operations = operations | {setting: "set"},
-    )
+    values[setting] = value
+    operations[setting] = "set"
+    return self
