@@ -2,6 +2,10 @@ common --enable_platform_specific_config
 common --enable_bzlmod
 startup --nowindows_enable_symlinks
 
+# Required with Bazel 6 (default on 7) to allow transitions to return to the
+# top-level configuration.
+common --experimental_output_directory_naming_scheme=diff_against_dynamic_baseline
+
 # Prevent Java compiler warnings such as:
 # [0.002s][warning][perf,memops] Cannot use file /tmp/hsperfdata_runner/2 because it is locked by another process (errno = 11)
 common --incompatible_sandbox_hermetic_tmp

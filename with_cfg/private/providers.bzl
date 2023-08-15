@@ -13,3 +13,5 @@ RuleInfo = provider(fields = [
 ])
 
 FrontendInfo = provider(fields = ["executable", "providers", "run_environment_info"])
+
+OriginalSettingsInfo = provider(fields = ["json"])

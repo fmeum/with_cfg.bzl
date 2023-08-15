@@ -2,7 +2,7 @@ load(":setting.bzl", "validate_and_get_attr_name")
 
 visibility("private")
 
-def make_wrapper(*, rule_info, frontend, transitioning_alias, values):
+def make_wrapper(*, rule_info, frontend, transitioning_alias, values, original_settings_label):
     return lambda *, name, **kwargs: _wrapper(
         name = name,
         kwargs = kwargs,
@@ -10,6 +10,7 @@ def make_wrapper(*, rule_info, frontend, transitioning_alias, values):
         frontend = frontend,
         transitioning_alias = transitioning_alias,
         values = values,
+        original_settings_label = original_settings_label,
     )
 
 # Attributes common to all rules.
@@ -50,7 +51,15 @@ _TEST_ATTRS = [
     "timeout",
 ]
 
-def _wrapper(*, name, kwargs, rule_info, frontend, transitioning_alias, values):
+def _wrapper(
+        *,
+        name,
+        kwargs,
+        rule_info,
+        frontend,
+        transitioning_alias,
+        values,
+        original_settings_label):
     tags = kwargs.pop("tags", None)
     if not tags:
         tags_with_manual = ["manual"]
@@ -111,17 +120,19 @@ def _wrapper(*, name, kwargs, rule_info, frontend, transitioning_alias, values):
         **(kwargs | common_attrs | extra_attrs)
     )
 
-    value_attrs = {
+    alias_attrs = {
         validate_and_get_attr_name(setting): value
         for setting, value in values.items()
     }
+    if original_settings_label:
+        alias_attrs["internal_only_reset"] = False
 
     transitioning_alias(
         name = alias_name,
         exports = ":" + original_name,
         tags = tags_with_manual,
         visibility = ["//visibility:private"],
-        **(value_attrs | common_attrs)
+        **(alias_attrs | common_attrs)
     )
 
     frontend(
@@ -150,5 +161,5 @@ def _wrapper(*, name, kwargs, rule_info, frontend, transitioning_alias, values):
             exports = ":" + original_sub_name,
             tags = tags_with_manual,
             visibility = visibility,
-            **(value_attrs | common_attrs)
+            **(alias_attrs | common_attrs)
         )
