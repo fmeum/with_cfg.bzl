@@ -1,6 +1,6 @@
-bazel_dep(name = "fmeum_with_cfg", version = "", repo_name = "with_cfg")
+bazel_dep(name = "with_cfg.bzl", version = "")
 local_path_override(
-    module_name = "fmeum_with_cfg",
+    module_name = "with_cfg.bzl",
     path = "..",
 )
 

@@ -1,5 +1,5 @@
 module(
-    name = "fmeum_with_cfg",
+    name = "with_cfg.bzl",
     version = "0.0.0",
     compatibility_level = 1,
 )

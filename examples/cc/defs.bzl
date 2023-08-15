@@ -1,4 +1,4 @@
-load("@with_cfg//with_cfg:defs.bzl", "with_cfg")
+load("@with_cfg.bzl", "with_cfg")
 
 _builder = with_cfg(native.cc_test)
 _builder.extend(
