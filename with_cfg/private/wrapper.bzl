@@ -24,6 +24,7 @@ _COMMON_ATTRS = [
     "features",
     "restricted_to",
     "target_compatible_with",
+    "toolchains",
 ]
 
 # Attributes common to all executable and test rules.
