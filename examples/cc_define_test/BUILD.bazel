@@ -7,5 +7,7 @@ cc_define_test(
         "arg1",
         "arg2",
     ],
+    data = ["greeting.txt"],
     env = {"MY_VAR": "my_value"},
+    deps = ["@bazel_tools//tools/cpp/runfiles"],
 )
