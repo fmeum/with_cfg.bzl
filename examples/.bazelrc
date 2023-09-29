@@ -13,3 +13,8 @@ common --nojava_header_compilation
 # Allow using rules_java 6.5.1 with Bazel 6.4.0rc1.
 # TODO: Remove after the release of Bazel 6.4.0.
 common --check_bazel_compatibility=warning
+
+# Improve build caching by redacting environment variables.
+common --incompatible_strict_action_env
+# Allow build to start before all external deps have been fetched.
+common --experimental_merged_skyframe_analysis_execution

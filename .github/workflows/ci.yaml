@@ -57,7 +57,7 @@ jobs:
         with:
           path: |
             ~/.cache/bazel
-          key: bazel-cache-${{ hashFiles('**/BUILD.bazel', '**/*.bzl', 'MODULE.bazel') }}
+          key: bazel-cache-${{ hashFiles('**/BUILD.bazel', '**/*.bzl', '**/MODULE.bazel', '**/.bazelrc') }}
           restore-keys: bazel-cache-
 
       - name: Configure Bazel version
