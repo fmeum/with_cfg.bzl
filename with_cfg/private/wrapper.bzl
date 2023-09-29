@@ -61,23 +61,29 @@ def _wrapper(*, name, kwargs, rule_info, frontend, transitioning_alias, values):
 
     visibility = kwargs.pop("visibility", None)
     common_attrs = {
-        attr: kwargs.pop(attr, None)
+        attr: kwargs.pop(attr)
         for attr in _COMMON_ATTRS
+        if attr in kwargs
     }
 
     # Due to --trim_test_configuration, all targets that depend on tests (such as our
     # transitioning_alias) must be marked as testonly to avoid action conflicts.
-    common_attrs["testonly"] = kwargs.pop("testonly", True if rule_info.test else None)
+    if rule_info.test:
+        common_attrs["testonly"] = True
+    elif "testonly" in kwargs:
+        common_attrs["testonly"] = kwargs.pop("testonly")
 
     if rule_info.test:
         extra_attrs = {
-            attr: kwargs.pop(attr, None)
+            attr: kwargs.pop(attr)
             for attr in _TEST_ATTRS
+            if attr in kwargs
         }
     elif rule_info.executable:
         extra_attrs = {
-            attr: kwargs.pop(attr, None)
+            attr: kwargs.pop(attr)
             for attr in _EXECUTABLE_ATTRS
+            if attr in kwargs
         }
     else:
         extra_attrs = {}
@@ -85,8 +91,10 @@ def _wrapper(*, name, kwargs, rule_info, frontend, transitioning_alias, values):
     # Native rules use magic "env" and "env_inherit" attributes to set environment variables. We
     # have to implement these attributes manually as they aren't forwarded via RunEnvironmentInfo.
     if rule_info.native and (rule_info.executable or rule_info.test):
-        extra_attrs["env"] = kwargs.pop("env", None)
-        extra_attrs["env_inherit"] = kwargs.pop("env_inherit", None)
+        if "env" in kwargs:
+            extra_attrs["env"] = kwargs.pop("env")
+        if "env_inherit" in kwargs:
+            extra_attrs["env_inherit"] = kwargs.pop("env_inherit")
 
     dirname, separator, basename = name.rpartition("/")
     original_name = "{dirname}{separator}{basename}_/{basename}".format(
