@@ -8,6 +8,8 @@ DEFAULT_PROVIDERS = [
     CcToolchainConfigInfo,
     DebugPackageInfo,
     InstrumentedFilesInfo,
+    JavaInfo,
+    JavaPluginInfo,
     OutputGroupInfo,
     PyInfo,
     PyRuntimeInfo,

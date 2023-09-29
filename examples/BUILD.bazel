@@ -1,0 +1,14 @@
+load("@rules_java//toolchains:default_java_toolchain.bzl", "default_java_toolchain")
+load("@rules_java//toolchains:java_toolchain_alias.bzl", "java_runtime_version_alias")
+
+default_java_toolchain(
+    name = "toolchain_jdk_21",
+    java_runtime = "remotejdk_21",
+    source_version = "21",
+    target_version = "21",
+)
+
+java_runtime_version_alias(
+    name = "remotejdk_21",
+    runtime_version = "remotejdk_21",
+)
