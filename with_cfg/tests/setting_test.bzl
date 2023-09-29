@@ -35,6 +35,11 @@ _GET_ATTR_TYPE_TEST_CASES = [
     ([Label("//:foo"), Label("//:bar")], "label_list"),
     (select({"//conditions:default": [Label("//:foo"), Label("//:bar")]}), "label_list"),
     ([Label("//:baz")] + select({Label("//conditions:default"): [Label("//:foo"), Label("//:bar")]}), "label_list"),
+    # Empty lists in selects.
+    (select({"@rules_cc//cc/compiler:msvc-cl": [], "//conditions:default": ["-fsanitize=address"]}), "string_list"),
+    (select({"@rules_cc//cc/compiler:msvc-cl": [], "//conditions:default": [Label("//:foo")]}), "label_list"),
+    (select({"@rules_cc//cc/compiler:msvc-cl": [], "//conditions:default": []}) + [Label("//:foo")], "label_list"),
+    (select({"@rules_cc//cc/compiler:msvc-cl": []}) + ["foo"], "string_list"),
 ]
 
 def _get_attr_type_test(env):

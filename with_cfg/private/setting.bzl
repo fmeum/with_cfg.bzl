@@ -31,45 +31,66 @@ def get_attr_type(value):
 
     s = str(value)
     pos = 0
+    in_select = False
 
-    # In a select, skip over the first key to the first value.
-    if s.startswith("select({", pos):
-        pos += len("select({")
-        if s.startswith("Label(", pos):
-            pos += len("Label(")
+    # Effectively a while loop but with an upper bound on the number of iterations: every iteration
+    # advances the position in the stringification by at least 1.
+    for _ in range(len(s)):
+        # In a select, skip over the first key to the first value.
+        if s.startswith("select({", pos):
+            pos += len("select({")
+            in_select = True
 
-        # Skip over the string.
-        if s[pos] != "\"":
-            fail("Failed to parse select value: {}".format(s))
-        pos += 1
-        for _ in range(pos, len(s)):
-            c = s[pos]
+        if in_select:
+            if s.startswith("Label(", pos):
+                pos += len("Label(")
+
+            # Skip over the string.
+            if s[pos] != "\"":
+                fail("Failed to parse select value: {}".format(s))
             pos += 1
-            if c == "\\":
-                # Skip over the escaped character.
+            for _ in range(pos, len(s)):
+                c = s[pos]
                 pos += 1
-            elif c == "\"":
-                break
+                if c == "\\":
+                    # Skip over the escaped character.
+                    pos += 1
+                elif c == "\"":
+                    break
 
-        if s.startswith("): ", pos):
-            pos += len("): ")
-        elif s.startswith(": ", pos):
-            pos += len(") ")
+            if s.startswith("): ", pos):
+                pos += len("): ")
+            elif s.startswith(": ", pos):
+                pos += len(") ")
 
-    suffix = ""
-    if s[pos] == "[":
-        pos += 1
-        suffix = "_list"
+        suffix = ""
+        if s[pos] == "[":
+            pos += 1
+            suffix = "_list"
 
-    if s.startswith("Label(", pos):
-        return "label" + suffix
-    if s[pos] == "\"":
-        return "string" + suffix
-    if s[pos] == "-" or s[pos].isdigit():
-        return "int" + suffix
-    if s.startswith("True", pos) and not s[pos + len("True")].isalnum() and not suffix:
-        return "bool"
-    if s.startswith("False", pos) and not s[pos + len("False")].isalnum() and not suffix:
-        return "bool"
+        if s.startswith("Label(", pos):
+            return "label" + suffix
+        if s[pos] == "\"":
+            return "string" + suffix
+        if s[pos] == "-" or s[pos].isdigit():
+            return "int" + suffix
+        if s.startswith("True", pos) and not s[pos + len("True")].isalnum() and not suffix:
+            return "bool"
+        if s.startswith("False", pos) and not s[pos + len("False")].isalnum() and not suffix:
+            return "bool"
 
-    fail("Failed to determine type of: {}".format(s))
+        # If we are in a select, the values may validly be empty lists (even all of them, in case
+        # the target intends to fail analysis when certain conditions don't match). Pass onto the
+        # next key in the select or the
+        if in_select:
+            if s.startswith("], ", pos):
+                pos += len("], ")
+                continue
+            elif s.startswith("]}) + ", pos):
+                pos += len("]}) + ")
+                in_select = False
+                continue
+
+        # Failure
+        break
+    fail("Failed to determine type of '{}' (suffix: '{}', in_select: {})".format(s, s[pos:], in_select))
