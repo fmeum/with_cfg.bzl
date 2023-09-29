@@ -12,4 +12,4 @@ jobs:
   release:
     uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@v4
     with:
-      release_files: with_cfg-*.tar.gz
+      release_files: with_cfg.bzl-*.tar.gz
