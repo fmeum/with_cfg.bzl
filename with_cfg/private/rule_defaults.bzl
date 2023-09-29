@@ -42,6 +42,5 @@ IMPLICIT_TARGETS = {
     ],
     "java_test": [
         "{}.jar",
-        "{}_deploy.jar",
     ],
 }
