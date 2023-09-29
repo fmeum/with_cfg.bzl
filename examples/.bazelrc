@@ -1,1 +1,15 @@
 common --enable_bzlmod
+
+# Prevent Java compiler warnings such as:
+# [0.002s][warning][perf,memops] Cannot use file /tmp/hsperfdata_runner/2 because it is locked by another process (errno = 11)
+common --incompatible_sandbox_hermetic_tmp
+
+common --java_language_version=11
+common --java_runtime_version=remotejdk_11
+# Workaround for https://github.com/bazelbuild/bazel/issues/19598
+# TODO: Remove after the release of Bazel 6.4.0.
+common --nojava_header_compilation
+
+# Allow using rules_java 6.5.1 with Bazel 6.4.0rc1.
+# TODO: Remove after the release of Bazel 6.4.0.
+common --check_bazel_compatibility=warning

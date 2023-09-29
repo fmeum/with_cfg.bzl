@@ -1,0 +1,18 @@
+load(":defs.bzl", "java_21_library")
+
+java_binary(
+    name = "Main",
+    srcs = ["src/main/java/com/example/Main.java"],
+    deps = [":primes"],
+)
+
+java_21_library(
+    name = "primes",
+    srcs = ["src/main/java/com/example/Primes.java"],
+    deps = [":integer_type"],
+)
+
+java_21_library(
+    name = "integer_type",
+    srcs = ["src/main/java/com/example/IntegerType.java"],
+)

@@ -9,6 +9,8 @@ on:
     branches: [main]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
 
 concurrency:
   # Cancel previous actions from the same PR: https://stackoverflow.com/a/72408109
@@ -17,16 +19,54 @@ concurrency:
 
 jobs:
   test:
-    uses: bazel-contrib/.github/.github/workflows/bazel.yaml@29e53247c6366e30acbedfc767f58f79fc05836c
-    with:
-      folders: |
-        [
-          ".",
-          "examples"
-        ]
-      exclude: |
-        [
-          {"folder": ".", "bzlmodEnabled": false},
-          {"folder": "examples", "bzlmodEnabled": false},
-          {"bazelversion": "5.4.0"},
-        ]
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, macos-12, windows-2019]
+        bazelversion: [last_rc, last_green]
+        folder: [".", examples]
+        exclude:
+          - os: windows-2019
+            folder: "."
+          - os: macos-12
+            folder: "."
+          - bazelversion: last_rc
+            folder: "."
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Cache build artifacts so that the next ci build is incremental.
+      # Because github action caches cannot be updated after a build, we need to
+      # store the contents of each build in a unique cache key, then fall back to loading
+      # it on the next ci run. We use hashFiles(...) in the key and restore-keys- with
+      # the prefix to load the most recent cache for the branch on a cache miss. You
+      # should customize the contents of hashFiles to capture any bazel input sources,
+      # although this doesn't need to be perfect. If none of the input sources change
+      # then a cache hit will load an existing cache and bazel won't have to do any work.
+      # In the case of a cache miss, you want the fallback cache to contain most of the
+      # previously built artifacts to minimize build time. The more precise you are with
+      # hashFiles sources the less work bazel will have to do.
+      # We do not cache downloaded external artifacts as these are generally
+      # faster to download again than to fetch them from the GitHub actions
+      # cache.
+      - name: Mount bazel caches
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/bazel
+          key: bazel-cache-${{ hashFiles('**/BUILD.bazel', '**/*.bzl', 'WORKSPACE') }}
+          restore-keys: bazel-cache-
+
+      - name: Configure Bazel version
+        working-directory: ${{ matrix.folder }}
+        run: echo "${{ matrix.bazelversion }}" > .bazelversion
+
+      - name: bazel test //...
+        env:
+          # Bazelisk will download bazel to here.
+          XDG_CACHE_HOME: ~/.cache/bazel-repo
+        working-directory: ${{ matrix.folder }}
+        run: bazel --bazelrc=${{ github.workspace }}/.github/workflows/ci.bazelrc --bazelrc=.bazelrc test ${{ steps.set_bzlmod_flag.outputs.bzlmod_flag }} //...
