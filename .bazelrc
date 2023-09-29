@@ -10,6 +10,11 @@ common --enable_bzlmod
 # https://bazelbuild.slack.com/archives/C014RARENH0/p1691158021917459?thread_ts=1691156601.420349&cid=C014RARENH0
 common --check_direct_dependencies=off
 
+# Improve build caching by redacting environment variables.
+common --incompatible_strict_action_env
+# Allow build to start before all external deps have been fetched.
+common --experimental_merged_skyframe_analysis_execution
+
 # Load any settings specific to the current user.
 # .bazelrc.user should appear in .gitignore so that settings are not shared with team members
 # This needs to be last statement in this
