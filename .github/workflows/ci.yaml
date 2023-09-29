@@ -32,7 +32,7 @@ jobs:
             folder: "."
           - os: macos-12
             folder: "."
-          - bazelversion: last_rc
+          - bazelversion: last_green
             folder: "."
 
     steps:
@@ -57,7 +57,7 @@ jobs:
         with:
           path: |
             ~/.cache/bazel
-          key: bazel-cache-${{ hashFiles('**/BUILD.bazel', '**/*.bzl', 'WORKSPACE') }}
+          key: bazel-cache-${{ hashFiles('**/BUILD.bazel', '**/*.bzl', 'MODULE.bazel') }}
           restore-keys: bazel-cache-
 
       - name: Configure Bazel version
