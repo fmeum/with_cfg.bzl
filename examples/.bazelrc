@@ -1,4 +1,5 @@
 common --enable_bzlmod
+startup --nowindows_enable_symlinks
 
 # Prevent Java compiler warnings such as:
 # [0.002s][warning][perf,memops] Cannot use file /tmp/hsperfdata_runner/2 because it is locked by another process (errno = 11)
