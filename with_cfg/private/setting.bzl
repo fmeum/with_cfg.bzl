@@ -1,4 +1,5 @@
-load(":utils.bzl", "is_bool", "is_label", "is_string")
+load(":utils.bzl", "is_bool", "is_int", "is_label", "is_list", "is_string")
+load(":select.bzl", "map_attr")
 
 visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
 
@@ -21,76 +22,35 @@ def validate_and_get_attr_name(setting):
     else:
         fail("Expected setting to be a Label or a string, got: {} ({})".format(repr(setting), type(setting)))
 
-def get_attr_type(value):
-    if is_string(value):
-        return "string"
-    if is_label(value):
-        return "label"
-    if is_bool(value):
+def get_attr_type(attr):
+    mutable_attr_type = [None]
+
+    def update_type(value):
+        if not mutable_attr_type[0]:
+            mutable_attr_type[0] = _get_type_as_attr_type(value)
+
+    map_attr(update_type, attr)
+    if not mutable_attr_type[0]:
+        fail("Failed to determine type of attribute '{}'".format(attr))
+    return mutable_attr_type[0]
+
+def _get_type_as_attr_type(value):
+    suffix = ""
+    if is_list(value):
+        if not value:
+            return None
+        inner_value = value[0]
+        suffix = "_list"
+    else:
+        inner_value = value
+
+    if is_string(inner_value):
+        return "string" + suffix
+    if is_label(inner_value):
+        return "label" + suffix
+    if is_int(inner_value):
+        return "int" + suffix
+    if is_bool(inner_value):
         return "bool"
 
-    s = str(value)
-    pos = 0
-    in_select = False
-
-    # Effectively a while loop but with an upper bound on the number of iterations: every iteration
-    # advances the position in the stringification by at least 1.
-    for _ in range(len(s)):
-        # In a select, skip over the first key to the first value.
-        if s.startswith("select({", pos):
-            pos += len("select({")
-            in_select = True
-
-        if in_select:
-            if s.startswith("Label(", pos):
-                pos += len("Label(")
-
-            # Skip over the string.
-            if s[pos] != "\"":
-                fail("Failed to parse select value: {}".format(s))
-            pos += 1
-            for _ in range(pos, len(s)):
-                c = s[pos]
-                pos += 1
-                if c == "\\":
-                    # Skip over the escaped character.
-                    pos += 1
-                elif c == "\"":
-                    break
-
-            if s.startswith("): ", pos):
-                pos += len("): ")
-            elif s.startswith(": ", pos):
-                pos += len(") ")
-
-        suffix = ""
-        if s[pos] == "[":
-            pos += 1
-            suffix = "_list"
-
-        if s.startswith("Label(", pos):
-            return "label" + suffix
-        if s[pos] == "\"":
-            return "string" + suffix
-        if s[pos] == "-" or s[pos].isdigit():
-            return "int" + suffix
-        if s.startswith("True", pos) and not s[pos + len("True")].isalnum() and not suffix:
-            return "bool"
-        if s.startswith("False", pos) and not s[pos + len("False")].isalnum() and not suffix:
-            return "bool"
-
-        # If we are in a select, the values may validly be empty lists (even all of them, in case
-        # the target intends to fail analysis when certain conditions don't match). Pass onto the
-        # next key in the select or the
-        if in_select:
-            if s.startswith("], ", pos):
-                pos += len("], ")
-                continue
-            elif s.startswith("]}) + ", pos):
-                pos += len("]}) + ")
-                in_select = False
-                continue
-
-        # Failure
-        break
-    fail("Failed to determine type of '{}' (suffix: '{}', in_select: {})".format(s, s[pos:], in_select))
+    fail("Failed to determine type of '{}'".format(value))

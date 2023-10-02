@@ -1,6 +1,9 @@
 load(":rule_test.bzl", "rule_test_suite")
+load(":select_test.bzl", "select_test_suite")
 load(":setting_test.bzl", "setting_test_suite")
 
 rule_test_suite(name = "rule_test")
+
+select_test_suite(name = "select_test")
 
 setting_test_suite(name = "setting_test")
