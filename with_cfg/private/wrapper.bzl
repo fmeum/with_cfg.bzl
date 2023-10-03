@@ -1,4 +1,7 @@
+load(":rewrite.bzl", "make_label_rewriter", "rewrite_locations_in_attr")
 load(":setting.bzl", "validate_and_get_attr_name")
+load(":select.bzl", "map_attr")
+load(":utils.bzl", "is_dict", "is_label", "is_list", "is_string")
 
 visibility("private")
 
@@ -110,6 +113,12 @@ def _wrapper(*, name, kwargs, rule_info, frontend, transitioning_alias, values):
         visibility = ["//visibility:private"],
         **(kwargs | common_attrs | extra_attrs)
     )
+    print(_process_attrs_for_reset(
+        attrs = kwargs,
+        attrs_to_reset = ["deps", "data"],
+        reset_target = lambda *args, **kwargs: print(args, kwargs),
+        basename = basename,
+    ))
 
     value_attrs = {
         validate_and_get_attr_name(setting): value
@@ -151,3 +160,78 @@ def _wrapper(*, name, kwargs, rule_info, frontend, transitioning_alias, values):
             visibility = visibility,
             **(value_attrs | common_attrs)
         )
+
+def _process_attrs_for_reset(*, attrs, attrs_to_reset, reset_target, basename):
+    # In a first pass over only the attributes to reset, replace all labels representing
+    # dependencies with labels of a `reset_target` target that forwards the dep's providers while
+    # applying the reset transition. Along the way collect a map of original to new labels.
+    label_map = {}
+    first_pass_attrs = dict(attrs)
+    for attr in attrs_to_reset:
+        if not attr in attrs:
+            continue
+        attr_func = lambda dep: _replace_dep_attr(
+            dep = dep,
+            label_map = label_map,
+            reset_target = reset_target,
+            base_target_name = basename + "__" + attr,
+        )
+        first_pass_attrs[attr] = map_attr(attr_func, attrs[attr])
+
+    # In a second pass, now over all attributes, rewrite all $(location ...) expressions. These can
+    # even appear in attributes that are reset (as values in attr.label_keyed_string_dict).
+    second_pass_attrs = {}
+    label_rewriter = make_label_rewriter(label_map)
+    for attr, value in first_pass_attrs.items():
+        second_pass_attrs[attr] = rewrite_locations_in_attr(value, label_rewriter)
+
+    return second_pass_attrs
+
+def _replace_dep_attr(*, dep, label_map, reset_target, base_target_name):
+    if is_list(dep):
+        # attr.label_list
+        return [
+            _replace_single_dep(
+                label_string = label_string,
+                label_map = label_map,
+                reset_target = reset_target,
+                target_name = base_target_name + "_" + str(i),
+            )
+            for i, label_string in enumerate(dep)
+        ]
+    elif is_dict(dep):
+        # attr.label_keyed_string_dict (only the keys represent deps)
+        return {
+            _replace_single_dep(
+                label_string = label_string,
+                label_map = label_map,
+                reset_target = reset_target,
+                target_name = base_target_name + "_" + str(i),
+            ): v
+            for i, (label_string, v) in enumerate(dep.items())
+        }
+    else:
+        # attr.label
+        return _replace_single_dep(
+            label_string = dep,
+            label_map = label_map,
+            reset_target = reset_target,
+            target_name = base_target_name,
+        )
+
+def _replace_single_dep(*, label_string, label_map, reset_target, target_name):
+    use_label = is_label(label_string)
+    if not use_label and not is_string(label_string):
+        fail("Expected dependency, got '{}' of type {}".format(label_string, type(label_string)))
+    label = native.package_relative_label(label_string)
+    if label in label_map:
+        target_label_string = label_map[label]
+    else:
+        reset_target(
+            name = target_name,
+            src = label,
+            visibility = ["//visibility:private"],
+        )
+        target_label_string = ":" + target_name
+        label_map[label] = target_label_string
+    return native.package_relative_label(target_label_string) if use_label else target_label_string

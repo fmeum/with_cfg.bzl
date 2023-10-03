@@ -32,6 +32,11 @@ int main(int argc, char** argv) {
   }
 
   std::string greeting_path = runfiles->Rlocation("with_cfg_examples/cc_define_test/greeting.txt");
+  std::string greeting_path_2 = runfiles->Rlocation(std::getenv("DATA_RLOCATIONPATH"));
+  if (greeting_path != greeting_path_2) {
+    std::cerr << "Rlocation() returned different paths: " << greeting_path << " vs "
+              << greeting_path_2 << std::endl; return 1;
+  }
   std::ifstream greeting_file(greeting_path);
   if (!greeting_file.good()) {
     std::cerr << "Failed to open greeting file: " << greeting_path << std::endl;

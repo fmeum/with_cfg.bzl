@@ -8,6 +8,9 @@ cc_define_test(
         "arg2",
     ],
     data = ["greeting.txt"],
-    env = {"MY_VAR": "my_value"},
+    env = {
+        "MY_VAR": "my_value",
+        "DATA_RLOCATIONPATH": "$(rlocationpath :greeting.txt)",
+    },
     deps = ["@bazel_tools//tools/cpp/runfiles"],
 )
