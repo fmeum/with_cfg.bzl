@@ -36,7 +36,10 @@ bzl_library(
     name = "setting",
     srcs = ["setting.bzl"],
     visibility = ["//with_cfg:__subpackages__"],
-    deps = [":utils"],
+    deps = [
+        ":select.bzl",
+        ":utils",
+    ],
 )
 
 bzl_library(
@@ -81,4 +84,11 @@ bzl_library(
     srcs = ["wrapper.bzl"],
     visibility = ["//with_cfg:__subpackages__"],
     deps = [":setting"],
+)
+
+bzl_library(
+    name = "select",
+    srcs = ["select.bzl"],
+    visibility = ["//with_cfg:__subpackages__"],
+    deps = [":utils"],
 )
