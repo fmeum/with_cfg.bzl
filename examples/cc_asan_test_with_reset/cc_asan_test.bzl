@@ -14,4 +14,7 @@ cc_asan_test, cc_asan_test_reset = with_cfg(
     }),
 ).resettable(
     Label(":cc_asan_test_original_settings"),
+).reset_on_attrs(
+    "data",
+    "srcs",
 ).build()

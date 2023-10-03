@@ -1,4 +1,4 @@
-load(":cc_define_test.bzl", "cc_define_test", "cc_define_test_reset")
+load(":cc_define_test.bzl", "cc_define_test")
 load("//helpers:defs.bzl", "untransitioned_target")
 load("@with_cfg.bzl", "original_settings")
 
@@ -12,7 +12,7 @@ cc_define_test(
     data = select({
         "@rules_cc//cc/compiler:msvc-cl": ["greeting_msvc.txt"],
         "//conditions:default": ["greeting_generic.txt"],
-    }) + [":reset_data_target"],
+    }) + [":data_target"],
     env = {
         "MY_VAR": "my_value",
     } | select({
@@ -24,11 +24,6 @@ cc_define_test(
         },
     }),
     deps = ["@bazel_tools//tools/cpp/runfiles"],
-)
-
-cc_define_test_reset(
-    name = "reset_data_target",
-    exports = ":data_target",
 )
 
 untransitioned_target(

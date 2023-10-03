@@ -1,8 +1,19 @@
+load(":rewrite.bzl", "make_label_rewriter", "rewrite_locations_in_attr")
 load(":setting.bzl", "validate_and_get_attr_name")
+load(":select.bzl", "map_attr")
+load(":utils.bzl", "is_dict", "is_label", "is_list", "is_string")
 
 visibility("private")
 
-def make_wrapper(*, rule_info, frontend, transitioning_alias, values, original_settings_label):
+# buildifier: disable=unnamed-macro
+def make_wrapper(
+        *,
+        rule_info,
+        frontend,
+        transitioning_alias,
+        values,
+        original_settings_label,
+        attrs_to_reset):
     return lambda *, name, **kwargs: _wrapper(
         name = name,
         kwargs = kwargs,
@@ -11,6 +22,7 @@ def make_wrapper(*, rule_info, frontend, transitioning_alias, values, original_s
         transitioning_alias = transitioning_alias,
         values = values,
         original_settings_label = original_settings_label,
+        attrs_to_reset = attrs_to_reset,
     )
 
 # Attributes common to all rules.
@@ -59,7 +71,8 @@ def _wrapper(
         frontend,
         transitioning_alias,
         values,
-        original_settings_label):
+        original_settings_label,
+        attrs_to_reset):
     tags = kwargs.pop("tags", None)
     if not tags:
         tags_with_manual = ["manual"]
@@ -113,11 +126,22 @@ def _wrapper(
     )
     alias_name = name + "_with_cfg"
 
+    processed_kwargs = _process_attrs_for_reset(
+        attrs = kwargs,
+        attrs_to_reset = attrs_to_reset,
+        reset_target = lambda *, name, exports: transitioning_alias(
+            name = name,
+            exports = exports,
+            tags = ["manual"],
+            visibility = ["//visibility:private"],
+        ),
+        basename = basename,
+    )
     rule_info.kind(
         name = original_name,
         tags = tags_with_manual,
         visibility = ["//visibility:private"],
-        **(kwargs | common_attrs | extra_attrs)
+        **(processed_kwargs | common_attrs | extra_attrs)
     )
 
     alias_attrs = {
@@ -163,3 +187,96 @@ def _wrapper(
             visibility = visibility,
             **(alias_attrs | common_attrs)
         )
+
+def _process_attrs_for_reset(*, attrs, attrs_to_reset, reset_target, basename):
+    if not attrs_to_reset:
+        return attrs
+
+    # In a first pass over only the attributes to reset, replace all labels representing
+    # dependencies with labels of a `reset_target` target that forwards the dep's providers while
+    # applying the reset transition. Along the way collect a map of original to new labels.
+    label_map = {}
+    first_pass_attrs = dict(attrs)
+    for attr in attrs_to_reset:
+        if not attr in attrs:
+            continue
+        mutable_num_calls = [0]
+        attr_func = lambda dep: _replace_dep_attr(
+            dep = dep,
+            label_map = label_map,
+            reset_target = reset_target,
+            base_target_name = basename + "__" + attr,
+            mutable_num_calls = mutable_num_calls,
+        )
+        first_pass_attrs[attr] = map_attr(attr_func, attrs[attr])
+
+    # In a second pass, now over all attributes, rewrite all $(location ...) expressions. These can
+    # even appear in attributes that are reset (as values in attr.label_keyed_string_dict).
+    second_pass_attrs = {}
+    label_rewriter = make_label_rewriter(label_map)
+    for attr, value in first_pass_attrs.items():
+        second_pass_attrs[attr] = rewrite_locations_in_attr(value, label_rewriter)
+
+    return second_pass_attrs
+
+def _replace_dep_attr(*, dep, label_map, reset_target, base_target_name, mutable_num_calls):
+    if is_list(dep):
+        # attr.label_list
+        result = [
+            _replace_single_dep(
+                label_string = label_string,
+                label_map = label_map,
+                reset_target = reset_target,
+                base_target_name = base_target_name,
+                mutable_num_calls = mutable_num_calls,
+            )
+            for label_string in dep
+        ]
+    elif is_dict(dep):
+        # attr.label_keyed_string_dict (only the keys represent deps)
+        result = {
+            _replace_single_dep(
+                label_string = label_string,
+                label_map = label_map,
+                reset_target = reset_target,
+                base_target_name = base_target_name,
+                mutable_num_calls = mutable_num_calls,
+            ): v
+            for label_string, v in dep.items()
+        }
+    else:
+        # attr.label
+        result = _replace_single_dep(
+            label_string = dep,
+            label_map = label_map,
+            reset_target = reset_target,
+            base_target_name = base_target_name,
+            mutable_num_calls = mutable_num_calls,
+        )
+
+    mutable_num_calls[0] += 1
+    return result
+
+def _replace_single_dep(
+        *,
+        label_string,
+        label_map,
+        reset_target,
+        base_target_name,
+        mutable_num_calls):
+    use_label = is_label(label_string)
+    if not use_label and not is_string(label_string):
+        fail("Expected dependency, got '{}' of type {}".format(label_string, type(label_string)))
+    label = native.package_relative_label(label_string)
+    if label in label_map:
+        target_label_string = label_map[label]
+    else:
+        # Multiple targets can be referenced in a single logical dep if that dep is a select.
+        target_name = base_target_name + "_" + str(mutable_num_calls[0])
+        reset_target(
+            name = target_name,
+            exports = label,
+        )
+        target_label_string = ":" + target_name
+        label_map[label] = target_label_string
+    return native.package_relative_label(target_label_string) if use_label else target_label_string

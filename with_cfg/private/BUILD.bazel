@@ -29,6 +29,7 @@ bzl_library(
         ":setting",
         ":transition",
         ":transitioning_alias",
+        ":utils",
         ":wrapper",
     ],
 )
@@ -41,9 +42,33 @@ bzl_library(
 )
 
 bzl_library(
+    name = "original_settings",
+    srcs = ["original_settings.bzl"],
+    visibility = ["//with_cfg:__subpackages__"],
+    deps = [":original_settings_rule"],
+)
+
+bzl_library(
+    name = "original_settings_rule",
+    srcs = ["original_settings_rule.bzl"],
+    visibility = ["//with_cfg:__subpackages__"],
+    deps = [":providers"],
+)
+
+bzl_library(
     name = "providers",
     srcs = ["providers.bzl"],
     visibility = ["//with_cfg:__subpackages__"],
+)
+
+bzl_library(
+    name = "rewrite",
+    srcs = ["rewrite.bzl"],
+    visibility = ["//with_cfg:__subpackages__"],
+    deps = [
+        ":select",
+        ":utils",
+    ],
 )
 
 bzl_library(
@@ -53,11 +78,18 @@ bzl_library(
 )
 
 bzl_library(
+    name = "select",
+    srcs = ["select.bzl"],
+    visibility = ["//with_cfg:__subpackages__"],
+    deps = [":utils"],
+)
+
+bzl_library(
     name = "setting",
     srcs = ["setting.bzl"],
     visibility = ["//with_cfg:__subpackages__"],
     deps = [
-        ":select.bzl",
+        ":select",
         ":utils",
     ],
 )
@@ -103,29 +135,10 @@ bzl_library(
     name = "wrapper",
     srcs = ["wrapper.bzl"],
     visibility = ["//with_cfg:__subpackages__"],
-    deps = [":setting"],
-)
-
-bzl_library(
-    name = "select",
-    srcs = ["select.bzl"],
-    visibility = ["//with_cfg:__subpackages__"],
-    deps = [":utils"],
-)
-
-bzl_library(
-    name = "original_settings",
-    srcs = ["original_settings.bzl"],
-    visibility = ["//with_cfg:__subpackages__"],
     deps = [
-        ":original_settings_rule",
-        ":providers",
+        ":rewrite",
+        ":select",
+        ":setting",
+        ":utils",
     ],
-)
-
-bzl_library(
-    name = "original_settings_rule",
-    srcs = ["original_settings_rule.bzl"],
-    visibility = ["//with_cfg:__subpackages__"],
-    deps = [":providers"],
 )
