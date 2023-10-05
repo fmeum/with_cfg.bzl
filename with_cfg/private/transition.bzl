@@ -20,9 +20,15 @@ def _transition_base_impl(settings, attr, *, operations):
         attr_name = validate_and_get_attr_name(setting)
         key = _get_settings_key(setting)
         if operation == "set":
+            # Always idempotent.
             new_settings[key] = getattr(attr, attr_name)
         elif operation == "extend":
-            new_settings[key] = settings[key] + getattr(attr, attr_name)
+            # Ensure idempotency by appending the tail only when the list-valued setting doesn't
+            # already has the tail. This ensures that chaining transitioned rules doesn't result in
+            # a blow-up of the list.
+            tail = getattr(attr, attr_name)
+            if settings[key][-len(tail):] != tail:
+                new_settings[key] = settings[key] + tail
         else:
             fail("Unknown operation: {}".format(operation))
     return new_settings
