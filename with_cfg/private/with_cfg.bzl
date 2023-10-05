@@ -52,9 +52,9 @@ def with_cfg(
         build setting](https://bazel.build/extending/config#user-defined-build-settings), then that
         setting is set to `value`. `value` can be a `select` expression.
       * `extend(setting, value)`: Like `set`, but instead of setting the setting to `value`, the
-        entries of `value` are appended to the current value. `value` has to be a list or a
-        `select` expression evaluating to a list. This is useful for repeatable settings such as
-        `copt`.
+        entries of `value` are appended to the current value if it doesn't already have them as a
+        suffix. `value` has to be a list or a `select` expression evaluating to a list. This is
+        useful for repeatable settings such as `copt`.
       * `build()`: Returns a pair of:
 
         * a macro that behaves like the original rule, except that the targets created from it *and
