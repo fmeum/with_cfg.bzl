@@ -1,0 +1,24 @@
+load(":defs.bzl", "opt_filegroup")
+
+cc_binary(
+    name = "slow_app",
+    srcs = ["slow_app.cpp"],
+    # Don't unnecessarily build the app in fastbuild mode.
+    tags = ["manual"],
+)
+
+opt_filegroup(
+    name = "opt_test_data",
+    srcs = [":slow_app"],
+)
+
+sh_test(
+    name = "slow_app_integration_test",
+    srcs = ["slow_app_integration_test.sh"],
+    data = [":opt_test_data"],
+    env = select({
+        "@platforms//os:windows": {"EXE_SUFFIX": ".exe"},
+        "//conditions:default": {"EXE_SUFFIX": ""},
+    }),
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
