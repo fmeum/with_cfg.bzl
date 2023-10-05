@@ -34,7 +34,12 @@ def with_cfg(
         Defaults to `True` if the name of the base rule name ends with `_binary`.
       implicit_targets: A list of patterns of implicit targets provided by the base rule.
 
-        Every pattern must contain a single `{}` placeholder for the target name.
+        A pattern is evaluated with `format` and supplied the following variables:
+        <ul>
+          <li>`{name}`: The full name of the target (e.g. `subdir/my_target`).
+          <li>`{basename}`: The basename of the target (e.g. `my_target`).
+          <li>`{dirprefix}`: The directory prefix of the target (e.g. `subdir/`, usually empty).
+        </ul>
         Not required for rules shipped with Bazel (`cc_*`, `java_*`).
       extra_providers: Additional providers to forward from the base rule or macro.
 
@@ -74,8 +79,12 @@ def with_cfg(
 
     # Validate implicit target patterns eagerly for better error messages.
     for pattern in implicit_targets:
-        if pattern.format(_PATTERN_VALIDATION_MARKER).count(_PATTERN_VALIDATION_MARKER) != 1:
-            fail("Implicit target pattern must contain exactly one '{}' placeholder: " + pattern)
+        if _PATTERN_VALIDATION_MARKER not in pattern.format(
+            name = _PATTERN_VALIDATION_MARKER,
+            basename = _PATTERN_VALIDATION_MARKER,
+            dirprefix = _PATTERN_VALIDATION_MARKER,
+        ):
+            fail("Implicit target pattern must contain {name} or {dirprefix} and {basename}: %s" % pattern)
 
     rule_info = RuleInfo(
         kind = kind,

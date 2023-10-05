@@ -29,20 +29,22 @@ DEFAULT_PROVIDERS = [
 
 IMPLICIT_TARGETS = {
     "cc_binary": [
-        "{}.dwp",
-        "{}.stripped",
+        "{name}.dwp",
+        "{name}.stripped",
     ],
     "java_binary": [
-        "{}.jar",
-        "{}-src.jar",
-        "{}_deploy.jar",
-        "{}_deploy-src.jar",
+        "{name}.jar",
+        "{name}-src.jar",
+        "{name}_deploy.jar",
+        "{name}_deploy-src.jar",
     ],
     "java_library": [
-        "lib{}.jar",
-        "lib{}-src.jar",
+        # It is not a typo that this uses `{name}` rather than `{basename}`: a java_library with
+        # `name = "dir/foo"` will product a jar at `libdir/foo.jar`, not `dir/libfoo.jar`.
+        "lib{name}.jar",
+        "lib{name}-src.jar",
     ],
     "java_test": [
-        "{}.jar",
+        "{name}.jar",
     ],
 }

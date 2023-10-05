@@ -16,3 +16,11 @@ java_21_library(
     name = "integer_type",
     srcs = ["src/main/java/com/example/IntegerType.java"],
 )
+
+# This target exists purely to demonstrate (and verify) that implicit outputs of
+# the underlying rule, in this case source jars, are available on the rule
+# produced by with_cfg.
+alias(
+    name = "primes_sources",
+    actual = "libprimes-src.jar",
+)
