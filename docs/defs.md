@@ -31,7 +31,7 @@ my_foo_binary, _1 = with_cfg(foo_binary).set(
 | :------------- | :------------- | :------------- |
 | <a id="with_cfg-kind"></a>kind |  The rule (or macro) to use as a base.   |  none |
 | <a id="with_cfg-executable"></a>executable |  Whether the base rule is executable.<br><br>Defaults to `True` if the name of the base rule name ends with `_binary`.   |  `None` |
-| <a id="with_cfg-implicit_targets"></a>implicit_targets |  A list of patterns of implicit targets provided by the base rule.<br><br>Every pattern must contain a single `{}` placeholder for the target name. Not required for rules shipped with Bazel (`cc_*`, `java_*`).   |  `None` |
+| <a id="with_cfg-implicit_targets"></a>implicit_targets |  A list of patterns of implicit targets provided by the base rule.<br><br>A pattern is evaluated with `format` and supplied the following variables: <ul>   <li>`{name}`: The full name of the target (e.g. `subdir/my_target`).   <li>`{basename}`: The basename of the target (e.g. `my_target`).   <li>`{dirprefix}`: The directory prefix of the target (e.g. `subdir/`, usually empty). </ul> Not required for rules shipped with Bazel (`cc_*`, `java_*`).   |  `None` |
 | <a id="with_cfg-extra_providers"></a>extra_providers |  Additional providers to forward from the base rule or macro.   |  `[]` |
 
 **RETURNS**

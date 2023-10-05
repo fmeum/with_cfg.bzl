@@ -133,16 +133,17 @@ def _wrapper(*, name, kwargs, rule_info, frontend, transitioning_alias, values):
     )
 
     for implicit_target in rule_info.implicit_targets:
-        sub_name = "{dirname}{separator}{sub_basename}".format(
-            dirname = dirname,
-            separator = separator,
-            sub_basename = implicit_target.format(basename),
-        )
-        original_sub_name = "{dirname}{separator}{basename}_/{sub_basename}".format(
-            dirname = dirname,
-            separator = separator,
+        dirprefix = dirname + separator
+        sub_name = implicit_target.format(
+            dirprefix = dirprefix,
             basename = basename,
-            sub_basename = implicit_target.format(basename),
+            name = dirprefix + basename,
+        )
+        original_dirprefix = dirprefix + basename + "_/"
+        original_sub_name = implicit_target.format(
+            dirprefix = original_dirprefix,
+            basename = basename,
+            name = original_dirprefix + basename,
         )
         transitioning_alias(
             name = sub_name,
