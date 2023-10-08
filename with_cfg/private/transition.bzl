@@ -27,7 +27,9 @@ def _transition_base_impl(settings, attr, *, operations):
             # already has the tail. This ensures that chaining transitioned rules doesn't result in
             # a blow-up of the list.
             tail = getattr(attr, attr_name)
-            if settings[key][-len(tail):] != tail:
+            if settings[key][-len(tail):] == tail:
+                new_settings[key] = settings[key]
+            else:
                 new_settings[key] = settings[key] + tail
         else:
             fail("Unknown operation: {}".format(operation))

@@ -1,0 +1,20 @@
+load(":cc_asan_test.bzl", "cc_asan_test")
+
+cc_asan_test(
+    name = "asan_test",
+    srcs = ["asan_test.cpp"],
+    env = {
+        # Effectively invert the exit code so that the test passes if and only
+        # if the expected ASAN error is detected.
+        "ASAN_OPTIONS": "exitcode=0:abort_on_error=0",
+    },
+    deps = [
+        ":lib",
+    ],
+)
+
+cc_library(
+    name = "lib",
+    srcs = ["lib.cpp"],
+    hdrs = ["lib.h"],
+)

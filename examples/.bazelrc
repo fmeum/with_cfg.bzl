@@ -1,3 +1,4 @@
+common --enable_platform_specific_config
 common --enable_bzlmod
 startup --nowindows_enable_symlinks
 
@@ -17,5 +18,10 @@ common --check_bazel_compatibility=warning
 
 # Improve build caching by redacting environment variables.
 common --incompatible_strict_action_env
+# On Windows, PATH doubles as the dynamic library search path. We need its
+# unmodified value to find libraries in non-standard location, such as the
+# ASAN runtime for cc_asan_test.
+common:windows --noincompatible_strict_action_env
+common:windows --test_env=PATH
 # Allow build to start before all external deps have been fetched.
 common --experimental_merged_skyframe_analysis_execution
