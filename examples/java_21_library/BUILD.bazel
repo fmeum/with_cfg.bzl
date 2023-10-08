@@ -1,4 +1,4 @@
-load(":defs.bzl", "java_21_library")
+load(":java_21_library.bzl", "java_21_library")
 
 java_binary(
     name = "Main",

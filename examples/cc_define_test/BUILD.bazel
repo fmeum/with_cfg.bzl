@@ -1,4 +1,4 @@
-load(":defs.bzl", "cc_define_test")
+load(":cc_define_test.bzl", "cc_define_test")
 
 cc_define_test(
     name = "dir/hello_world",
@@ -7,7 +7,19 @@ cc_define_test(
         "arg1",
         "arg2",
     ],
-    data = ["greeting.txt"],
-    env = {"MY_VAR": "my_value"},
+    data = select({
+        "@rules_cc//cc/compiler:msvc-cl": ["greeting_msvc.txt"],
+        "//conditions:default": ["greeting_generic.txt"],
+    }),
+    env = {
+        "MY_VAR": "my_value",
+    } | select({
+        "@rules_cc//cc/compiler:msvc-cl": {
+            "GREETING_RLOCATIONPATH": "$(rlocationpath :greeting_msvc.txt)",
+        },
+        "//conditions:default": {
+            "GREETING_RLOCATIONPATH": "$(rlocationpath :greeting_generic.txt)",
+        },
+    }),
     deps = ["@bazel_tools//tools/cpp/runfiles"],
 )
