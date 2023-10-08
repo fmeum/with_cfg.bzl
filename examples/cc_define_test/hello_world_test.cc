@@ -2,12 +2,19 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <memory>
 
 #include "tools/cpp/runfiles/runfiles.h"
 
 using bazel::tools::cpp::runfiles::Runfiles;
+
+#ifdef _MSC_VER
+#define EXPECTED_GREETING "Hello, MSVC!\n"
+#else
+#define EXPECTED_GREETING "Hello, with_cfg.bzl!\n"
+#endif
 
 int main(int argc, char** argv) {
   if (std::string(std::getenv("MY_VAR")) != "my_value") {
@@ -31,13 +38,23 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  std::string greeting_path = runfiles->Rlocation("with_cfg_examples/cc_define_test/greeting.txt");
+  std::string greeting_path = runfiles->Rlocation(std::getenv("GREETING_RLOCATIONPATH"));
   std::ifstream greeting_file(greeting_path);
   if (!greeting_file.good()) {
     std::cerr << "Failed to open greeting file: " << greeting_path << std::endl;
     return 1;
   }
 
-  std::cout << greeting_file.rdbuf();
+  std::stringstream buffer;
+  buffer << greeting_file.rdbuf();
+  std::string greeting = buffer.str();
+
+  if (greeting != EXPECTED_GREETING) {
+    std::cerr << "Expected greeting '" << EXPECTED_GREETING << "', got '"
+            << greeting << "'" << std::endl;
+    return 1;
+  }
+
+  std::cout << greeting << std::endl;
   return 0;
 }

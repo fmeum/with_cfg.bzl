@@ -1,4 +1,4 @@
-load(":defs.bzl", "opt_filegroup")
+load(":opt_filegroup.bzl", "opt_filegroup")
 
 cc_binary(
     name = "slow_app",
