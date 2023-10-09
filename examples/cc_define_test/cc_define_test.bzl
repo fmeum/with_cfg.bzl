@@ -8,4 +8,5 @@ _builder.extend(
         "//conditions:default": ["-DNAME=\"with_cfg\""],
     }),
 )
-cc_define_test, _cc_define_test_ = _builder.build()
+_builder.resettable(Label(":cc_define_test_original_settings"))
+cc_define_test, cc_define_test_reset = _builder.build()

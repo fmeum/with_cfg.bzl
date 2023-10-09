@@ -1,0 +1,46 @@
+load(":cc_asan_test.bzl", "cc_asan_test", "cc_asan_test_reset")
+load("//helpers:defs.bzl", "untransitioned_target")
+load("@with_cfg.bzl", "original_settings")
+
+cc_asan_test(
+    name = "asan_test",
+    srcs = ["asan_test.cpp"],
+    data = [
+        ":reset_target",
+    ],
+    env = {
+        # Effectively invert the exit code so that the test passes if and only
+        # if the expected ASAN error is detected.
+        "ASAN_OPTIONS": "exitcode=0:abort_on_error=0",
+    },
+    deps = [
+        ":lib",
+    ],
+)
+
+cc_library(
+    name = "lib",
+    srcs = ["lib.cpp"],
+    hdrs = ["lib.h"],
+    deps = [":large_dep_reset"],
+)
+
+# This ensures that the "large" third-party dependency is built with the
+# original top-level settings, that is, without AddressSanitizer.
+cc_asan_test_reset(
+    name = "large_dep_reset",
+    exports = "//cc_asan_test_with_reset/third_party:large_dep",
+)
+
+cc_asan_test_reset(
+    name = "reset_target",
+    exports = ":untransitioned_target",
+)
+
+untransitioned_target(
+    name = "untransitioned_target",
+)
+
+original_settings(
+    name = "cc_asan_test_original_settings",
+)

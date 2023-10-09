@@ -2,6 +2,52 @@
 
 
 
+<a id="original_settings"></a>
+
+## original_settings
+
+<pre>
+original_settings(<a href="#original_settings-name">name</a>)
+</pre>
+
+Stores the original settings modified by a "resettable" rule constructed with `with_cfg`.
+
+Targets of this rule are only created for [`with_cfg`](#with_cfg)'s `resettable()` method. A
+single target of this rule should be created for each resettable rule created with `with_cfg`,
+in the BUILD file where the resettable rule is defined.
+
+`visibility` does not need to be set.
+
+Example:
+```python
+# pkg/defs.bzl
+load("@with_cfg.bzl", "with_cfg")
+my_foo_binary, _my_foo_binary_internal = with_cfg(
+    foo_binary
+).set(
+    "platforms",
+    [Label("//platforms:my_platform")],
+).resettable(
+    Label(":my_foo_binary_original_settings"),
+).build()
+
+# pkg/BUILD.bazel
+load("@with_cfg.bzl", "original_settings")
+
+original_settings(
+    name = "my_foo_binary_original_settings",
+)
+```
+
+
+**PARAMETERS**
+
+
+| Name  | Description | Default Value |
+| :------------- | :------------- | :------------- |
+| <a id="original_settings-name"></a>name |  The name of the target.   |  none |
+
+
 <a id="with_cfg"></a>
 
 ## with_cfg
@@ -14,12 +60,16 @@ Creates a new rule out of an existing one with modified Bazel flags or build set
 
 Example:
 ```python
-load("@with_cfg//with_cfg:defs.bzl", "with_cfg")
+load("@with_cfg.bzl", "with_cfg")
 
-my_foo_binary, _1 = with_cfg(foo_binary).set(
-    "platforms", [Label("//platforms:my_platform")]
+my_foo_binary, _my_foo_binary_internal = with_cfg(
+    foo_binary
+).set(
+    "platforms",
+    [Label("//platforms:my_platform")],
 ).extend(
-    Label("//config:foo_opts"), ["--bar", "--baz"]
+    Label("//config:foo_opts"),
+    ["--bar", "--baz"],
 ).build()
 ```
 
@@ -47,15 +97,30 @@ A builder with the following methods:
   entries of `value` are appended to the current value if it doesn't already have them as a
   suffix. `value` has to be a list or a `select` expression evaluating to a list. This is
   useful for repeatable settings such as `copt`.
+* `resettable(original_settings_label)`: If called on the builder, the resulting rule will
+  store the original values of the settings it modifies in the
+  [`original_settings`](#original_settings) target referenced by the `Label`
+  `original_settings_label`. This allows users to reset the settings to their original values
+  for certain dependencies by wrapping them in the reset rule returned by the `build()` method
+  (see below). The [`original_settings`](#original_settings) target should be declared in the
+  package containing the `.bzl` file with the `with_cfg` call.
 * `build()`: Returns a pair of:
 
   * a macro that behaves like the original rule, except that the targets created from it *and
     all their transitive dependencies* have the Bazel flags and user-defined build settings
     supplied to `set` and `extend` set to the given values.
-  * a rule internally used by the macro that has to be assigned to a global variable in a
-    `.bzl` file to comply with Bazel restrictions. It is recommended to chose a name starting
-    with `_` as the rule should not be exported or used directly. While the exact name does
-    not matter, it does show up in `query --output=build` output, can match `query`'s `kind`
-    operator, and must not end with `_test`.
+  * a rule that depends on whether `resettable()` has been called on the builder:
+
+    * If `resettable()` has not been called, this rule is only used internally by the macro,
+      but has to be assigned to a global variable in a `.bzl` file to comply with Bazel
+      restrictions. It is recommended to chose a name starting with `_` as the rule should not
+      be exported or used directly. While the exact name does not matter, it does show up in
+      `query --output=build` output, can match `query`'s `kind` operator, and must not end
+      with `_test`.
+    * If `resettable()` has been called, this rule is the reset rule that can be used to
+      return the settings modified by the macro to their original values for specific
+      dependencies. The reset rule has a single attribute, `exports`, which accepts a single
+      label. The rule will forward all builtin providers as well as the ones specified in
+      `extra_providers` from the "exported" target after resetting the settings for it.
 
 

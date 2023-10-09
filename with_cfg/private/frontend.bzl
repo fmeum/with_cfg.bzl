@@ -1,4 +1,4 @@
-load(":common.bzl", "FrontendInfo")
+load(":providers.bzl", "FrontendInfo")
 
 visibility("private")
 
