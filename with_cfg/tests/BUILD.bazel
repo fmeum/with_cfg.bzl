@@ -1,6 +1,9 @@
+load(":rewrite_test.bzl", "rewrite_test_suite")
 load(":rule_test.bzl", "rule_test_suite")
 load(":select_test.bzl", "select_test_suite")
 load(":setting_test.bzl", "setting_test_suite")
+
+rewrite_test_suite(name = "rewrite_test")
 
 rule_test_suite(name = "rule_test")
 
