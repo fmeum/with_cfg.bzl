@@ -12,7 +12,7 @@ git archive --format=tar --prefix=${PREFIX}/ ${TAG} | gzip > $ARCHIVE
 SHA=$(shasum -a 256 $ARCHIVE | awk '{print $1}')
 
 cat << EOF
-## Using Bzlmod with Bazel 6
+## Using Bzlmod
 
 1. Enable with \`common --enable_bzlmod\` in \`.bazelrc\`.
 2. Add to your \`MODULE.bazel\` file:
@@ -23,7 +23,7 @@ bazel_dep(name = "with_cfg.bzl", version = "${TAG:1}")
 
 ## Using WORKSPACE
 
-Paste this snippet into your `WORKSPACE.bazel` file:
+Paste this snippet into your \`WORKSPACE.bazel\` file:
 
 \`\`\`starlark
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
