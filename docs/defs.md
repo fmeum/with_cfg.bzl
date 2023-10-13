@@ -104,6 +104,9 @@ A builder with the following methods:
   for certain dependencies by wrapping them in the reset rule returned by the `build()` method
   (see below). The [`original_settings`](#original_settings) target should be declared in the
   package containing the `.bzl` file with the `with_cfg` call.
+
+  Using `resettable` requires the Bazel flag `--experimental_output_directory_naming_scheme`
+  to be set to `diff_against_dynamic_baseline`, which is the default as of Bazel 7.
 * `reset_on_attrs(*attrs)`: If called with one or more attribute names, the settings modified
   via `set()` and `extend()` are automatically reset to their original values for all
   dependencies listed in any of these attributes. This requires `resettable()` to be called on
