@@ -1,43 +1,86 @@
-# Template for Bazel rules
+# with_cfg.bzl
 
-Copy this template to create a Bazel ruleset.
+This Starlark library makes it easy to create new rules that are variants of existing rules with modified [Bazel settings](https://bazel.build/reference/command-line-reference) via a builder.
+It uses [transitions](https://bazel.build/extending/config#user-defined-transitions) to apply these settings to both the rule and its (transitive) dependencies.
+It also supports resetting the modified settings to their original values for specific dependencies or entire attributes, which can help reduce build times by preventing unnecessary rebuilds of dependencies in different configurations.
 
-Features:
+## Setup
 
-- follows the official style guide at https://docs.bazel.build/versions/main/skylark/deploying.html
-- allows for both WORKSPACE.bazel and bzlmod (MODULE.bazel) usage
-- includes Bazel formatting as a pre-commit hook (using [buildifier])
-- includes stardoc API documentation generator
-- includes typical toolchain setup
-- CI configured with GitHub Actions
-- Release using GitHub Actions just by pushing a tag
+Add the following to your `MODULE.bazel` file, substituting `...` with the latest release version:
 
-See https://docs.bazel.build/versions/main/skylark/deploying.html#readme
+```starlark
+bazel_dep(name = "with_cfg.bzl", version = "...")
+```
 
-[buildifier]: https://github.com/bazelbuild/buildtools/tree/master/buildifier#readme
+## Basic usage
 
-Ready to get started? Copy this repo, then
+The following example creates an `opt_filegroup` rule that behaves like a `filegroup` but builds all its files with `--compilation_mode=opt`:
 
-1. update the `actions/cache@v2` bazel cache key in [.github/workflows/ci.yaml](.github/workflows/ci.yaml) and [.github/workflows/release.yml](.github/workflows/release.yml) to be a hash of your source files.
-1. delete this section of the README (everything up to the SNIP).
+```starlark
+# opt_filegroup.bzl
+load("@with_cfg.bzl", "with_cfg")
 
----- SNIP ----
+opt_filegroup, _opt_filegroup_internal = with_cfg(
+    native.filegroup,
+).set(
+    "compilation_mode",
+    "opt",
+).build()
+```
 
-# Bazel rules for with_cfg
+Since the `filegroup` rule is used in a `.bzl` file, not a `BUILD` file, it has to be qualified with `native.`.
+The second return value of `build()` has to be assigned to a variable, here called `_opt_filegroup_internal`, due to restrictions on rule definitions enforced by Bazel, but can otherwise be ignored.
+The `opt_filegroup` rule can now be used just like `filegroup`.
 
-## Installation
+See [examples/opt_filegroup](examples/opt_filegroup) for the complete example.
 
-From the release you wish to use:
-<https://github.com/fmeum/with_cfg/releases>
-copy the WORKSPACE snippet into your `WORKSPACE` file.
+## Advanced usage
 
-To use a commit rather than a release, you can point at any SHA of the repo.
+The following example creates a `cc_asan_test` rule that behaves like a `cc_test`, but instruments the test and all its dependencies with [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html).
+It also comes with a "reset" rule `cc_asan_test_reset` that can be used to disable instrumentation for specific dependencies and also automatically doesn't apply the instrumentation to `data` dependencies and (generated) source files.
 
-For example to use commit `abc123`:
+```starlark
+# cc_asan_test.bzl
+load("@with_cfg.bzl", "with_cfg")
 
-1. Replace `url = "https://github.com/fmeum/with_cfg/releases/download/v0.1.0/with_cfg-v0.1.0.tar.gz"` with a GitHub-provided source archive like `url = "https://github.com/fmeum/with_cfg/archive/abc123.tar.gz"`
-1. Replace `strip_prefix = "with_cfg-0.1.0"` with `strip_prefix = "with_cfg-abc123"`
-1. Update the `sha256`. The easiest way to do this is to comment out the line, then Bazel will
-   print a message with the correct value. Note that GitHub source archives don't have a strong
-   guarantee on the sha256 stability, see
-   <https://github.blog/2023-02-21-update-on-the-future-stability-of-source-code-archives-and-hashes/>
+cc_asan_test, cc_asan_test_reset = with_cfg(
+    native.cc_test,
+).extend(
+    "copt",
+    ["-fsanitize=address"],
+).extend(
+    "linkopt",
+    select({
+        # link.exe doesn't require or recognize -fsanitize=address and would emit a warning.
+        "@rules_cc//cc/compiler:msvc-cl": [],
+        "//conditions:default": ["-fsanitize=address"],
+    }),
+).resettable(
+    Label(":cc_asan_test_original_settings"),
+).reset_on_attrs(
+    "data",
+    "srcs",
+).build()
+
+# BUILD.bazel
+load("@with_cfg.bzl", "original_settings")
+
+original_settings(
+    name = "cc_asan_test_original_settings",
+)
+```
+
+See [examples/cc_asan_test_with_reset](examples/cc_asan_test_with_reset) for the complete example.
+
+## Documentation
+
+The symbols exported from `@with_cfg.bzl` are documented [here](docs/defs.md).
+
+## Examples
+
+- [cc_asan_test](examples/cc_asan_test/cc_asan_test.bzl): A `cc_test` that is always instrumented and run with [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html), including its dependencies.
+- [cc_asan_test_with_reset](examples/cc_asan_test_with_reset/cc_asan_test.bzl): An advanced variant of `cc_asan_test` that uses `resettable()` and `reset_on_attrs()` to reduce build time by selectively disabling instrumentation for test data and certain dependencies.
+- [cc_define_test](examples/cc_define_test/cc_define_test.bzl): A `cc_test` that propagates a define to all its transitive dependencies. This example shows that `with_cfg.bzl` transparently supports runfiles lookups, `select`s and other features of the underlying rule.
+- [java_21_library](examples/java_21_library/java_21_library.bzl): A `java_library` that is always built targeting Java 21, even if the default Java configuration doesn't support it.
+- [java_21_library_with_reset](examples/java_21_library_with_reset/java_21_library.bzl): An advanced variant of `java_21_library` that uses `resettable()` to build a legacy dependency of the library with Java 7.
+- [opt_filegroup](examples/opt_filegroup/opt_filegroup.bzl): Build all files in a `filegroup` with `--compilation_mode` set to `opt`, for example to speed up an integration test using them.
