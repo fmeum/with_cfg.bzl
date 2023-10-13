@@ -8,10 +8,12 @@ load(":wrapper.bzl", "make_wrapper")
 visibility("private")
 
 # buildifier: disable=uninitialized
+# buildifier: disable=unnamed-macro
 def make_builder(rule_info):
     values = {}
     operations = {}
     mutable_original_settings_label = []
+    attrs_to_reset = []
 
     self = struct(
         build = lambda: _build(
@@ -19,6 +21,7 @@ def make_builder(rule_info):
             values = values,
             operations = operations,
             mutable_original_settings_label = mutable_original_settings_label,
+            attrs_to_reset = attrs_to_reset,
         ),
         extend = lambda setting, value: _extend(
             setting,
@@ -39,14 +42,22 @@ def make_builder(rule_info):
             self = self,
             mutable_original_settings_label = mutable_original_settings_label,
         ),
+        reset_on_attrs = lambda *attrs: _reset_on_attrs(
+            attrs,
+            self = self,
+            attrs_to_reset = attrs_to_reset,
+        ),
     )
     return self
 
-def _build(*, rule_info, values, operations, mutable_original_settings_label):
+def _build(*, rule_info, values, operations, mutable_original_settings_label, attrs_to_reset):
     if mutable_original_settings_label:
         original_settings_label = mutable_original_settings_label[0]
     else:
         original_settings_label = None
+
+    if attrs_to_reset and not original_settings_label:
+        fail("reset_on_attrs() can only be used together with resettable()")
 
     transition = make_transition(
         operations = operations,
@@ -68,6 +79,7 @@ def _build(*, rule_info, values, operations, mutable_original_settings_label):
         transitioning_alias = transitioning_alias,
         values = values,
         original_settings_label = original_settings_label,
+        attrs_to_reset = attrs_to_reset,
     )
 
     return wrapper, transitioning_alias
@@ -92,6 +104,14 @@ def _resettable(label, *, self, mutable_original_settings_label):
     if mutable_original_settings_label:
         fail("resettable() can only be called once")
     if not is_label(label):
-        fail("resettable() must be called with a Label of an 'original_settings` target")
+        fail("resettable() must be called with a Label(...) of an 'original_settings` target")
     mutable_original_settings_label.append(label)
+    return self
+
+def _reset_on_attrs(attrs, *, self, attrs_to_reset):
+    if not attrs:
+        fail("reset_on_attrs() must be called with at least one attribute name")
+    if attrs_to_reset:
+        fail("reset_on_attrs() can only be called once")
+    attrs_to_reset.extend(attrs)
     return self

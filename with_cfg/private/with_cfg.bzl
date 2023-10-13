@@ -8,6 +8,7 @@ visibility("//with_cfg/...")
 # placeholder.
 _PATTERN_VALIDATION_MARKER = "with_cfg!-~+this string is pretty unique"
 
+# buildifier: disable=unnamed-macro
 def with_cfg(
         kind,
         *,
@@ -66,6 +67,10 @@ def with_cfg(
         for certain dependencies by wrapping them in the reset rule returned by the `build()` method
         (see below). The [`original_settings`](#original_settings) target should be declared in the
         package containing the `.bzl` file with the `with_cfg` call.
+      * `reset_on_attrs(*attrs)`: If called with one or more attribute names, the settings modified
+        via `set()` and `extend()` are automatically reset to their original values for all
+        dependencies listed in any of these attributes. This requires `resettable()` to be called on
+        the builder and is equivalent to manually wrapping each dependency with the reset rule.
       * `build()`: Returns a pair of:
 
         * a macro that behaves like the original rule, except that the targets created from it *and

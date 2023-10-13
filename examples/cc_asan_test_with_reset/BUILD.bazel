@@ -6,7 +6,7 @@ cc_asan_test(
     name = "asan_test",
     srcs = ["asan_test.cpp"],
     data = [
-        ":reset_target",
+        ":untransitioned_target",
     ],
     env = {
         # Effectively invert the exit code so that the test passes if and only
@@ -30,11 +30,6 @@ cc_library(
 cc_asan_test_reset(
     name = "large_dep_reset",
     exports = "//cc_asan_test_with_reset/third_party:large_dep",
-)
-
-cc_asan_test_reset(
-    name = "reset_target",
-    exports = ":untransitioned_target",
 )
 
 untransitioned_target(

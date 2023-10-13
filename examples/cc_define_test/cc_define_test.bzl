@@ -8,5 +8,11 @@ _builder.extend(
         "//conditions:default": ["-DNAME=\"with_cfg\""],
     }),
 )
+_builder.reset_on_attrs(
+    "data",
+    "srcs",
+    # Verify that an unspecified reset attr doesn't result in an error.
+    "additional_linker_inputs",
+)
 _builder.resettable(Label(":cc_define_test_original_settings"))
-cc_define_test, cc_define_test_reset = _builder.build()
+cc_define_test, _cc_define_test_reset = _builder.build()
