@@ -7,7 +7,7 @@
       "name": "Fabian Meumertzheim"
     }
   ],
-  "repository": ["github:fmeum/with_cfg"],
+  "repository": ["github:fmeum/with_cfg.bzl"],
   "versions": [],
   "yanked_versions": {}
 }
