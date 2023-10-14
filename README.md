@@ -1,8 +1,6 @@
 # with_cfg.bzl
 
-This Starlark library makes it easy to create new rules that are variants of existing rules with modified [Bazel settings](https://bazel.build/reference/command-line-reference) via a builder.
-It uses [transitions](https://bazel.build/extending/config#user-defined-transitions) to apply these settings to both the rule and its (transitive) dependencies.
-It also supports resetting the modified settings to their original values for specific dependencies or entire attributes, which can help reduce build times by preventing unnecessary rebuilds of dependencies in different configurations.
+This Starlark library makes it easy to create new rules that are variants of existing rules with modified [Bazel settings](https://bazel.build/reference/command-line-reference), applied to both the rule itself and its (transitive) dependencies via [transitions](https://bazel.build/extending/config#user-defined-transitions).
 
 ## Setup
 
@@ -13,6 +11,8 @@ bazel_dep(name = "with_cfg.bzl", version = "...")
 ```
 
 ## Basic usage
+
+All functionality is provided by the `with_cfg` function defined in `@with_cfg.bzl`, which accepts an existing rule (or macro) as an argument and returns a builder for a new rule with modified Bazel settings.
 
 The following example creates an `opt_filegroup` rule that behaves like a `filegroup` but builds all its files with `--compilation_mode=opt`:
 
@@ -30,6 +30,8 @@ The `opt_filegroup` rule can now be used just like `filegroup`.
 See [examples/opt_filegroup](examples/opt_filegroup) for the complete example.
 
 ## Advanced usage
+
+`with_cfg` also supports resetting the modified settings to their original values for specific dependencies or entire attributes, which can help reduce build times by preventing unnecessary rebuilds of dependencies in different configurations.
 
 The following example creates a `cc_asan_test` rule that behaves like a `cc_test`, but instruments the test and all its dependencies with [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html).
 It also comes with a "reset" rule `cc_asan_test_reset` that can be used to disable instrumentation for specific dependencies and also automatically doesn't apply the instrumentation to `data` dependencies and (generated) source files.
