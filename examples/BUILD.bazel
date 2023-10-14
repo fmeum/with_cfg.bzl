@@ -12,3 +12,8 @@ java_runtime_version_alias(
     name = "remotejdk_21",
     runtime_version = "remotejdk_21",
 )
+
+alias(
+    name = "bzl_library",
+    actual = "@with_cfg.bzl//:with_cfg",
+)

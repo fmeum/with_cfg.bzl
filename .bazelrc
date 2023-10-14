@@ -12,8 +12,6 @@ common --check_direct_dependencies=off
 
 # Improve build caching by redacting environment variables.
 common --incompatible_strict_action_env
-# Allow build to start before all external deps have been fetched.
-common --experimental_merged_skyframe_analysis_execution
 
 # Load any settings specific to the current user.
 # .bazelrc.user should appear in .gitignore so that settings are not shared with team members
