@@ -14,10 +14,15 @@ def validate_and_get_attr_name(setting):
         # attribute name starts with a letter as it needs to be a valid identifier.
         return "s_{}_{}".format(hash(str(setting)) + 2147483648, setting.name)
     elif is_string(setting):
-        if not setting:
-            fail("The empty string is not a valid setting")
-        if setting[0] in "@/:":
-            fail("Use Label({}) rather than a string to refer to a custom build setting".format(repr(setting)))
+        # Strip leading dashes for "did you mean" suggestions as users may have copy-pasted actual
+        # command line flags.
+        stripped_setting = setting.lstrip("-")
+        if not stripped_setting:
+            fail("\"{}\" is not a valid setting".format(stripped_setting))
+        if stripped_setting[0] in "@/:":
+            fail("Custom build settings can only be referenced via Labels, did you mean Label({})?".format(repr(stripped_setting)))
+        if setting.startswith("-"):
+            fail("\"{}\" is not a valid setting, did you mean \"{}\"?".format(setting, stripped_setting))
         return setting
     else:
         fail("Expected setting to be a Label or a string, got: {} ({})".format(repr(setting), type(setting)))
