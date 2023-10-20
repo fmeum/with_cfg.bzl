@@ -8,19 +8,8 @@ local_path_override(
 
 bazel_dep(name = "platforms", version = "0.0.7")
 bazel_dep(name = "rules_cc", version = "0.0.9")
-bazel_dep(name = "rules_java", version = "6.5.1")
-
-remotejdk21_repos = use_extension("//:deps.bzl", "remotejdk21_repos")
-use_repo(
-    remotejdk21_repos,
-    "remotejdk21_linux_toolchain_config_repo",
-    "remotejdk21_macos_toolchain_config_repo",
-    "remotejdk21_win_toolchain_config_repo",
-)
+bazel_dep(name = "rules_java", version = "7.0.6")
 
 register_toolchains(
-    "@remotejdk21_linux_toolchain_config_repo//:all",
-    "@remotejdk21_macos_toolchain_config_repo//:all",
-    "@remotejdk21_win_toolchain_config_repo//:all",
-    "//:toolchain_jdk_21_definition",
+    "//:toolchain_jdk_17_definition",
 )
