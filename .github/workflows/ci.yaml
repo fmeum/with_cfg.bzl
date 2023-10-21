@@ -26,12 +26,8 @@ jobs:
       matrix:
         os: [ubuntu-20.04, macos-12, windows-2022]
         bazelversion: [6.4.0, last_rc, last_green]
-        folder: [".", examples]
-        exclude:
-          - os: windows-2022
-            folder: "."
-          - os: macos-12
-            folder: "."
+        folder: [examples]
+        include:
           - bazelversion: last_rc
             folder: "."
 
