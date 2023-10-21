@@ -10,11 +10,8 @@ common --experimental_output_directory_naming_scheme=diff_against_dynamic_baseli
 # [0.002s][warning][perf,memops] Cannot use file /tmp/hsperfdata_runner/2 because it is locked by another process (errno = 11)
 common --incompatible_sandbox_hermetic_tmp
 
-common --java_language_version=11
-common --java_runtime_version=remotejdk_11
-# Workaround for https://github.com/bazelbuild/bazel/issues/19598
-# TODO: Remove after the fix is available in last_green.
-common --nojava_header_compilation
+common --java_language_version=17
+common --java_runtime_version=remotejdk_17
 
 # Improve build caching by redacting environment variables.
 common --incompatible_strict_action_env
