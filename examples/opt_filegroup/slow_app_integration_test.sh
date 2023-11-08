@@ -14,7 +14,7 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null || \
 slow_app=$(rlocation "with_cfg_examples/opt_filegroup/slow_app${EXE_SUFFIX}")
 
 if [ "$(uname)" == "Darwin" ]; then
-  slow_app_realpath=$(python -c "import os, sys; print(os.path.realpath(sys.argv[1]))" "$slow_app")
+  slow_app_realpath=$(python3 -c "import os, sys; print(os.path.realpath(sys.argv[1]))" "$slow_app")
 else
   slow_app_realpath=$(realpath "$slow_app")
 fi
