@@ -7,7 +7,6 @@ DEFAULT_PROVIDERS = [
     CcInfo,
     CcToolchainConfigInfo,
     DebugPackageInfo,
-    InstrumentedFilesInfo,
     JavaInfo,
     JavaPluginInfo,
     OutputGroupInfo,

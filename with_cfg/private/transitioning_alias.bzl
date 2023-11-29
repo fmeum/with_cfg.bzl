@@ -56,6 +56,10 @@ def _transitioning_alias_base_impl(ctx, *, providers):
             data_runfiles = target[DefaultInfo].data_runfiles,
             default_runfiles = target[DefaultInfo].default_runfiles,
         ),
+        coverage_common.instrumented_files_info(
+            ctx = ctx,
+            dependency_attributes = ["exports"],
+        ),
     ]
     if not is_reset_rule:
         returned_providers.append(FrontendInfo(
