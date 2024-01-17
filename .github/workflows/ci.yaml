@@ -55,7 +55,7 @@ jobs:
       # faster to download again than to fetch them from the GitHub actions
       # cache.
       - name: Mount bazel caches
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/bazel
