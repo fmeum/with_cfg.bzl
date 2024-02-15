@@ -1,0 +1,43 @@
+load(":opt_filegroup.bzl", "opt_filegroup", "opt_filegroup_reset")
+load("@with_cfg.bzl", "original_settings")
+
+cc_binary(
+    name = "slow_to_run_app",
+    srcs = ["slow_to_run_app.cpp"],
+    # Don't unnecessarily build the app in fastbuild mode.
+    tags = ["manual"],
+)
+
+cc_binary(
+    name = "slow_to_build_app",
+    srcs = ["slow_to_build_app.cpp"],
+    tags = ["manual"],
+)
+
+opt_filegroup_reset(
+    name = "slow_to_build_app_reset",
+    exports = ":slow_to_build_app",
+)
+
+opt_filegroup(
+    name = "opt_test_data",
+    srcs = [
+        ":slow_to_build_app_reset",
+        ":slow_to_run_app",
+    ],
+)
+
+sh_test(
+    name = "slow_apps_integration_test",
+    srcs = ["slow_apps_integration_test.sh"],
+    data = [":opt_test_data"],
+    env = select({
+        "@platforms//os:windows": {"EXE_SUFFIX": ".exe"},
+        "//conditions:default": {"EXE_SUFFIX": ""},
+    }),
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
+
+original_settings(
+    name = "opt_filegroup_original_settings",
+)
