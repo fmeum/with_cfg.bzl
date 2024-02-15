@@ -5,14 +5,29 @@ load("@with_cfg.bzl", "original_settings")
 cc_asan_test(
     name = "asan_test",
     srcs = ["asan_test.cpp"],
+    # These synthetic references to targets demonstrate that attributes that are
+    # reset still support complex values such as selects.
     data = [
-        ":untransitioned_target",
-    ],
+        ":untransitioned_target_1",
+        ":untransitioned_target_2",
+    ] + select({
+        "@platforms//os:windows": [
+            ":untransitioned_target_3",
+            ":untransitioned_target_4",
+        ],
+        "//conditions:default": [
+            ":untransitioned_target_5",
+            ":untransitioned_target_6",
+        ],
+    }),
     env = {
         # Effectively invert the exit code so that the test passes if and only
         # if the expected ASAN error is detected.
         "ASAN_OPTIONS": "exitcode=0:abort_on_error=0",
     },
+    # Verify that an attr.label (rather than an attr.label_list) is handled correctly, this is
+    # otherwise a no-op.
+    win_def_file = ":asan_test.def",
     deps = [
         ":lib",
     ],
@@ -32,10 +47,15 @@ cc_asan_test_reset(
     exports = "//cc_asan_test_with_reset/third_party:large_dep",
 )
 
-untransitioned_target(
-    name = "untransitioned_target",
-)
-
 original_settings(
     name = "cc_asan_test_original_settings",
 )
+
+# These synthetic targets verify that they are not affected by any
+# transition.
+[
+    untransitioned_target(
+        name = "untransitioned_target_" + str(i),
+    )
+    for i in range(1, 7)
+]

@@ -8,5 +8,5 @@ _builder.extend("linkopt", select({
     "//conditions:default": ["-fsanitize=address"],
 }))
 _builder.resettable(Label(":cc_asan_test_original_settings"))
-_builder.reset_on_attrs("data", "srcs")
+_builder.reset_on_attrs("data", "srcs", "win_def_file")
 cc_asan_test, cc_asan_test_reset = _builder.build()
