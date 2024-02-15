@@ -222,7 +222,7 @@ def _process_attrs_for_reset(*, attrs, attrs_to_reset, reset_target, basename):
 def _replace_dep_attr(*, dep, label_map, reset_target, base_target_name, mutable_num_calls):
     if is_list(dep):
         # attr.label_list
-        result = [
+        return [
             _replace_single_dep(
                 label_string = label_string,
                 label_map = label_map,
@@ -234,7 +234,7 @@ def _replace_dep_attr(*, dep, label_map, reset_target, base_target_name, mutable
         ]
     elif is_dict(dep):
         # attr.label_keyed_string_dict (only the keys represent deps)
-        result = {
+        return {
             _replace_single_dep(
                 label_string = label_string,
                 label_map = label_map,
@@ -246,16 +246,13 @@ def _replace_dep_attr(*, dep, label_map, reset_target, base_target_name, mutable
         }
     else:
         # attr.label
-        result = _replace_single_dep(
+        return _replace_single_dep(
             label_string = dep,
             label_map = label_map,
             reset_target = reset_target,
             base_target_name = base_target_name,
             mutable_num_calls = mutable_num_calls,
         )
-
-    mutable_num_calls[0] += 1
-    return result
 
 def _replace_single_dep(
         *,
@@ -279,4 +276,6 @@ def _replace_single_dep(
         )
         target_label_string = ":" + target_name
         label_map[label] = target_label_string
+        mutable_num_calls[0] += 1
+
     return native.package_relative_label(target_label_string) if use_label else target_label_string
