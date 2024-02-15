@@ -88,7 +88,7 @@ def _transition_base_impl(settings, attr, *, operations, original_settings_label
                 )
 
         else:
-            new_settings[str(original_settings_label)] = json.encode(settings)
+            new_settings[str(original_settings_label)] = _encode_settings(settings)
 
     return new_settings
 
@@ -99,3 +99,18 @@ def _get_settings_key(setting):
         return "//command_line_option:" + setting
     else:
         fail("Expected Label or string, got: {} ({})".format(setting, type(setting)))
+
+_STARLARK_TYPES = {
+    type(t): None
+    for t in [True, "", 0, 0.0, []]
+}
+
+def _encode_settings(settings):
+    # Certain setting values supplied by Bazel are special StarlarkValue types and thus unsupported
+    # by json.encode. We work around this by converting everything that isn't a native Starlark type
+    # to a string.
+    fixed_settings = {
+        k: v if type(v) in _STARLARK_TYPES else str(v)
+        for k, v in settings.items()
+    }
+    return json.encode(fixed_settings)
