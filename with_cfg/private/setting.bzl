@@ -3,16 +3,32 @@ load(":select.bzl", "map_attr")
 
 visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
 
+def make_valid_identifier(name):
+    """Makes a valid identifier name from a given string
+
+    Args:
+      name: the string to be converted into an identifier name
+
+    Returns:
+      A valid identifier name (which by that can be used for an attribute name)
+    """
+    identifier = ""
+    for c in name.elems():
+        if c.isalnum():
+            identifier += c
+        else:
+            identifier += "_"
+
+    # Ensures that the attribute name starts with a letter as it needs to be a valid identifier
+    return "s_{}".format(identifier)
+
 def validate_and_get_attr_name(setting):
     if is_label(setting):
         # Trigger an early error if the label refers to an invalid repo name.
         # buildifier: disable=no-effect
         setting.workspace_name
 
-        # Ensure that the hash, which is a (signed) 32-bit integer, is non-negative, so that it does
-        # not contain a dash, which is not allowed in attribute names. Also ensure that the
-        # attribute name starts with a letter as it needs to be a valid identifier.
-        return "s_{}_{}".format(hash(str(setting)) + 2147483648, setting.name)
+        return make_valid_identifier("{}_{}".format(hash(str(setting)), setting.name))
     elif is_string(setting):
         # Strip leading dashes for "did you mean" suggestions as users may have copy-pasted actual
         # command line flags.

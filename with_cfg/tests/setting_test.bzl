@@ -42,6 +42,21 @@ _GET_ATTR_TYPE_TEST_CASES = [
     (select({"@rules_cc//cc/compiler:msvc-cl": []}) + ["foo"], "string_list"),
 ]
 
+_VALIDATE_ATTR_NAME_TEST_CASES = [
+    # Setting, Name is a valid identifier, Hash is a valid identifier
+    (Label("//:foo"), True, False),
+    (Label("//:foobar"), True, True),
+    (Label("//:foo-bar"), False, False),
+    (Label("//:!foo^&bar"), False, True),
+    (Label("//:-{abc}"), False, False),
+]
+
+def _is_valid_identifier(identifier):
+    for c in identifier.elems():
+        if not c.isalnum() and c != "_":
+            return False
+    return True
+
 def _get_attr_type_test(env):
     for value, expected_type in _GET_ATTR_TYPE_TEST_CASES:
         env.expect.where(value = value).that_str(get_attr_type(value)).equals(expected_type)
@@ -53,11 +68,18 @@ def _get_attr_name_test(env):
     some_setting_subject.contains("some_setting")
     some_setting_subject.not_equals(validate_and_get_attr_name(Label("@bazel_tools//pkg:some_setting")))
 
+def _validate_attr_name_test(env):
+    for value, name_is_valid, hash_is_valid in _VALIDATE_ATTR_NAME_TEST_CASES:
+        env.expect.that_bool(_is_valid_identifier(value.name)).equals(name_is_valid)
+        env.expect.that_bool(_is_valid_identifier(str(hash(str(value))))).equals(hash_is_valid)
+        env.expect.that_bool(_is_valid_identifier(validate_and_get_attr_name(value))).equals(True)
+
 def setting_test_suite(name):
     test_suite(
         name = name,
         basic_tests = [
             _get_attr_name_test,
             _get_attr_type_test,
+            _validate_attr_name_test,
         ],
     )
