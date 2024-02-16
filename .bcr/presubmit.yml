@@ -2,17 +2,18 @@ bcr_test_module:
   module_path: "examples"
   matrix:
     platform: ["debian10", "macos", "ubuntu2004"]
+    bazel: ["6.x", "7.x"]
   tasks:
     run_tests:
       name: "Run test module"
       platform: ${{ platform }}
-      bazel: 6.4.0rc3
+      bazel: ${{ bazel }}
       test_targets:
         - "//..."
     run_windows_tests:
       name: "Run test module"
       platform: "windows"
-      bazel: 6.4.0rc3
+      bazel: ${{ bazel }}
       build_targets:
         - "//..."
       test_targets:
