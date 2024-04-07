@@ -30,6 +30,9 @@ def validate_and_get_attr_name(setting):
 
         return make_valid_identifier("{}_{}".format(hash(str(setting)), setting.name))
     elif is_string(setting):
+        if setting.startswith("//command_line_option:"):
+            fail("Invalid setting \"{}\", did you mean \"{}\"?".format(setting, setting[len("//command_line_option:"):]))
+
         # Strip leading dashes for "did you mean" suggestions as users may have copy-pasted actual
         # command line flags.
         stripped_setting = setting.lstrip("-")
