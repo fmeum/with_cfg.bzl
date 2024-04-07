@@ -1,5 +1,5 @@
-load(":utils.bzl", "is_bool", "is_int", "is_label", "is_list", "is_string")
 load(":select.bzl", "map_attr")
+load(":utils.bzl", "is_bool", "is_int", "is_label", "is_list", "is_string")
 
 visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
 
@@ -39,6 +39,10 @@ def validate_and_get_attr_name(setting):
             fail("Custom build settings can only be referenced via Labels, did you mean Label({})?".format(repr(stripped_setting)))
         if setting.startswith("-"):
             fail("\"{}\" is not a valid setting, did you mean \"{}\"?".format(setting, stripped_setting))
+        if setting == "features":
+            # features is a special case as it is both a command-line option (--features) and a
+            # special attribute on all rules. Avoids "built-in attributes cannot be overridden".
+            return "features_attr"
         return setting
     else:
         fail("Expected setting to be a Label or a string, got: {} ({})".format(repr(setting), type(setting)))
