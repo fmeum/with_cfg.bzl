@@ -1,6 +1,6 @@
-load(":cc_define_test.bzl", "cc_define_test")
-load("//helpers:defs.bzl", "untransitioned_target")
 load("@with_cfg.bzl", "original_settings")
+load("//helpers:defs.bzl", "untransitioned_target")
+load(":cc_define_test.bzl", "cc_define_test")
 
 cc_define_test(
     name = "dir/hello_world",

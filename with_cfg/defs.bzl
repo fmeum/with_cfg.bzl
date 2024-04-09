@@ -1,5 +1,5 @@
-load("//with_cfg/private:with_cfg.bzl", _with_cfg = "with_cfg")
 load("//with_cfg/private:original_settings.bzl", _original_settings = "original_settings")
+load("//with_cfg/private:with_cfg.bzl", _with_cfg = "with_cfg")
 
 visibility("//")
 

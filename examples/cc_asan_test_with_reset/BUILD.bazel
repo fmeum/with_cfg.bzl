@@ -1,6 +1,6 @@
-load(":cc_asan_test.bzl", "cc_asan_test", "cc_asan_test_reset")
-load("//helpers:defs.bzl", "untransitioned_target")
 load("@with_cfg.bzl", "original_settings")
+load("//helpers:defs.bzl", "untransitioned_target")
+load(":cc_asan_test.bzl", "cc_asan_test", "cc_asan_test_reset")
 
 cc_asan_test(
     name = "asan_test",

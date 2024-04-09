@@ -1,6 +1,6 @@
 load(":rewrite.bzl", "make_label_rewriter", "rewrite_locations_in_attr")
-load(":setting.bzl", "validate_and_get_attr_name")
 load(":select.bzl", "map_attr")
+load(":setting.bzl", "validate_and_get_attr_name")
 load(":utils.bzl", "is_dict", "is_label", "is_list", "is_string")
 
 visibility("private")
