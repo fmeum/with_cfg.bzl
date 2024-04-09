@@ -1,5 +1,5 @@
-load(":setting.bzl", "validate_and_get_attr_name")
 load(":frontend.bzl", "get_frontend")
+load(":setting.bzl", "validate_and_get_attr_name")
 load(":transition.bzl", "make_transition")
 load(":transitioning_alias.bzl", "make_transitioning_alias")
 load(":utils.bzl", "is_label")

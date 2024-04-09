@@ -1,5 +1,5 @@
-load(":java_21_library.bzl", "java_21_library", "java_21_library_reset")
 load("@with_cfg.bzl", "original_settings")
+load(":java_21_library.bzl", "java_21_library", "java_21_library_reset")
 
 java_binary(
     name = "Main",

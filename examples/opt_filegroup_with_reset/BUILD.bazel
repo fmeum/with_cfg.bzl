@@ -1,5 +1,5 @@
-load(":opt_filegroup.bzl", "opt_filegroup", "opt_filegroup_reset")
 load("@with_cfg.bzl", "original_settings")
+load(":opt_filegroup.bzl", "opt_filegroup", "opt_filegroup_reset")
 
 cc_binary(
     name = "slow_to_run_app",
