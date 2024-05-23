@@ -6,10 +6,25 @@ local_path_override(
     path = "..",
 )
 
+bazel_dep(name = "contrib_rules_jvm", version = "0.26.0")
 bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(name = "rules_cc", version = "0.0.9")
 bazel_dep(name = "rules_java", version = "7.3.1")
+bazel_dep(name = "rules_jvm_external", version = "6.1")
 
 register_toolchains(
     "//:toolchain_jdk_17_definition",
+    "//:toolchain_jdk_21_definition",
 )
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+maven.install(
+    name = "maven_java_test_suite_example",
+    artifacts = [
+        "org.junit.jupiter:junit-jupiter-api:5.10.2",
+        "org.junit.jupiter:junit-jupiter-engine:5.10.2",
+        "org.junit.platform:junit-platform-launcher:1.10.2",
+        "org.junit.platform:junit-platform-reporting:1.10.2",
+    ],
+)
+use_repo(maven, "maven_java_test_suite_example")
