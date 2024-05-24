@@ -1,4 +1,4 @@
-load("java_17_junit5_test.bzl", "java_17_junit5_test")
+load(":java_17_junit5_test.bzl", "java_17_junit5_test")
 load(":java_21_junit5_test.bzl", "java_21_junit5_test")
 load(":test_suite.bzl", "java_test_suite")
 
