@@ -1,9 +1,10 @@
 load(":java_17_junit5_test.bzl", "java_17_junit5_test")
 load(":java_21_junit5_test.bzl", "java_21_junit5_test")
-load(":test_suite.bzl", "java_test_suite")
+load(":test_suite.bzl", "multi_jdk_test_suite")
 
-java_test_suite(
+multi_jdk_test_suite(
     name = "test-suite",
+    srcs = ["src/test/java/com/example/VersionTest.java"],
     test_runners = {
         "jdk21": java_21_junit5_test,
         "jdk17": java_17_junit5_test,

@@ -1,27 +1,28 @@
-load("@contrib_rules_jvm//java:defs.bzl", "create_jvm_test_suite", "java_junit5_test", "java_test")
+load("@contrib_rules_jvm//java:defs.bzl", "create_jvm_test_suite")
 load("@rules_java//java:defs.bzl", "java_library")
 
-def java_test_suite(
+def multi_jdk_test_suite(
         name,
-        srcs = ["src/test/java/**/*.java"],
+        srcs = [],
         deps = [],
-        resources = ["src/test/resources/**/*"],
-        data = ["src/main/resources/**/*", "src/test/resources/**/*"],
-        runner = "junit5",
-        test_runners = {},
-        test_suffixes = ["Test.java"],
-        tags = []):
-    srcs = _maybe_glob(srcs)
+        test_runners = {}):
+    """A macro similiar to java_test_suite from contrib_rules_jvm but creates multiple variations of each test based on the 'test_runners' argument.
+
+    Args:
+        name: The base name of the test suite.
+        srcs: A list of source files to include in the test suite.
+        deps: A list of dependencies to include in the test suite.
+        test_runners: A dict where the keys are suffixes to be appended to the
+            name of each test target in the suite, and the values are the rule
+            functions to use to define those test variants (e.g. java_17_junit5_test
+            or java_21_junit5_test).
+    """
 
     if not srcs:
-        # no test sources found, nothing to do here
-        return
+        fail("srcs is required")
 
     if not test_runners:
-        if runner == "junit5":
-            test_runners = {"": java_junit5_test}
-        else:
-            test_runners = {"": java_test}
+        fail("test_runners is required")
 
     def _define_library(name, **kwargs):
         java_library(
@@ -51,26 +52,11 @@ def java_test_suite(
 
         create_jvm_test_suite(
             name = name if name_suffix == "" else name + "-" + name_suffix,
-            srcs = _maybe_glob(srcs),
-            data = _maybe_glob(data),
-            resources = native.glob(resources),
-            runner = runner,
+            srcs = srcs,
+            # runner = runner,
             package = None,  # set to None to have rule infer package name
             define_library = _define_library,
             define_test = wrapped_test_fn,
-            test_suffixes = test_suffixes,
-            # java_test_suite modifies this list, so make a copy here
+            test_suffixes = ["Test.java"],
             deps = [dep for dep in deps],
-            tags = tags,
         )
-
-# handle the case where some list may be a mix of file globs and target labels
-def _maybe_glob(inputs):
-    out = []
-
-    for input in inputs:
-        if "*" in input:
-            out += native.glob([input])
-        else:
-            out.append(input)
-    return out
