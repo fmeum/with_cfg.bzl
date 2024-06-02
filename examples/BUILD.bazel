@@ -7,6 +7,13 @@ default_java_toolchain(
     target_version = "17",
 )
 
+default_java_toolchain(
+    name = "toolchain_jdk_21",
+    java_runtime = "@rules_java//toolchains:remotejdk_21",
+    source_version = "21",
+    target_version = "21",
+)
+
 alias(
     name = "bzl_library",
     actual = "@with_cfg.bzl//:with_cfg",

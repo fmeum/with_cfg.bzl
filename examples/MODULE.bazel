@@ -6,10 +6,35 @@ local_path_override(
     path = "..",
 )
 
+bazel_dep(name = "contrib_rules_jvm", version = "0.26.0")
 bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(name = "rules_cc", version = "0.0.9")
-bazel_dep(name = "rules_java", version = "7.3.1")
+
+# Can't update past this version as it breaks compatibility with Bazel 6 due to
+# the Turbine native image not supporting --release used by rules_jvm_external.
+bazel_dep(name = "rules_java", version = "7.2.0")
+
+# This fork restores compatibility with Bazel 6 and is based on 6.1.
+bazel_dep(name = "rules_jvm_external")
+git_override(
+    module_name = "rules_jvm_external",
+    commit = "0a1704520d2ef8af05613924246a18664a5ed504",
+    remote = "https://github.com/fmeum/rules_jvm_external.git",
+)
 
 register_toolchains(
     "//:toolchain_jdk_17_definition",
+    "//:toolchain_jdk_21_definition",
 )
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+maven.install(
+    name = "maven_java_test_suite_example",
+    artifacts = [
+        "org.junit.jupiter:junit-jupiter-api:5.10.2",
+        "org.junit.jupiter:junit-jupiter-engine:5.10.2",
+        "org.junit.platform:junit-platform-launcher:1.10.2",
+        "org.junit.platform:junit-platform-reporting:1.10.2",
+    ],
+)
+use_repo(maven, "maven_java_test_suite_example")
