@@ -25,3 +25,9 @@ common:windows --noincompatible_strict_action_env
 common:windows --test_env=PATH
 # Allow build to start before all external deps have been fetched.
 common --experimental_merged_skyframe_analysis_execution
+
+# Debug where options came from
+common:ci --announce_rc
+# Don't rely on test logs being easily accessible from the test runner,
+# though it makes the log noisier.
+common:ci --test_output=errors

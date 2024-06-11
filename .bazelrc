@@ -13,6 +13,15 @@ common --check_direct_dependencies=off
 # Improve build caching by redacting environment variables.
 common --incompatible_strict_action_env
 
+# Avoid building protoc from source.
+common --incompatible_enable_proto_toolchain_resolution
+
+# Debug where options came from
+common:ci --announce_rc
+# Don't rely on test logs being easily accessible from the test runner,
+# though it makes the log noisier.
+common:ci --test_output=errors
+
 # Load any settings specific to the current user.
 # .bazelrc.user should appear in .gitignore so that settings are not shared with team members
 # This needs to be last statement in this
