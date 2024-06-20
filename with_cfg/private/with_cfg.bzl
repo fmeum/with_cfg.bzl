@@ -138,7 +138,10 @@ def is_executable(rule_name):
     return rule_name.endswith("_binary")
 
 def is_test(rule_name):
-    return rule_name.endswith("_test")
+    # rules_go's go_test is a macro called go_test_macro. Macro wrappers should
+    # generally try to have the same name as the rule they are wrapping, so this
+    # shouldn't become configurable.
+    return rule_name.endswith("_test") or rule_name == "go_test_macro"
 
 def _is_native(rule_or_macro):
     return str(rule_or_macro).startswith("<built-in rule ")
