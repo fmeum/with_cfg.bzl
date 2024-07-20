@@ -1,0 +1,25 @@
+load(":doubly_transitioned_test.bzl", "doubly_transitioned_test")
+load("//args_location_expansion/rules:defs.bzl", "write_settings_rule")
+
+write_settings_rule(
+    name = "single_rule",
+)
+
+doubly_transitioned_test(
+    name = "doubly_transitioned_test",
+    binary = ":test_bin",
+    args = [
+        "$(rlocationpath :single_rule)",
+        "$(rlocationpaths //args_location_expansion/pkg:all_rules)",
+    ],
+    data = [
+        ":single_rule",
+        "//args_location_expansion/pkg:all_rules",
+    ],
+)
+
+sh_binary(
+    name = "test_bin",
+    srcs = ["test_bin.sh"],
+    visibility = ["//visibility:public"],
+)

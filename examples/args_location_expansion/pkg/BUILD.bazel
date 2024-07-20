@@ -1,0 +1,18 @@
+load("//args_location_expansion/rules:defs.bzl", "write_settings_rule")
+
+write_settings_rule(
+    name = "some_rule",
+)
+
+write_settings_rule(
+    name = "other_rule",
+)
+
+filegroup(
+    name = "all_rules",
+    srcs = [
+        ":some_rule",
+        ":other_rule",
+    ],
+    visibility = ["//visibility:public"],
+)
