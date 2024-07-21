@@ -12,7 +12,19 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null || \
   { echo>&2 "ERROR: cannot find $f"; exit 1; }; f=; set -e
 # --- end runfiles.bash initialization v3 ---
 
+function check_runfile() {
+  real_path=$(rlocation "$1" || { >&2 echo "$1 not found"; exit 1; })
+  basename=$(basename "$1")
+  if [ "$(cat "$real_path")" != "name:$basename,rule_setting:rule,with_cfg_setting:with_cfg" ]; then
+    echo "Runfile content mismatch: $1"
+    exit 1
+  fi
+}
+
+if [ "$#" -ne 3 ]; then
+  echo "Usage: $0 <runfile1> <runfile2> <runfile3>"
+  exit 1
+fi
 for arg in "$@"; do
-  path=$(rlocation "$arg")
-  cat "$path"
+  check_runfile "$arg"
 done
