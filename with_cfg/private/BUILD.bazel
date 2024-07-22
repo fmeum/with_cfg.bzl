@@ -21,6 +21,15 @@ config_setting(
 )
 
 bzl_library(
+    name = "args",
+    srcs = ["args.bzl"],
+    visibility = ["//with_cfg:__subpackages__"],
+    deps = [
+        ":rewrite",
+    ],
+)
+
+bzl_library(
     name = "builder",
     srcs = ["builder.bzl"],
     visibility = ["//with_cfg:__subpackages__"],
@@ -136,6 +145,7 @@ bzl_library(
     srcs = ["wrapper.bzl"],
     visibility = ["//with_cfg:__subpackages__"],
     deps = [
+        ":args",
         ":rewrite",
         ":select",
         ":setting",
