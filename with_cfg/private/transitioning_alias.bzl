@@ -1,3 +1,4 @@
+load(":args.bzl", "args_aspect")
 load(":providers.bzl", "FrontendInfo", "OriginalSettingsInfo")
 load(":setting.bzl", "get_attr_type", "validate_and_get_attr_name")
 
@@ -30,6 +31,7 @@ def make_transitioning_alias(*, providers, transition, values, original_settings
             "exports": attr.label(
                 allow_files = True,
                 cfg = transition,
+                aspects = [args_aspect],
             ),
             "_allowlist_function_transition": attr.label(
                 default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
