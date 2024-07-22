@@ -15,6 +15,7 @@ alias(
 doubly_transitioned_test(
     name = "doubly_transitioned_test",
     args = [
+        "$(rlocationpath :source_file.txt)",
         "$(rlocationpath :single_rule)",
         "$(rlocationpaths //args_location_expansion/pkg:multiple_rules)",
         "$(rlocationpath alias_target)",
@@ -28,6 +29,7 @@ doubly_transitioned_test(
     data = [
         ":alias_target",
         ":single_rule",
+        ":source_file.txt",
         "//args_location_expansion/pkg:multiple_rules",
         "//args_location_expansion/pkg:special_09!%-@^_\"#$&'(*-+,;<=>?[]{|}~/._characters_rule",
         "@bazel_tools//tools/bash/runfiles",
