@@ -69,6 +69,7 @@ def _clean_run_environment_info(run_environment_info):
     )
 
 _frontend_attrs = {
+    "data": attr.label_list(allow_files = True),
     "env": attr.string_dict(),
     "env_inherit": attr.string_list(),
     # This attribute name is internal only, so it can only help to choose a

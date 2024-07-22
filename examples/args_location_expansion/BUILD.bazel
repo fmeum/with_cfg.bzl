@@ -1,0 +1,58 @@
+load("//args_location_expansion/rules:defs.bzl", "write_settings_rule")
+load(":doubly_transitioned_test.bzl", "doubly_transitioned_test")
+
+write_settings_rule(
+    name = "single_rule",
+    tags = ["manual"],
+)
+
+alias(
+    name = "alias_target",
+    actual = "//args_location_expansion/pkg:aliased_rule",
+    tags = ["manual"],
+)
+
+doubly_transitioned_test(
+    name = "doubly_transitioned_test",
+    args = [
+        "$(rlocationpath :source_file.txt)",
+        "$(rlocationpath :single_rule)",
+        "$(rlocationpaths //args_location_expansion/pkg:multiple_rules)",
+        "$(rlocationpath alias_target)",
+        "$(rlocationpath :alias_target)",
+        "$(rlocationpath @bazel_tools//tools/bash/runfiles)",
+        "_main/$(rootpath :single_rule)",
+        "_main/$(location :single_rule)",
+    ] + select({
+        "@platforms//os:linux": ["$(rlocationpath //args_location_expansion/pkg:linux_only_rule)"],
+        "//conditions:default": ["$(rlocationpath //args_location_expansion/pkg:generic_rule)"],
+    }) + select({
+        "@platforms//os:windows": [],
+        "//conditions:default": ["$(rlocationpath //args_location_expansion/pkg:special_09!%-@^_\"#$&'(*-+,;<=>?[]{|}~/._characters_rule)"],
+    }),
+    binary = ":test_bin",
+    data = [
+        ":alias_target",
+        ":single_rule",
+        ":source_file.txt",
+        "//args_location_expansion/pkg:multiple_rules",
+        "@bazel_tools//tools/bash/runfiles",
+    ] + select({
+        "@platforms//os:linux": ["//args_location_expansion/pkg:linux_only_rule"],
+        "//conditions:default": ["//args_location_expansion/pkg:generic_rule"],
+    }) + select({
+        "@platforms//os:windows": [],
+        "//conditions:default": ["//args_location_expansion/pkg:special_09!%-@^_\"#$&'(*-+,;<=>?[]{|}~/._characters_rule"],
+    }),
+    env = select({
+        "@platforms//os:windows": {"NUM_RUNFILES": "10"},
+        "//conditions:default": {"NUM_RUNFILES": "11"},
+    }),
+)
+
+sh_binary(
+    name = "test_bin",
+    srcs = ["test_bin.sh"],
+    data = ["@bazel_tools//tools/bash/runfiles"],
+    visibility = ["//visibility:public"],
+)

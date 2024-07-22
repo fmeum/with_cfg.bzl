@@ -22,7 +22,7 @@ def _rewrite_locations_in_value(value, label_rewriter):
         return value
     if is_dict(value):
         return {
-            _rewrite_locations_in_single_value(k, label_rewriter): _rewrite_locations_in_list_or_single_value(v, label_rewriter)
+            rewrite_locations_in_single_value(k, label_rewriter): _rewrite_locations_in_list_or_single_value(v, label_rewriter)
             for k, v in value.items()
         }
     return _rewrite_locations_in_list_or_single_value(value, label_rewriter)
@@ -31,13 +31,13 @@ def _rewrite_locations_in_list_or_single_value(value, label_rewriter):
     if not value:
         return value
     if is_list(value):
-        return [_rewrite_locations_in_single_value(v, label_rewriter) for v in value]
-    return _rewrite_locations_in_single_value(value, label_rewriter)
+        return [rewrite_locations_in_single_value(v, label_rewriter) for v in value]
+    return rewrite_locations_in_single_value(value, label_rewriter)
 
 # Based on:
 # https://github.com/bazelbuild/bazel/blob/9bf8f396db5c8b204c61b34638ca15ece0328fc0/src/main/starlark/builtins_bzl/common/cc/cc_helper.bzl#L777C1-L830C27
 # SPDX: Apache-2.0
-def _rewrite_locations_in_single_value(expression, label_rewriter):
+def rewrite_locations_in_single_value(expression, label_rewriter):
     if not is_string(expression):
         return expression
     if "$(" not in expression:

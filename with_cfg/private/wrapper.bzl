@@ -1,3 +1,4 @@
+load(":args.bzl", "rewrite_args")
 load(":rewrite.bzl", "make_label_rewriter", "rewrite_locations_in_attr")
 load(":select.bzl", "map_attr")
 load(":setting.bzl", "validate_and_get_attr_name")
@@ -40,22 +41,13 @@ _COMMON_ATTRS = [
     "toolchains",
 ]
 
-# Attributes common to all executable and test rules.
-# These attributes are applied to the original target and the frontend if the original target is
-# executable.
-# env and env_inherit are covered by the forwarded RunEnvironmentInfo instead.
-_EXECUTABLE_ATTRS = [
-    # keep sorted
-    "args",
-]
-
 # Attributes common to all test rules.
 # These attributes are applied to the original target and the frontend if the original target is a
 # test.
+# args is treated specially.
 # env and env_inherit are covered by the forwarded RunEnvironmentInfo instead.
 _TEST_ATTRS = [
     # keep sorted
-    "args",
     "flaky",
     "local",
     "shard_count",
@@ -73,6 +65,14 @@ def _wrapper(
         values,
         original_settings_label,
         attrs_to_reset):
+    dirname, separator, basename = name.rpartition("/")
+    original_name = "{dirname}{separator}{basename}_/{basename}".format(
+        dirname = dirname,
+        separator = separator,
+        basename = basename,
+    )
+    alias_name = name + "_with_cfg"
+
     tags = kwargs.pop("tags", None)
     if not tags:
         tags_with_manual = ["manual"]
@@ -101,12 +101,6 @@ def _wrapper(
             for attr in _TEST_ATTRS
             if attr in kwargs
         }
-    elif rule_info.executable:
-        extra_attrs = {
-            attr: kwargs.pop(attr)
-            for attr in _EXECUTABLE_ATTRS
-            if attr in kwargs
-        }
     else:
         extra_attrs = {}
 
@@ -118,13 +112,22 @@ def _wrapper(
         if "env_inherit" in kwargs:
             extra_attrs["env_inherit"] = kwargs.pop("env_inherit")
 
-    dirname, separator, basename = name.rpartition("/")
-    original_name = "{dirname}{separator}{basename}_/{basename}".format(
-        dirname = dirname,
-        separator = separator,
-        basename = basename,
-    )
-    alias_name = name + "_with_cfg"
+    frontend_attrs = {}
+    if "args" in kwargs:
+        # Leave the args attribute in place on the original rule so that they can be read by the
+        # args_aspect attached to the exports attribute of the transitioning_alias.
+        frontend_attrs["args"], frontend_attrs["data"] = rewrite_args(
+            alias_name,
+            kwargs["args"],
+            lambda *, name, srcs, output_group: native.filegroup(
+                name = name,
+                srcs = srcs,
+                output_group = output_group,
+                testonly = common_attrs.get("testonly", False),
+                tags = ["manual"],
+                visibility = ["//visibility:private"],
+            ),
+        )
 
     processed_kwargs = _process_attrs_for_reset(
         attrs = kwargs,
@@ -164,7 +167,7 @@ def _wrapper(
         exports = ":" + alias_name,
         tags = tags,
         visibility = visibility,
-        **(common_attrs | extra_attrs)
+        **(common_attrs | extra_attrs | frontend_attrs)
     )
 
     for implicit_target in rule_info.implicit_targets:

@@ -1,0 +1,1 @@
+name:source_file.txt,rule_setting:rule,with_cfg_setting:with_cfg

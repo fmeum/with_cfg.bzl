@@ -1,0 +1,46 @@
+load("//args_location_expansion/rules:defs.bzl", "write_settings_rule")
+
+write_settings_rule(
+    name = "some_rule",
+    tags = ["manual"],
+)
+
+write_settings_rule(
+    name = "other_rule",
+    tags = ["manual"],
+)
+
+filegroup(
+    name = "multiple_rules",
+    srcs = [
+        ":other_rule",
+        ":some_rule",
+    ],
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+write_settings_rule(
+    name = "aliased_rule",
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+write_settings_rule(
+    # Omits ')' as it doesn't seem to be supported with location expansion.
+    name = "special_09!%-@^_\"#$&'(*-+,;<=>?[]{|}~/._characters_rule",
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+write_settings_rule(
+    name = "linux_only_rule",
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+write_settings_rule(
+    name = "generic_rule",
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
