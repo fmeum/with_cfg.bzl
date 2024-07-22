@@ -15,7 +15,9 @@ complexities handled by the functions in this file:
    We use a non-recursing aspect on the original rule to collect the files
    corresponding to labels mentioned in location expansion in "args" and provide
    them to the frontend rule via output groups named after the user-provided
-   label strings.
+   label strings. As a consequence, we also have to set the "args" attribute on
+   the underlying target so that the aspect can see it - aspect attributes are
+   limited to integers and string enums.
 2. "args" can only be set at load time via the magic attribute and the only way
    to get analysis time information into it is via the hard-coded location
    expansion applied to it in

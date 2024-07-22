@@ -114,8 +114,8 @@ def _wrapper(
 
     frontend_attrs = {}
     if "args" in kwargs:
-        # Leave the args attribute in place on the original rule in case it processes it in a
-        # non-standard way.
+        # Leave the args attribute in place on the original rule so that they can be read by the
+        # args_aspect attached to the exports attribute of the transitioning_alias.
         frontend_attrs["args"], frontend_attrs["data"] = rewrite_args(
             alias_name,
             kwargs["args"],
