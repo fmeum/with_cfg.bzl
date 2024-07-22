@@ -1,25 +1,28 @@
-load(":rewrite.bzl", "rewrite_locations_in_single_value")
+load(":rewrite.bzl", "rewrite_locations_in_attr", "rewrite_locations_in_single_value")
 
 visibility("private")
 
-def escape_label(label):
-    # type: (Label) -> str
-    # https://github.com/bazelbuild/bazel/blob/af8deb85cbc627a507605e67aa71e829f7db630f/src/main/java/com/google/devtools/build/lib/actions/Actions.java#L375-L381
-    path = label.package + ":" + label.name
-    if label.repo_name:
-        path = label.repo_name + "@" + path
-    return path.replace("_", "_U").replace("/", "_S").replace("\\", "_B").replace(":", "_C").replace("@", "_A")
+def rewrite_args(name, args, testonly):
+    # type: (string, list[string], bool) -> tuple[list[string], list[Label]]
+    seen_labels = {}
+    filegroup_labels = []
 
-_LOCATION_EXPANSION_ARGS = [
-    # keep sorted
-    "data",
-    "deps",
-    "implementation_deps",
-    "srcs",
-    "tools",
-]
+    def rewrite_label(label_string):
+        # type: (string) -> string
+        escaped_label = _escape_label(label_string)
+        filegroup_name = name + "__args__" + escaped_label
+        if label_string not in seen_labels:
+            seen_labels[label_string] = None
+            native.filegroup(
+                name = filegroup_name,
+                srcs = [":" + name],
+                output_group = _OUTPUT_GROUPS_PREFIX + label_string,
+                testonly = testonly,
+            )
+            filegroup_labels.append(native.package_relative_label(filegroup_name))
+        return ":" + filegroup_name
 
-_OUTPUT_GROUPS_PREFIX = "_with_cfg.bzl_args__"
+    return rewrite_locations_in_attr(args, rewrite_label), filegroup_labels
 
 def _args_aspect_impl(target, ctx):
     # type: (Target, ctx) -> list[Provider]
@@ -48,9 +51,11 @@ def _args_aspect_impl(target, ctx):
             targets[target] = None
 
     labels = {}
+
     def collect_label(label):
         labels[label] = None
         return label
+
     for arg in ctx.rule.attr.args:
         rewrite_locations_in_single_value(arg, collect_label)
 
@@ -60,12 +65,23 @@ def _args_aspect_impl(target, ctx):
         labels_to_files[label] = execpaths_expansion_to_files[execpaths_expansion]
 
     return [
-        OutputGroupInfo(**{_OUTPUT_GROUPS_PREFIX + l: f for l, f in labels_to_files.items()}),
+        OutputGroupInfo(**{_OUTPUT_GROUPS_PREFIX + label: f for label, f in labels_to_files.items()}),
     ]
 
 args_aspect = aspect(
     implementation = _args_aspect_impl,
 )
+
+_LOCATION_EXPANSION_ARGS = [
+    # keep sorted
+    "data",
+    "deps",
+    "implementation_deps",
+    "srcs",
+    "tools",
+]
+
+_OUTPUT_GROUPS_PREFIX = "_with_cfg.bzl_args__"
 
 def _callable_path_string(file):
     # type: (File) -> str
@@ -79,9 +95,9 @@ def _callable_path_string(file):
 
 # Based on
 # https://github.com/bazelbuild/bazel/blob/af8deb85cbc627a507605e67aa71e829f7db630f/src/main/starlark/builtins_bzl/common/java/java_helper.bzl#L365-L386
-# Modified to handle ~ analogous to
+# Modified to handle ~ in the same way as
 # https://github.com/bazelbuild/bazel/blob/30f6c8238f39c4a396b3cb56a98c1a2e79d10bb9/src/main/java/com/google/devtools/build/lib/util/ShellEscaper.java#L106-L108
-def _shell_escape(s):
+def _shell_escape(s):  # type: (string) -> string
     """Shell-escape a string
 
     Quotes a word so that it can be used, without further quoting, as an argument
@@ -108,3 +124,7 @@ def _shell_escape(s):
         return "'" + s.replace("'", "'\\''") + "'"
     else:
         return s
+
+def _escape_label(label_string):  # type: (string) -> string
+    # https://github.com/bazelbuild/bazel/blob/af8deb85cbc627a507605e67aa71e829f7db630f/src/main/java/com/google/devtools/build/lib/actions/Actions.java#L375-L381
+    return label_string.replace("_", "_U").replace("/", "_S").replace("\\", "_B").replace(":", "_C").replace("@", "_A")

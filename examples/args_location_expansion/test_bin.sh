@@ -15,14 +15,15 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null || \
 function check_runfile() {
   real_path=$(rlocation "$1" || { >&2 echo "$1 not found"; exit 1; })
   basename=$(basename "$1")
-  if [ "$(cat "$real_path")" != "name:$basename,rule_setting:rule,with_cfg_setting:with_cfg" ]; then
-    echo "Runfile content mismatch: $1"
+  want="name:$basename,rule_setting:rule,with_cfg_setting:with_cfg"
+  if [[ $1 != bazel_tools/* && "$(cat "$real_path")" != "$want" ]]; then
+    echo "Runfile content mismatch in $1: got '$(cat "$real_path")', want '$want'"
     exit 1
   fi
 }
 
-if [ "$#" -ne 3 ]; then
-  echo "Usage: $0 <runfile1> <runfile2> <runfile3>"
+if [ "$#" -ne 9 ]; then
+  echo "Unexpected number of arguments: $#, want 9"
   exit 1
 fi
 for arg in "$@"; do

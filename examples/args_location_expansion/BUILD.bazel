@@ -3,18 +3,34 @@ load(":doubly_transitioned_test.bzl", "doubly_transitioned_test")
 
 write_settings_rule(
     name = "single_rule",
+    tags = ["manual"],
+)
+
+alias(
+    name = "alias_target",
+    actual = "//args_location_expansion/pkg:aliased_rule",
+    tags = ["manual"],
 )
 
 doubly_transitioned_test(
     name = "doubly_transitioned_test",
     args = [
         "$(rlocationpath :single_rule)",
-        "$(rlocationpaths //args_location_expansion/pkg:all_rules)",
+        "$(rlocationpaths //args_location_expansion/pkg:multiple_rules)",
+        "$(rlocationpath alias_target)",
+        "$(rlocationpath :alias_target)",
+        "$(rlocationpath @bazel_tools//tools/bash/runfiles)",
+        "$(rlocationpath //args_location_expansion/pkg:special_09!%-@^_\"#$&'(*-+,;<=>?[]{|}~/._characters_rule)",
+        "_main/$(rootpath :single_rule)",
+        "_main/$(location :single_rule)",
     ],
     binary = ":test_bin",
     data = [
+        ":alias_target",
         ":single_rule",
-        "//args_location_expansion/pkg:all_rules",
+        "//args_location_expansion/pkg:multiple_rules",
+        "//args_location_expansion/pkg:special_09!%-@^_\"#$&'(*-+,;<=>?[]{|}~/._characters_rule",
+        "@bazel_tools//tools/bash/runfiles",
     ],
 )
 

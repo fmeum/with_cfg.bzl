@@ -3,14 +3,14 @@ load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 def _write_settings_rule_impl(ctx):
     # type: (ctx) -> None
     rule_setting = ctx.attr._rule_setting[BuildSettingInfo].value
-    # if rule_setting == "unset":
-    #     fail("rule_setting is unset")
+    if rule_setting == "unset":
+        fail("rule_setting is unset")
     with_cfg_setting = ctx.attr._with_cfg_setting[BuildSettingInfo].value
-    # if with_cfg_setting == "unset":
-    #     fail("with_cfg_setting is unset")
+    if with_cfg_setting == "unset":
+        fail("with_cfg_setting is unset")
 
     out = ctx.actions.declare_file(ctx.label.name + "_" + rule_setting[0] + "_" + with_cfg_setting[0])
-    ctx.actions.write(out, "name:{},rule_setting:{},with_cfg_setting:{}\n".format(ctx.label.name, rule_setting, with_cfg_setting))
+    ctx.actions.write(out, "name:{},rule_setting:{},with_cfg_setting:{}\n".format(out.basename, rule_setting, with_cfg_setting))
     return [DefaultInfo(files = depset([out]))]
 
 write_settings_rule = rule(
