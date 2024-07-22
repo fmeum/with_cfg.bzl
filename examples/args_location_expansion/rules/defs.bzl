@@ -46,6 +46,9 @@ def _transitioned_test_impl(ctx):
             executable = executable,
             runfiles = runfiles,
         ),
+        RunEnvironmentInfo(
+            environment = ctx.attr.env,
+        ),
     ]
 
 transitioned_test = rule(
@@ -59,6 +62,7 @@ transitioned_test = rule(
             cfg = _data_transition,
             allow_files = True,
         ),
+        "env": attr.string_dict(),
         "_allowlist_function_transition": attr.label(
             default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
         ),
