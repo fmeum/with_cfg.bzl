@@ -16,6 +16,7 @@ filegroup(
         ":other_rule",
         ":some_rule",
     ],
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
