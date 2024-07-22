@@ -1,3 +1,36 @@
+"""
+Logic for setting "args" on a transitioned rule with location expansion.
+
+Compared to "env" and "env_inherit", which are backed by a provider, "args"
+handling in Bazel is still based on "magic" handling in the core and thus much
+more difficult to generically forward. This results in the following
+complexities handled by the functions in this file:
+
+1. The way locations expand in "args" depends on the configuration of the
+   underlying target, which can be affected by transitions both by with_cfg.bzl
+   and the rule itself. We thus need to obtain the expanded locations from the
+   rule context instead of e.g. rewriting labels to helper targets during the
+   loading phase, which would miss the effect of transitions applied by the rule
+   itself.
+   We use a non-recursing aspect on the original rule to collect the files
+   corresponding to labels mentioned in location expansion in "args" and provide
+   them to the frontend rule via output groups named after the user-provided
+   label strings.
+2. "args" can only be set at load time via the magic attribute and the only way
+   to get analysis time information into it is via the hard-coded location
+   expansion applied to it in
+   https://github.com/bazelbuild/bazel/blob/9425e365ebf921d4286fcf159b429e38f6b0a48f/src/main/java/com/google/devtools/build/lib/analysis/RunfilesSupport.java#L525
+   We create a helper `filegroup` target for each unique label string mentioned
+   in a location expansion expression in "args", add it to the (otherwise
+   unused) `data` attribute of the frontend and rewrite the label strings to
+   instead point to the `filegroup` targets.
+3. `native.package_relative_label` is not available in the analysis phase and
+   rule or aspect implementation logic can't see the labels of alias targets,
+   so the only way to reliably match user-provided labels to the files they
+   represent is to query `ctx.expand_location("$(execpaths ...)")` and manually
+   collect the files with the given paths.
+"""
+
 load(":rewrite.bzl", "rewrite_locations_in_attr", "rewrite_locations_in_single_value")
 
 visibility("private")
