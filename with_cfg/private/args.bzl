@@ -86,6 +86,8 @@ def _args_aspect_impl(target, ctx):
 
     labels = {}
 
+    # buildifier thinks that "label" references the variable in the for loop below.
+    # buildifier: disable=uninitialized
     def collect_label(label):
         labels[label] = None
         return label
