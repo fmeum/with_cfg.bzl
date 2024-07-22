@@ -2,8 +2,8 @@ load(":rewrite.bzl", "rewrite_locations_in_attr", "rewrite_locations_in_single_v
 
 visibility("private")
 
-def rewrite_args(name, args, testonly):
-    # type: (string, list[string], bool) -> tuple[list[string], list[Label]]
+def rewrite_args(name, args, make_filegroup):
+    # type: (string, list[string], Any) -> tuple[list[string], list[Label]]
     seen_labels = {}
     filegroup_labels = []
 
@@ -13,11 +13,10 @@ def rewrite_args(name, args, testonly):
         filegroup_name = name + "__args__" + escaped_label
         if label_string not in seen_labels:
             seen_labels[label_string] = None
-            native.filegroup(
+            make_filegroup(
                 name = filegroup_name,
                 srcs = [":" + name],
                 output_group = _OUTPUT_GROUPS_PREFIX + label_string,
-                testonly = testonly,
             )
             filegroup_labels.append(native.package_relative_label(filegroup_name))
         return ":" + filegroup_name

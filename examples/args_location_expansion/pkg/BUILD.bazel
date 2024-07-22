@@ -31,3 +31,15 @@ write_settings_rule(
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )
+
+write_settings_rule(
+    name = "linux_only_rule",
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+write_settings_rule(
+    name = "generic_rule",
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)

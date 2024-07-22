@@ -119,7 +119,14 @@ def _wrapper(
         frontend_attrs["args"], frontend_attrs["data"] = rewrite_args(
             alias_name,
             kwargs["args"],
-            common_attrs.get("testonly", False),
+            lambda *, name, srcs, output_group: native.filegroup(
+                name = name,
+                srcs = srcs,
+                output_group = output_group,
+                testonly = common_attrs.get("testonly", False),
+                tags = ["manual"],
+                visibility = ["//visibility:private"],
+            ),
         )
 
     processed_kwargs = _process_attrs_for_reset(

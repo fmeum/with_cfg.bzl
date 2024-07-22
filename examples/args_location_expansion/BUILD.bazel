@@ -24,7 +24,10 @@ doubly_transitioned_test(
         "$(rlocationpath //args_location_expansion/pkg:special_09!%-@^_\"#$&'(*-+,;<=>?[]{|}~/._characters_rule)",
         "_main/$(rootpath :single_rule)",
         "_main/$(location :single_rule)",
-    ],
+    ] + select({
+        "@platforms//os:linux": ["$(rlocationpath //args_location_expansion/pkg:linux_only_rule)"],
+        "//conditions:default": ["$(rlocationpath //args_location_expansion/pkg:generic_rule)"],
+    }),
     binary = ":test_bin",
     data = [
         ":alias_target",
@@ -33,7 +36,10 @@ doubly_transitioned_test(
         "//args_location_expansion/pkg:multiple_rules",
         "//args_location_expansion/pkg:special_09!%-@^_\"#$&'(*-+,;<=>?[]{|}~/._characters_rule",
         "@bazel_tools//tools/bash/runfiles",
-    ],
+    ] + select({
+        "@platforms//os:linux": ["//args_location_expansion/pkg:linux_only_rule"],
+        "//conditions:default": ["//args_location_expansion/pkg:generic_rule"],
+    }),
 )
 
 sh_binary(

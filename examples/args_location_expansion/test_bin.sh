@@ -22,8 +22,8 @@ function check_runfile() {
   fi
 }
 
-if [ "$#" -ne 10 ]; then
-  echo "Unexpected number of arguments: $#, want 10"
+if [ "$#" -ne 11 ]; then
+  echo "Unexpected number of arguments: $#, want 11"
   exit 1
 fi
 for arg in "$@"; do
