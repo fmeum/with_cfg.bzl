@@ -1,6 +1,6 @@
 common --enable_platform_specific_config
 common --enable_bzlmod
-startup --nowindows_enable_symlinks
+common --windows_enable_symlinks
 
 # Required with Bazel 6 (default on 7) to allow transitions to return to the
 # top-level configuration.
