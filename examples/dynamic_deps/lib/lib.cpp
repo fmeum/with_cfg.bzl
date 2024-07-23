@@ -1,3 +1,4 @@
+#define COMPILING_DLL
 #include "lib.h"
 
 #include <iostream>
