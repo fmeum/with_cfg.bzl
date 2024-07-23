@@ -14,7 +14,7 @@ runfiles_dir(
 )
 
 sh_test(
-    name = "bin_test_runfiles",
+    name = "bin_test_from_symlinked_runfiles",
     srcs = ["bin_test.sh"],
     args = ["$(rlocationpath :bin)"],
     data = [":bin"],
@@ -29,5 +29,19 @@ sh_test(
         "//conditions:default": ["$(rlocationpath :bin_runfiles)/bin"],
     }),
     data = [":bin_runfiles"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
+
+sh_test(
+    name = "bin_test_from_regular_runfiles",
+    srcs = ["bin_test.sh"],
+    args = select({
+        "@platforms//os:windows": ["$(rlocationpath :bin_runfiles)/bin.exe.runfiles/$(rlocationpath :bin)"],
+        "//conditions:default": ["$(rlocationpath :bin_runfiles)/bin.runfiles/$(rlocationpath :bin)"],
+    }),
+    data = [
+        ":bin",
+        ":bin_runfiles",
+    ],
     deps = ["@bazel_tools//tools/bash/runfiles"],
 )

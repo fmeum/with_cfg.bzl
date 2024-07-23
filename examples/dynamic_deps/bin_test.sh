@@ -13,12 +13,7 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null || \
 # --- end runfiles.bash initialization v3 ---
 
 bin_path=$(rlocation "$1" || { >&2 echo "$1 not found"; exit 1; })
-output=$(env \
-    -u RUNFILES_DIR \
-    -u RUNFILES_MANIFEST \
-    -u RUNFILES_MANIFEST_ONLY \
-    -u JAVA_RUNFILES \
-    "$bin_path" || { >&2 echo "Failed to run $bin_path"; exit 1; })
+output=$("$bin_path" || { >&2 echo "Failed to run $bin_path"; exit 1; })
 if [[ "$output" != "Hello,_world!" ]]; then
   echo "Unexpected output: $output"
   exit 1
