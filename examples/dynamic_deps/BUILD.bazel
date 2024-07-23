@@ -1,0 +1,33 @@
+load("//dynamic_deps/rules:runfiles_dir.bzl", "runfiles_dir")
+load(":cc_define_binary.bzl", "cc_define_binary")
+
+cc_define_binary(
+    name = "bin",
+    srcs = ["bin.cpp"],
+    dynamic_deps = ["//dynamic_deps/lib:shared"],
+    deps = ["//dynamic_deps/lib"],
+)
+
+runfiles_dir(
+    name = "bin_runfiles",
+    executable = ":bin",
+)
+
+sh_test(
+    name = "bin_test_runfiles",
+    srcs = ["bin_test.sh"],
+    args = ["$(rlocationpath :bin)"],
+    data = [":bin"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
+
+sh_test(
+    name = "bin_test_direct",
+    srcs = ["bin_test.sh"],
+    args = select({
+        "@platforms//os:windows": ["$(rlocationpath :bin_runfiles)/bin.exe"],
+        "//conditions:default": ["$(rlocationpath :bin_runfiles)/bin"],
+    }),
+    data = [":bin_runfiles"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
