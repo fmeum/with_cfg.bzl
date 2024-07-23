@@ -14,9 +14,9 @@ def _frontend_impl(ctx):
     target = ctx.attr.exports
 
     original_executable = target[FrontendInfo].executable
-    dirname, separator, _ = ctx.label.name.rpartition("/")
-    basename = original_executable.basename
-    executable = ctx.actions.declare_file(dirname + separator + basename)
+    dirname, separator, basename = ctx.label.name.rpartition("/")
+    executable_basename = original_executable.basename
+    executable = ctx.actions.declare_file(dirname + separator + basename + "/" + executable_basename)
 
     # TODO: If this is a copy rather than a symlink, runfiles discovery will not work correctly.
     #       Fix this by using a wrapper script rather than a symlink.
