@@ -1,3 +1,3 @@
 #pragma once
 
-void PrintGreeting();
+extern "C" void PrintGreeting();
