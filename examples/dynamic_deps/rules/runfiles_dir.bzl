@@ -8,22 +8,16 @@ def _runfiles_dir_impl(ctx):
     args = ctx.actions.args()
     args.add(out_dir.path)
 
-    direct_inputs = [default_info.files_to_run.repo_mapping_manifest]
-    transitive_inputs = [default_info.default_runfiles.files]
-    inputs = depset(direct_inputs, transitive = transitive_inputs)
-
     ctx.actions.run_shell(
-        inputs = inputs,
+        inputs = default_info.default_runfiles.files,
         outputs = [out_dir],
         command = """
 mkdir -p {out_dir}/{name}.runfiles
 cp {executable} {out_dir}/{name}
-cp {repo_mapping} {out_dir}/{name}.repo_mapping
 """.format(
             name = name,
             out_dir = out_dir.path,
             executable = executable.path,
-            repo_mapping = default_info.files_to_run.repo_mapping_manifest.path,
         ) + "\n".join([
             """
 mkdir -p $(dirname {out_dir}/{name}.runfiles/{rlocationpath})
