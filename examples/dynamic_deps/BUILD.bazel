@@ -1,0 +1,58 @@
+load("//dynamic_deps/rules:runfiles_dir.bzl", "runfiles_dir")
+load(":cc_define_binary.bzl", "cc_define_binary")
+
+cc_define_binary(
+    name = "bin",
+    srcs = ["bin.cpp"],
+    dynamic_deps = ["//dynamic_deps/lib:shared"],
+    deps = ["//dynamic_deps/lib"],
+)
+
+runfiles_dir(
+    name = "bin_runfiles",
+    executable = ":bin",
+)
+
+sh_test(
+    name = "bin_test_from_symlinked_runfiles",
+    srcs = ["bin_test.sh"],
+    args = ["$(rlocationpath :bin)"],
+    data = [":bin"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
+
+sh_test(
+    name = "bin_test_direct",
+    srcs = ["bin_test.sh"],
+    args = select({
+        "@platforms//os:windows": ["$(rlocationpath :bin_runfiles)/bin.exe"],
+        "//conditions:default": ["$(rlocationpath :bin_runfiles)/bin"],
+    }),
+    data = [":bin_runfiles"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+    target_compatible_with = select({
+        # TODO: Get this test to pass on Windows.
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        # TODO: Reenable on macOS after:
+        # 1. Bazel is released with the fix in https://github.com/bazelbuild/bazel/pull/23089.
+        # 2. Enabling --incompatible_macos_set_install_name.
+        # 3. Adding a dep on apple_support, as the default Unix toolchain only supports this flag
+        #    after https://github.com/bazelbuild/bazel/pull/23090.
+        "@platforms//os:macos": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+)
+
+sh_test(
+    name = "bin_test_from_regular_runfiles",
+    srcs = ["bin_test.sh"],
+    args = select({
+        "@platforms//os:windows": ["$(rlocationpath :bin_runfiles)/bin.exe.runfiles/$(rlocationpath :bin)"],
+        "//conditions:default": ["$(rlocationpath :bin_runfiles)/bin.runfiles/$(rlocationpath :bin)"],
+    }),
+    data = [
+        ":bin",
+        ":bin_runfiles",
+    ],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
