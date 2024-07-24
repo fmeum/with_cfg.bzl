@@ -30,8 +30,11 @@ sh_test(
     }),
     data = [":bin_runfiles"],
     deps = ["@bazel_tools//tools/bash/runfiles"],
-    # TODO: Get this test to pass on macOS and Windows.
-    target_compatible_with = ["@platforms//os:linux"],
+    # TODO: Get this test to pass on Windows.
+    target_compatible_with = select({
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
 )
 
 sh_test(
