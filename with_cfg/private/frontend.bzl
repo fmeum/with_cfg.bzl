@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load(":providers.bzl", "FrontendInfo")
 
 visibility("private")
@@ -16,7 +17,14 @@ def _frontend_impl(ctx):
 
     original_executable = target[FrontendInfo].executable
     executable_basename = original_executable.basename
-    executable = ctx.actions.declare_file(ctx.label.name + "/" + executable_basename)
+    incompatible_same_depth_path_layout = ctx.attr._incompatible_same_depth_path_layout[BuildSettingInfo].value
+    if incompatible_same_depth_path_layout:
+        # Create the executable in a subdirectory to ensure that its path depth below the exec root
+        # is the same as the original executable's. This is necessary to make relative RPATHS work.
+        executable = ctx.actions.declare_file(ctx.label.name + "/" + executable_basename)
+    else:
+        dirname, separator, _ = ctx.label.name.rpartition("/")
+        executable = ctx.actions.declare_file(dirname + separator + executable_basename)
 
     additional_runfiles = [executable]
     if CcInfo in target and ctx.target_platform_has_constraint(ctx.attr._windows[platform_common.ConstraintValueInfo]):
@@ -91,6 +99,7 @@ _frontend_attrs = {
         providers = [FrontendInfo],
     ),
     "_windows": attr.label(default = "@platforms//os:windows"),
+    "_incompatible_same_depth_path_layout": attr.label(default = "//:incompatible_same_depth_path_layout"),
 }
 
 _frontend_test_attrs = {
