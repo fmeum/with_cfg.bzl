@@ -31,8 +31,6 @@ def _frontend_impl(ctx):
             ctx.actions.symlink(output = out_dll, target_file = dll)
             additional_runfiles.append(out_dll)
 
-    print(additional_runfiles)
-
     ctx.actions.symlink(output = executable, target_file = original_executable)
     data_runfiles = ctx.runfiles(additional_runfiles).merge(target[DefaultInfo].data_runfiles)
     default_runfiles = ctx.runfiles(additional_runfiles).merge(target[DefaultInfo].default_runfiles)
