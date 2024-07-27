@@ -39,3 +39,21 @@ maven.install(
     ],
 )
 use_repo(maven, "maven_java_test_suite_example")
+
+bazel_dep(name = "rules_python", version = "0.34.0")
+bazel_dep(name = "rules_uv")
+git_override(
+    module_name = "rules_uv",
+    # TODO: Remove after the next release.
+    commit = "94362c919b7a0b546c7cf1d1217f494ec2bdb531",
+    remote = "https://github.com/theoremlp/rules_uv",
+)
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    is_default = True,
+    python_version = "3.12",
+)
+python.toolchain(
+    python_version = "3.8",
+)
