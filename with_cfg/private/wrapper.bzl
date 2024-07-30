@@ -113,7 +113,7 @@ def _wrapper(
             extra_attrs["env_inherit"] = kwargs.pop("env_inherit")
 
     frontend_attrs = {}
-    if "args" in kwargs:
+    if "args" in kwargs and (rule_info.executable or rule_info.test):
         # Leave the args attribute in place on the original rule so that they can be read by the
         # args_aspect attached to the exports attribute of the transitioning_alias.
         frontend_attrs["args"], frontend_attrs["data"] = rewrite_args(
