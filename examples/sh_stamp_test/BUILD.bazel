@@ -1,0 +1,7 @@
+load(":sh_stamp_test.bzl", "sh_stamp_test")
+
+sh_stamp_test(
+    name = "stamp_test",
+    srcs = ["stamp_test.sh"],
+    env = {"FOO": "bar"},
+)
