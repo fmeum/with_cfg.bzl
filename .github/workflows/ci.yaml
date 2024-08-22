@@ -52,6 +52,7 @@ jobs:
 
       - name: bazel test //...
         working-directory: ${{ matrix.folder }}
+        shell: bash
         run: bazel test --config=ci //... ${{ matrix.test_args }}
 
       - name: bazel coverage //...
