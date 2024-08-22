@@ -24,13 +24,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macos-12, windows-2022]
-        bazelversion: [6.4.0, last_rc, last_green]
+        os: [ubuntu-22.04, macos-14, windows-2022]
+        bazelversion: [6.5.0, last_rc, last_green]
         folder: [examples]
         include:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             bazelversion: last_rc
             folder: "."
+          - os: windows-2022
+            bazelversion: 6.5.0
+            test_args: "-- -//sh:test -//args_location_expansion:doubly_transitioned_test"
 
     steps:
       - uses: actions/checkout@v4
@@ -49,9 +52,10 @@ jobs:
 
       - name: bazel test //...
         working-directory: ${{ matrix.folder }}
-        run: bazel test --config=ci //...
+        shell: bash
+        run: bazel test --config=ci //... ${{ matrix.test_args }}
 
       - name: bazel coverage //...
-        if: matrix.os == 'ubuntu-20.04' && matrix.folder == 'examples'
+        if: matrix.os == 'ubuntu-22.04' && matrix.folder == 'examples'
         working-directory: ${{ matrix.folder }}
         run: bazel coverage --config=ci //...
