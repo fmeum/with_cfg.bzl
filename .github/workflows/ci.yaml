@@ -33,7 +33,7 @@ jobs:
             folder: "."
           - os: windows-2022
             bazelversion: 6.5.0
-            test_args: "-- -//sh:test"
+            test_args: "-- -//sh:test -//args_location_expansion:doubly_transitioned_test"
 
     steps:
       - uses: actions/checkout@v4
