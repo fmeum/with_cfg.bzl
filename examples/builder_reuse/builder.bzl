@@ -21,8 +21,9 @@ first_cc_test, _first_cc_test_ = _first_builder.build()
 
 second_builder = _first_builder.clone()
 
-# Demonstrate that clone() does not share mutable state with the original builder.
+# Demonstrate that the builder does not capture mutable values by reference.
 _first_builder_copt_default[0] = "-DC_VALUE=\"unexpected\""
+# Demonstrate that clone() does not share mutable state with the original builder.
 second_builder.set(
     "cxxopt",
     select({
