@@ -166,6 +166,10 @@ def consume_single_value(r, pos):
         pos += 6
         string, after_string = _consume_string(r, pos)
 
+        # On Bazel 6, stringification of Labels may not include the leading `@@`.
+        if not string.startswith("@@"):
+            string = "@" + string
+
         # Skip over `)`.
         return Label(string), after_string + 1
     elif c == "-" or c.isdigit():

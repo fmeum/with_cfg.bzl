@@ -130,4 +130,11 @@ A builder with the following methods:
       label. The rule will forward all builtin providers as well as the ones specified in
       `extra_providers` from the "exported" target after resetting the settings for it.
 
+  build() can only be called once on a builder. Subsequent calls to other methods except
+  `clone()` will fail.
+* `clone()`: Returns a new builder with the same rule and settings as the original one, but
+  acts as if `resettable()` and `reset_on_attrs()` have not been called. `set` and `extend`
+  can be called on this builder even for settings that had already been added to the original
+  builder. This is useful to create multiple rules with slightly different settings.
+
 

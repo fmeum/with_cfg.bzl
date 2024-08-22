@@ -1,0 +1,32 @@
+load(":builder.bzl", "first_cc_test", "second_cc_test")
+load(":builder_reuse.bzl", "third_cc_test")
+
+first_cc_test(
+    name = "first_cc_test",
+    srcs = ["test.cpp"],
+    env = {
+        "C_VALUE": "first",
+        "CXX_VALUE": "first",
+    },
+    visibility = ["//visibility:public"],
+)
+
+second_cc_test(
+    name = "second_cc_test",
+    srcs = ["test.cpp"],
+    env = {
+        "C_VALUE": "first",
+        "CXX_VALUE": "second",
+    },
+    visibility = ["//visibility:public"],
+)
+
+third_cc_test(
+    name = "third_cc_test",
+    srcs = ["test.cpp"],
+    env = {
+        "C_VALUE": "third",
+        "CXX_VALUE": "second",
+    },
+    visibility = ["//visibility:public"],
+)
