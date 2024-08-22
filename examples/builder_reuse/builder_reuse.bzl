@@ -1,6 +1,6 @@
 load(":builder.bzl", "second_builder")
 
-_third_builder = second_builder
+_third_builder = second_builder.clone()
 _third_builder.extend(
     "copt",
     select({
