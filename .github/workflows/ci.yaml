@@ -25,11 +25,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, macos-14, windows-2022]
-        bazelversion: [6.5.0, last_rc, last_green]
+        bazelversion: [6.5.0, latest, last_green]
         folder: [examples]
         include:
           - os: ubuntu-22.04
-            bazelversion: last_rc
+            bazelversion: latest
             folder: "."
           - os: windows-2022
             bazelversion: 6.5.0
