@@ -13,3 +13,4 @@ jobs:
     uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@v7
     with:
       release_files: with_cfg.bzl-*.tar.gz
+      prerelease: false
