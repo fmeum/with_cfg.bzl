@@ -139,7 +139,7 @@ def _wrapper(
             tags = ["manual"],
             visibility = ["//visibility:private"],
         ),
-        basename = basename,
+        name_prefix = name,
     )
     rule_info.kind(
         name = original_name,
@@ -192,7 +192,7 @@ def _wrapper(
             **(alias_attrs | common_attrs)
         )
 
-def _process_attrs_for_reset(*, attrs, attrs_to_reset, reset_target, basename):
+def _process_attrs_for_reset(*, attrs, attrs_to_reset, reset_target, name_prefix):
     if not attrs_to_reset:
         return attrs
 
@@ -209,7 +209,7 @@ def _process_attrs_for_reset(*, attrs, attrs_to_reset, reset_target, basename):
             dep = dep,
             label_map = label_map,
             reset_target = reset_target,
-            base_target_name = basename + "__" + attr,
+            name_prefix = name_prefix + "__" + attr,
             mutable_num_calls = mutable_num_calls,
         )
         first_pass_attrs[attr] = map_attr(attr_func, attrs[attr])
@@ -223,7 +223,9 @@ def _process_attrs_for_reset(*, attrs, attrs_to_reset, reset_target, basename):
 
     return second_pass_attrs
 
-def _replace_dep_attr(*, dep, label_map, reset_target, base_target_name, mutable_num_calls):
+def _replace_dep_attr(*, dep, label_map, reset_target, name_prefix, mutable_num_calls):
+    if dep == None:
+        return dep
     if is_list(dep):
         # attr.label_list
         return [
@@ -231,39 +233,39 @@ def _replace_dep_attr(*, dep, label_map, reset_target, base_target_name, mutable
                 label_string = label_string,
                 label_map = label_map,
                 reset_target = reset_target,
-                base_target_name = base_target_name,
+                name_prefix = name_prefix,
                 mutable_num_calls = mutable_num_calls,
             )
             for label_string in dep
         ]
-    elif is_dict(dep):
+    if is_dict(dep):
         # attr.label_keyed_string_dict (only the keys represent deps)
         return {
             _replace_single_dep(
                 label_string = label_string,
                 label_map = label_map,
                 reset_target = reset_target,
-                base_target_name = base_target_name,
+                name_prefix = name_prefix,
                 mutable_num_calls = mutable_num_calls,
             ): v
             for label_string, v in dep.items()
         }
-    else:
-        # attr.label
-        return _replace_single_dep(
-            label_string = dep,
-            label_map = label_map,
-            reset_target = reset_target,
-            base_target_name = base_target_name,
-            mutable_num_calls = mutable_num_calls,
-        )
+
+    # attr.label
+    return _replace_single_dep(
+        label_string = dep,
+        label_map = label_map,
+        reset_target = reset_target,
+        name_prefix = name_prefix,
+        mutable_num_calls = mutable_num_calls,
+    )
 
 def _replace_single_dep(
         *,
         label_string,
         label_map,
         reset_target,
-        base_target_name,
+        name_prefix,
         mutable_num_calls):
     use_label = is_label(label_string)
     if not use_label and not is_string(label_string):
@@ -273,7 +275,7 @@ def _replace_single_dep(
         target_label_string = label_map[label]
     else:
         # Multiple targets can be referenced in a single logical dep if that dep is a select.
-        target_name = base_target_name + "_" + str(mutable_num_calls[0])
+        target_name = name_prefix + "_" + str(mutable_num_calls[0])
         reset_target(
             name = target_name,
             exports = label,

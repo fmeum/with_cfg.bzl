@@ -130,10 +130,12 @@ def with_cfg(
     )
     return make_builder(rule_info)
 
-def get_rule_name(rule_or_macro):
-    s = str(rule_or_macro)
+def get_rule_name(kind):
+    s = str(kind)
     if s.startswith("<rule "):
         return s.removeprefix("<rule ").removesuffix(">")
+    elif s.startswith("<macro "):
+        return s.removeprefix("<macro ").removesuffix(">")
     elif s.startswith("<built-in rule "):
         return s.removeprefix("<built-in rule ").removesuffix(">")
     elif s.startswith("<function "):
@@ -150,8 +152,8 @@ def is_test(rule_name):
     # shouldn't become configurable.
     return rule_name.endswith("_test") or rule_name == "go_test_macro"
 
-def _is_native(rule_or_macro):
-    return str(rule_or_macro).startswith("<built-in rule ")
+def _is_native(kind):
+    return str(kind).startswith("<built-in rule ")
 
 def get_implicit_targets(rule_name):
     return IMPLICIT_TARGETS.get(rule_name, [])
