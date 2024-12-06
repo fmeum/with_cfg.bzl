@@ -5,7 +5,7 @@ load("@rules_proto//proto:proto_lang_toolchain.bzl", "proto_lang_toolchain")
 
 stardoc_with_diff_test(
     name = "defs",
-    bzl_library_target = "//with_cfg:defs",
+    bzl_library_target = "//:with_cfg",
 )
 
 update_docs(name = "update")

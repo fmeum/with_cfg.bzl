@@ -127,6 +127,7 @@ def with_cfg(
         implicit_targets = implicit_targets,
         providers = DEFAULT_PROVIDERS + extra_providers,
         native = _is_native(kind),
+        supports_inheritance = _supports_inheritance(kind),
     )
     return make_builder(rule_info)
 
@@ -154,6 +155,10 @@ def is_test(rule_name):
 
 def _is_native(kind):
     return str(kind).startswith("<built-in rule ")
+
+def _supports_inheritance(kind):
+    # Legacy macros don't support inheritance.
+    return not str(kind).startswith("<function ")
 
 def get_implicit_targets(rule_name):
     return IMPLICIT_TARGETS.get(rule_name, [])

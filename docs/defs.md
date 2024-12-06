@@ -7,6 +7,8 @@
 ## original_settings
 
 <pre>
+load("@with_cfg.bzl", "original_settings")
+
 original_settings(<a href="#original_settings-name">name</a>)
 </pre>
 
@@ -53,6 +55,8 @@ original_settings(
 ## with_cfg
 
 <pre>
+load("@with_cfg.bzl", "with_cfg")
+
 with_cfg(<a href="#with_cfg-kind">kind</a>, <a href="#with_cfg-executable">executable</a>, <a href="#with_cfg-implicit_targets">implicit_targets</a>, <a href="#with_cfg-extra_providers">extra_providers</a>)
 </pre>
 
