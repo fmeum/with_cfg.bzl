@@ -23,6 +23,7 @@ second_builder = _first_builder.clone()
 
 # Demonstrate that the builder does not capture mutable values by reference.
 _first_builder_copt_default[0] = "-DC_VALUE=\"unexpected\""
+
 # Demonstrate that clone() does not share mutable state with the original builder.
 second_builder.set(
     "cxxopt",

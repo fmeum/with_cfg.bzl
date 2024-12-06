@@ -2,13 +2,13 @@ cc_library(
     name = "lib",
     srcs = ["lib.cpp"],
     hdrs = ["lib.h"],
-    visibility = ["//dynamic_deps:__pkg__"],
     tags = ["manual"],
+    visibility = ["//dynamic_deps:__pkg__"],
 )
 
 cc_shared_library(
     name = "shared",
-    deps = [":lib"],
-    visibility = ["//dynamic_deps:__pkg__"],
     tags = ["manual"],
+    visibility = ["//dynamic_deps:__pkg__"],
+    deps = [":lib"],
 )

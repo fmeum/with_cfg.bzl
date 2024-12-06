@@ -224,6 +224,8 @@ def _process_attrs_for_reset(*, attrs, attrs_to_reset, reset_target, basename):
     return second_pass_attrs
 
 def _replace_dep_attr(*, dep, label_map, reset_target, base_target_name, mutable_num_calls):
+    if dep == None:
+        return dep
     if is_list(dep):
         # attr.label_list
         return [
@@ -236,7 +238,7 @@ def _replace_dep_attr(*, dep, label_map, reset_target, base_target_name, mutable
             )
             for label_string in dep
         ]
-    elif is_dict(dep):
+    if is_dict(dep):
         # attr.label_keyed_string_dict (only the keys represent deps)
         return {
             _replace_single_dep(
@@ -248,15 +250,15 @@ def _replace_dep_attr(*, dep, label_map, reset_target, base_target_name, mutable
             ): v
             for label_string, v in dep.items()
         }
-    else:
-        # attr.label
-        return _replace_single_dep(
-            label_string = dep,
-            label_map = label_map,
-            reset_target = reset_target,
-            base_target_name = base_target_name,
-            mutable_num_calls = mutable_num_calls,
-        )
+
+    # attr.label
+    return _replace_single_dep(
+        label_string = dep,
+        label_map = label_map,
+        reset_target = reset_target,
+        base_target_name = base_target_name,
+        mutable_num_calls = mutable_num_calls,
+    )
 
 def _replace_single_dep(
         *,

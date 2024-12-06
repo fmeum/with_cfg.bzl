@@ -1,3 +1,4 @@
+load("@bazel_features//:features.bzl", "bazel_features")
 load("//dynamic_deps/rules:runfiles_dir.bzl", "runfiles_dir")
 load(":cc_define_binary.bzl", "cc_define_binary")
 
@@ -29,18 +30,16 @@ sh_test(
         "//conditions:default": ["$(rlocationpath :bin_runfiles)/bin"],
     }),
     data = [":bin_runfiles"],
-    deps = ["@bazel_tools//tools/bash/runfiles"],
     target_compatible_with = select({
         # TODO: Get this test to pass on Windows.
         "@platforms//os:windows": ["@platforms//:incompatible"],
-        # TODO: Reenable on macOS after:
-        # 1. Bazel is released with the fix in https://github.com/bazelbuild/bazel/pull/23089.
-        # 2. Enabling --incompatible_macos_set_install_name.
-        # 3. Adding a dep on apple_support, as the default Unix toolchain only supports this flag
-        #    after https://github.com/bazelbuild/bazel/pull/23090.
-        "@platforms//os:macos": ["@platforms//:incompatible"],
+        # Requires https://github.com/bazelbuild/bazel/pull/23089 and the flip
+        # of --incompatible_macos_set_install_name on macOS. Use a feature
+        # introduced in Bazel 8 as a proxy for the fix.
+        "@platforms//os:macos": [] if bazel_features.rules.rule_extension_apis_available else ["@platforms//:incompatible"],
         "//conditions:default": [],
     }),
+    deps = ["@bazel_tools//tools/bash/runfiles"],
 )
 
 sh_test(
