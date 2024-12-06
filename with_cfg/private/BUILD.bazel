@@ -153,5 +153,6 @@ bzl_library(
         ":select",
         ":setting",
         ":utils",
+        "@bazel_features//:features",
     ],
 )
