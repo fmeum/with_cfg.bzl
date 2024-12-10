@@ -16,7 +16,7 @@ bazel_dep(name = "rules_testing", version = "0.4.0", dev_dependency = True)
 bazel_dep(name = "rules_java", version = "7.6.1", dev_dependency = True)
 bazel_dep(name = "rules_proto", version = "6.0.0", dev_dependency = True)
 bazel_dep(name = "stardoc", version = "0.7.2", dev_dependency = True)
-bazel_dep(name = "toolchains_protoc", version = "0.3.0", dev_dependency = True)
+bazel_dep(name = "toolchains_protoc", version = "0.3.6", dev_dependency = True)
 
 protoc = use_extension(
     "@toolchains_protoc//protoc:extensions.bzl",

@@ -9,7 +9,7 @@
 <pre>
 load("@with_cfg.bzl", "original_settings")
 
-original_settings(<a href="#original_settings-name">name</a>)
+original_settings(*, <a href="#original_settings-name">name</a>)
 </pre>
 
 Stores the original settings modified by a "resettable" rule constructed with `with_cfg`.
@@ -57,7 +57,7 @@ original_settings(
 <pre>
 load("@with_cfg.bzl", "with_cfg")
 
-with_cfg(<a href="#with_cfg-kind">kind</a>, <a href="#with_cfg-executable">executable</a>, <a href="#with_cfg-implicit_targets">implicit_targets</a>, <a href="#with_cfg-extra_providers">extra_providers</a>)
+with_cfg(<a href="#with_cfg-kind">kind</a>, *, <a href="#with_cfg-executable">executable</a>, <a href="#with_cfg-implicit_targets">implicit_targets</a>, <a href="#with_cfg-extra_providers">extra_providers</a>)
 </pre>
 
 Creates a new rule out of an existing one with modified Bazel flags or build settings.
