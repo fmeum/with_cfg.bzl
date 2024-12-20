@@ -17,6 +17,10 @@ using bazel::tools::cpp::runfiles::Runfiles;
 #endif
 
 int main(int argc, char** argv) {
+  if (std::string(NAME) != "with_cfg") {
+    std::cerr << "NAME is not set to 'with_cfg'" << std::endl;
+    return 1;
+  }
   if (std::string(std::getenv("MY_VAR")) != "my_value") {
     std::cerr << "MY_VAR is not set to 'my_value'" << std::endl;
     return 1;
