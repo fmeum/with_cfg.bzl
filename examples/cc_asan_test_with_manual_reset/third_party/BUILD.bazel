@@ -3,5 +3,5 @@
 cc_library(
     name = "large_dep",
     srcs = ["large_dep.cpp"],
-    visibility = ["//cc_asan_test_with_reset:__pkg__"],
+    visibility = ["//cc_asan_test_with_manual_reset:__pkg__"],
 )

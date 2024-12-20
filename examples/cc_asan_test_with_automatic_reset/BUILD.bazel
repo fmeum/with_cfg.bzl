@@ -44,7 +44,7 @@ cc_library(
 # original top-level settings, that is, without AddressSanitizer.
 cc_asan_test_reset(
     name = "large_dep_reset",
-    exports = "//cc_asan_test_with_reset/third_party:large_dep",
+    exports = "//cc_asan_test_with_automatic_reset/third_party:large_dep",
 )
 
 original_settings(

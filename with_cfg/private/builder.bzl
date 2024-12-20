@@ -1,3 +1,5 @@
+load("@bazel_features//:features.bzl", "bazel_features")
+load(":extend.bzl", "make_transitioned_rule")
 load(":frontend.bzl", "get_frontend")
 load(":select.bzl", "map_attr")
 load(":setting.bzl", "validate_and_get_attr_name")
@@ -85,6 +87,24 @@ def _build(*, rule_info, values, operations, mutable_has_been_built, mutable_ori
         operations = operations,
         original_settings_label = original_settings_label,
     )
+
+    # Resetting attributes is not yet supported with the extended rule approach.
+    if bazel_features.rules.rule_extension_apis_available and rule_info.supports_extension and not attrs_to_reset:
+        transitioned_rule = make_transitioned_rule(
+            rule_info = rule_info,
+            transition = transition,
+            values = values,
+        )
+        if original_settings_label:
+            transitioning_alias = make_transitioning_alias(
+                providers = rule_info.providers,
+                transition = transition,
+                values = values,
+                original_settings_label = original_settings_label,
+            )
+            return transitioned_rule, transitioning_alias
+        return transitioned_rule, None
+
     transitioning_alias = make_transitioning_alias(
         providers = rule_info.providers,
         transition = transition,

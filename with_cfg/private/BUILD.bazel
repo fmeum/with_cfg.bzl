@@ -44,6 +44,15 @@ bzl_library(
 )
 
 bzl_library(
+    name = "extend",
+    srcs = ["extend.bzl"],
+    visibility = ["//with_cfg:__subpackages__"],
+    deps = [
+        ":setting",
+    ],
+)
+
+bzl_library(
     name = "frontend",
     srcs = ["frontend.bzl"],
     visibility = ["//with_cfg:__subpackages__"],
@@ -138,6 +147,7 @@ bzl_library(
     visibility = ["//with_cfg:__subpackages__"],
     deps = [
         ":builder",
+        ":extend",
         ":providers",
         ":rule_defaults",
     ],

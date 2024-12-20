@@ -1,4 +1,4 @@
-#include "cc_asan_test_with_reset/lib.h"
+#include "cc_asan_test_with_manual_reset/lib.h"
 
 #include <iostream>
 
