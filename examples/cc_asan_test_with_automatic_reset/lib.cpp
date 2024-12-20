@@ -1,4 +1,4 @@
-#include "cc_asan_test_with_reset/lib.h"
+#include "cc_asan_test_with_automatic_reset/lib.h"
 
 int trigger_asan() {
   int* array = new int[100] {};

@@ -9,6 +9,7 @@ RuleInfo = provider(fields = [
     "kind",
     "native",
     "providers",
+    "supports_extension",
     "supports_inheritance",
     "test",
 ])

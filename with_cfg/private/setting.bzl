@@ -42,11 +42,11 @@ def validate_and_get_attr_name(setting):
             fail("Custom build settings can only be referenced via Labels, did you mean Label({})?".format(repr(stripped_setting)))
         if setting.startswith("-"):
             fail("\"{}\" is not a valid setting, did you mean \"{}\"?".format(setting, stripped_setting))
-        if setting == "features":
-            # features is a special case as it is both a command-line option (--features) and a
-            # special attribute on all rules. Avoids "built-in attributes cannot be overridden".
-            return "features_attr"
-        return setting
+
+        # Avoid collisions with existing attributes in two cases:
+        # 1. The setting is `features`, which is also an attribute common to all rules.
+        # 2. Rule extensions are used and the extended rule has an attribute with the same name.
+        return "with_cfg_" + setting
     else:
         fail("Expected setting to be a Label or a string, got: {} ({})".format(repr(setting), type(setting)))
 

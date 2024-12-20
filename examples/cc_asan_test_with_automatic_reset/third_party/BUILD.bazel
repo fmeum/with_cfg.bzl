@@ -1,0 +1,7 @@
+# This is a mock of a large third-party dependency that should not be built with
+# AddressSanitizer to reduce build time.
+cc_library(
+    name = "large_dep",
+    srcs = ["large_dep.cpp"],
+    visibility = ["//cc_asan_test_with_automatic_reset:__pkg__"],
+)

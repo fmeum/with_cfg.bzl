@@ -62,7 +62,7 @@ def _get_attr_type_test(env):
         env.expect.where(value = value).that_str(get_attr_type(value)).equals(expected_type)
 
 def _get_attr_name_test(env):
-    env.expect.that_str(validate_and_get_attr_name("platforms")).equals("platforms")
+    env.expect.that_str(validate_and_get_attr_name("platforms")).contains("platforms")
 
     some_setting_subject = env.expect.that_str(validate_and_get_attr_name(Label("@bazel_tools//:some_setting")))
     some_setting_subject.contains("some_setting")

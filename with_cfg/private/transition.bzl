@@ -26,7 +26,9 @@ def _make_transition_impl(*, operations, original_settings_label):
     )
 
 def _transition_base_impl(settings, attr, *, operations, original_settings_label):
-    if original_settings_label and attr.internal_only_reset:
+    # internal_only_reset may be missing if this transition is attached to an extended rule rather
+    # than a transitioning alias.
+    if original_settings_label and getattr(attr, "internal_only_reset", False):
         original_settings = settings[str(original_settings_label)]
         if original_settings:
             # The reset rule is used in the transitive closure of the transitioning rule. Reset the
