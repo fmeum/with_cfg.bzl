@@ -1,6 +1,6 @@
 load(":builder.bzl", "make_builder")
 load(":providers.bzl", "RuleInfo")
-load(":rule_defaults.bzl", "DEFAULT_PROVIDERS", "IMPLICIT_TARGETS")
+load(":rule_defaults.bzl", "DEFAULT_PROVIDERS", "IMPLICIT_TARGETS", "SPECIAL_CASED_PROVIDERS")
 
 visibility("//with_cfg/...")
 
@@ -125,7 +125,7 @@ def with_cfg(
         executable = executable,
         test = test,
         implicit_targets = implicit_targets,
-        providers = DEFAULT_PROVIDERS + extra_providers,
+        providers = _all_providers(extra_providers),
         native = _is_native(kind),
         supports_inheritance = _supports_inheritance(kind),
         supports_extension = _supports_extension(kind),
@@ -174,3 +174,15 @@ def _supports_extension(kind):
 
 def get_implicit_targets(rule_name):
     return IMPLICIT_TARGETS.get(rule_name, [])
+
+def _all_providers(extra_providers):
+    if not extra_providers:
+        return DEFAULT_PROVIDERS
+    all_providers = list(DEFAULT_PROVIDERS)
+
+    # Providers aren't hashable.
+    # TODO: Improve this after https://github.com/bazelbuild/bazel/pull/24848.
+    for p in extra_providers:
+        if p not in all_providers and p not in SPECIAL_CASED_PROVIDERS:
+            all_providers.append(p)
+    return all_providers

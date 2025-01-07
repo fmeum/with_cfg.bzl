@@ -1,6 +1,10 @@
 load("@with_cfg.bzl", "with_cfg")
 
-_builder = with_cfg(native.cc_test)
+_builder = with_cfg(
+    native.cc_test,
+    # Verify that duplicated providers are handled gracefully.
+    extra_providers = [DefaultInfo, CcInfo],
+)
 _builder.extend(
     "copt",
     select({

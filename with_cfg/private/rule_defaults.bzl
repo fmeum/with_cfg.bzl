@@ -1,8 +1,15 @@
 visibility("private")
 
-DEFAULT_PROVIDERS = [
+SPECIAL_CASED_PROVIDERS = [
+    DefaultInfo,
+    # Forwarding is handled by coverage_common.instrumented_files_info.
+    InstrumentedFilesInfo,
     # RunEnvironmentInfo can't be returned from a non-executable, non-test rule and thus requires
     # special handling so that it isn't returned by the transitioning alias.
+    RunEnvironmentInfo,
+]
+
+DEFAULT_PROVIDERS = [
     AnalysisTestResultInfo,
     CcInfo,
     CcToolchainConfigInfo,
