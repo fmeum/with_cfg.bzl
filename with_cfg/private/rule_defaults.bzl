@@ -1,3 +1,5 @@
+load("@bazel_features//:features.bzl", "bazel_features")
+
 visibility("private")
 
 SPECIAL_CASED_PROVIDERS = [
@@ -10,24 +12,28 @@ SPECIAL_CASED_PROVIDERS = [
 ]
 
 DEFAULT_PROVIDERS = [
-    AnalysisTestResultInfo,
-    CcInfo,
-    CcToolchainConfigInfo,
-    DebugPackageInfo,
-    JavaInfo,
-    JavaPluginInfo,
-    OutputGroupInfo,
-    PyInfo,
-    PyRuntimeInfo,
-    apple_common.Objc,
-    apple_common.XcodeProperties,
-    apple_common.XcodeVersionConfig,
-    config_common.FeatureFlagInfo,
-    java_common.BootClassPathInfo,
-    java_common.JavaRuntimeInfo,
-    java_common.JavaToolchainInfo,
-    platform_common.TemplateVariableInfo,
-    platform_common.ToolchainInfo,
+    p
+    for p in [
+        AnalysisTestResultInfo,
+        CcInfo,
+        CcToolchainConfigInfo,
+        DebugPackageInfo,
+        JavaInfo,
+        JavaPluginInfo,
+        OutputGroupInfo,
+        bazel_features.globals.PyInfo,
+        bazel_features.globals.PyRuntimeInfo,
+        apple_common.Objc,
+        apple_common.XcodeProperties,
+        apple_common.XcodeVersionConfig,
+        config_common.FeatureFlagInfo,
+        java_common.BootClassPathInfo,
+        java_common.JavaRuntimeInfo,
+        java_common.JavaToolchainInfo,
+        platform_common.TemplateVariableInfo,
+        platform_common.ToolchainInfo,
+    ]
+    if p
 ]
 
 IMPLICIT_TARGETS = {
