@@ -1,3 +1,4 @@
+load("@bazel_features//:features.bzl", "bazel_features")
 load(":builder.bzl", "make_builder")
 load(":providers.bzl", "RuleInfo")
 load(":rule_defaults.bzl", "DEFAULT_PROVIDERS", "IMPLICIT_TARGETS", "SPECIAL_CASED_PROVIDERS")
@@ -166,7 +167,7 @@ _NOT_EXTENDABLE = [
     # keep sorted
     "cc_binary",
     "cc_test",
-]
+] if not bazel_features.cc.rules_support_extension else []
 
 def _supports_extension(kind):
     kind_str = str(kind)
