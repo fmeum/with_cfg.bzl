@@ -25,14 +25,14 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, macos-14, windows-2022]
-        bazelversion: [6.5.0, 7.4.1, latest, last_green]
+        bazelversion: [6.x, 7.x, 8.x, last_green]
         folder: [examples]
         include:
           - os: ubuntu-22.04
-            bazelversion: latest
+            bazelversion: 8.x
             folder: "."
           - os: windows-2022
-            bazelversion: 6.5.0
+            bazelversion: 6.x
             test_args: "-- -//sh:test -//args_location_expansion:doubly_transitioned_test"
 
     steps:
