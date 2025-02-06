@@ -143,6 +143,7 @@ def _wrapper(
         reset_target = lambda *, name, exports: transitioning_alias(
             name = name,
             exports = exports,
+            testonly = common_attrs.get("testonly", False),
             tags = ["manual"],
             visibility = ["//visibility:private"],
         ),
