@@ -45,8 +45,6 @@ java_library(
     testonly = True,
 )
 
-# Note that this test cannot be run. It is only here to demonstrate the
-# `testonly` dependency.
 java_21_test(
     name = "tests",
     srcs = ["src/test/java/com/example/LegacyIllegalArgumentExceptionTest.java"],
