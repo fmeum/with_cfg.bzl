@@ -49,8 +49,8 @@ java_library(
 # `testonly` dependency.
 java_21_test(
     name = "tests",
-    srcs = ["src/test/java/com/example/IntegerTypeTest.java"],
-    test_class = "com.example.IntegerTypeTest",
+    srcs = ["src/test/java/com/example/LegacyIllegalArgumentExceptionTest.java"],
+    test_class = "com.example.LegacyIllegalArgumentExceptionTest",
     deps = [":testonly_legacy_lib"],
 )
 
