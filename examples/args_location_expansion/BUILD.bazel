@@ -20,7 +20,7 @@ doubly_transitioned_test(
         "$(rlocationpaths //args_location_expansion/pkg:multiple_rules)",
         "$(rlocationpath alias_target)",
         "$(rlocationpath :alias_target)",
-        "$(rlocationpath @bazel_tools//tools/bash/runfiles)",
+        "$(rlocationpath @bazel_tools//tools/test:collect_coverage)",
         "_main/$(rootpath :single_rule)",
         "_main/$(location :single_rule)",
     ] + select({
@@ -36,7 +36,7 @@ doubly_transitioned_test(
         ":single_rule",
         ":source_file.txt",
         "//args_location_expansion/pkg:multiple_rules",
-        "@bazel_tools//tools/bash/runfiles",
+        "@bazel_tools//tools/test:collect_coverage",
     ] + select({
         "@platforms//os:linux": ["//args_location_expansion/pkg:linux_only_rule"],
         "//conditions:default": ["//args_location_expansion/pkg:generic_rule"],
