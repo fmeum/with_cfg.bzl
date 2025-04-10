@@ -2,6 +2,8 @@
 
 This Starlark library makes it easy to create new rules that are variants of existing rules with modified [Bazel settings](https://bazel.build/reference/command-line-reference), applied to both the rule itself and its (transitive) dependencies via [transitions](https://bazel.build/extending/config#user-defined-transitions).
 
+[Talk "with_cfg.bzl: Making transitions more accessible"](https://youtube.com/watch?v=U5bdQRQY-io&list=PLxNYxgaZ8Rsefrwb_ySGRi_bvQejpO_Tj&index=14&pp=iAQB)
+
 ## Setup
 
 Add the following to your `MODULE.bazel` file, substituting `...` with the latest release version:
