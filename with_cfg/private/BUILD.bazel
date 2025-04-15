@@ -96,6 +96,9 @@ bzl_library(
     name = "rule_defaults",
     srcs = ["rule_defaults.bzl"],
     visibility = ["//with_cfg:__subpackages__"],
+    deps = [
+        "@rules_java//java/common",
+    ],
 )
 
 bzl_library(

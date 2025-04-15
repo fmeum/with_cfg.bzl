@@ -1,3 +1,4 @@
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("//args_location_expansion/rules:defs.bzl", "write_settings_rule")
 load(":doubly_transitioned_test.bzl", "doubly_transitioned_test")
 
