@@ -1,3 +1,5 @@
+load("@rules_java//java:java_binary.bzl", "java_binary")
+load("@rules_java//java:java_library.bzl", "java_library")
 load("@with_cfg.bzl", "original_settings")
 load(":java_21_library.bzl", "java_21_library", "java_21_library_reset", "java_21_test")
 
@@ -41,8 +43,8 @@ java_library(
 
 java_library(
     name = "testonly_legacy_lib",
-    srcs = ["src/main/java/com/example/LegacyIllegalArgumentException.java"],
     testonly = True,
+    srcs = ["src/main/java/com/example/LegacyIllegalArgumentException.java"],
 )
 
 java_21_test(

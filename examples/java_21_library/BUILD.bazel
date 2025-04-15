@@ -1,3 +1,4 @@
+load("@rules_java//java:java_binary.bzl", "java_binary")
 load(":java_21_library.bzl", "java_21_library")
 
 java_binary(
