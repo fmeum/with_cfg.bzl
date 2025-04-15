@@ -1,0 +1,13 @@
+load("//helpers:defs.bzl", "untransitioned_target")
+load(":cc_no_copt_binary.bzl", "cc_no_copt_binary")
+
+cc_no_copt_binary(
+    name = "binary",
+    srcs = ["binary.cc"],
+    # Verify that the transition is a no-op.
+    data = [":data_target"],
+)
+
+untransitioned_target(
+    name = "data_target",
+)

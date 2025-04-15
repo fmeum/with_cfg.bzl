@@ -59,10 +59,15 @@ def get_attr_type(attr):
 
     map_attr(update_type, attr)
     if not mutable_attr_type[0]:
-        fail("Failed to determine type of attribute '{}'".format(attr))
+        # This can happen if all values are empty lists, None, or if there are
+        # no values at all. Each of these cases is supported by a string_list.
+        return "string_list"
     return mutable_attr_type[0]
 
 def _get_type_as_attr_type(value):
+    if value == None:
+        return None
+
     suffix = ""
     if is_list(value):
         if not value:
