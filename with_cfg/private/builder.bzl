@@ -126,6 +126,22 @@ def _build(*, rule_info, values, operations, mutable_has_been_built, mutable_ori
 
     return wrapper, transitioning_alias
 
+_Op = provider(
+    fields = [
+        "type",
+        "attr",
+        "attr_name",
+        "transform",
+    ],
+)
+
+_EXTEND_OP = _Op(
+    type = "extend",
+    attr = None,
+    attr_name = None,
+    transform = lambda x: x,
+)
+
 def _extend(setting, value, *, self, values, operations, mutable_has_been_built, overrides_allowed):
     if mutable_has_been_built[0]:
         fail("extend() can only be called before build()")
@@ -139,8 +155,15 @@ def _extend(setting, value, *, self, values, operations, mutable_has_been_built,
     # Make a deep copy so that subsequent modification doesn't affect the builder state.
     # This improves readability but is also necessary for clone() to work correctly.
     values[setting] = map_attr(_clone_value_deeply, value)
-    operations[setting] = "extend"
+    operations[setting] = _EXTEND_OP
     return self
+
+_SET_OP = _Op(
+    type = "set",
+    attr = None,
+    attr_name = None,
+    transform = lambda x: x,
+)
 
 def _set(setting, value, *, self, values, operations, mutable_has_been_built, overrides_allowed):
     if mutable_has_been_built[0]:
@@ -155,7 +178,7 @@ def _set(setting, value, *, self, values, operations, mutable_has_been_built, ov
     # Make a deep copy so that subsequent modification doesn't affect the builder state.
     # This improves readability but is also necessary for clone() to work correctly.
     values[setting] = map_attr(_clone_value_deeply, value)
-    operations[setting] = "set"
+    operations[setting] = _SET_OP
     return self
 
 def _resettable(label, *, self, mutable_original_settings_label, mutable_has_been_built):

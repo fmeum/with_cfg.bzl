@@ -42,22 +42,23 @@ def _transition_base_impl(settings, attr, *, operations, original_settings_label
 
     new_settings = {}
     for setting, operation in operations.items():
-        attr_name = validate_and_get_attr_name(setting)
+        attr_name = operation.attr_name or validate_and_get_attr_name(setting)
         key = _get_settings_key(setting)
-        if operation == "set":
+        type = operation.type
+        if type == "set":
             # Always idempotent.
-            new_settings[key] = getattr(attr, attr_name)
-        elif operation == "extend":
+            new_settings[key] = operation.transform(getattr(attr, attr_name))
+        elif type == "extend":
             # Ensure idempotency by appending the tail only when the list-valued setting doesn't
             # already has the tail. This ensures that chaining transitioned rules doesn't result in
             # a blow-up of the list.
-            tail = getattr(attr, attr_name)
+            tail = operation.transform(getattr(attr, attr_name))
             if settings[key][-len(tail):] == tail:
                 new_settings[key] = settings[key]
             else:
                 new_settings[key] = settings[key] + tail
         else:
-            fail("Unknown operation: {}".format(operation))
+            fail("Unknown operation type: {}".format(type))
 
     if original_settings_label:
         original_settings_label_str = str(original_settings_label)
