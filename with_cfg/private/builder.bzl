@@ -50,6 +50,17 @@ def _make_builder(rule_info, *, values = {}, operations = {}):
             mutable_has_been_built = mutable_has_been_built,
             overrides_allowed = overrides_allowed,
         ),
+        set_to_attr = lambda setting, attr, *, attr_name = None, transform = lambda x: x: _set_to_attr(
+            setting,
+            attr,
+            attr_name = attr_name,
+            transform = transform,
+            self = self,
+            values = values,
+            operations = operations,
+            mutable_has_been_built = mutable_has_been_built,
+            overrides_allowed = overrides_allowed,
+        ),
         resettable = lambda label: _resettable(
             label,
             self = self,
@@ -179,6 +190,24 @@ def _set(setting, value, *, self, values, operations, mutable_has_been_built, ov
     # This improves readability but is also necessary for clone() to work correctly.
     values[setting] = map_attr(_clone_value_deeply, value)
     operations[setting] = _SET_OP
+    return self
+
+def _set_to_attr(setting, attr, *, attr_name, transform, self, values, operations, mutable_has_been_built, overrides_allowed):
+    if mutable_has_been_built[0]:
+        fail("set_to_attr() can only be called before build()")
+    if setting in values:
+        if setting in overrides_allowed:
+            overrides_allowed.pop(setting)
+        else:
+            fail("Cannot set setting '{}' because it has already been added to this builder (consider using clone())".format(setting))
+
+    values[setting] = None
+    operations[setting] = _Op(
+        type = "set",
+        attr = attr,
+        attr_name = attr_name,
+        transform = transform,
+    )
     return self
 
 def _resettable(label, *, self, mutable_original_settings_label, mutable_has_been_built):

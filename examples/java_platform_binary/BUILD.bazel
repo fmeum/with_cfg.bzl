@@ -1,0 +1,15 @@
+load(":java_platform_binary.bzl", "java_platform_binary")
+
+java_platform_binary(
+    name = "Main",
+    srcs = ["src/main/java/com/example/Main.java"],
+    target_platform = ":macos",
+)
+
+platform(
+    name = "macos",
+    constraint_values = [
+        "@platforms//cpu:macos",
+        "@platforms//os:x86_64",
+    ],
+)
