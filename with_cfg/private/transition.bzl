@@ -1,4 +1,4 @@
-load(":setting.bzl", "validate_and_get_attr_name")
+load(":setting.bzl", "validate_and_get_internal_attr_name")
 load(":utils.bzl", "is_label", "is_string")
 
 visibility("private")
@@ -42,7 +42,7 @@ def _transition_base_impl(settings, attr, *, operations, original_settings_label
 
     new_settings = {}
     for setting, operation in operations.items():
-        attr_name = operation.attr_name or validate_and_get_attr_name(setting)
+        attr_name = operation.attr_name if operation.attr_name != None else validate_and_get_internal_attr_name(setting)
         key = _get_settings_key(setting)
         type = operation.type
         if type == "set":

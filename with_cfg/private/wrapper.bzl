@@ -2,7 +2,7 @@ load("@bazel_features//:features.bzl", "bazel_features")
 load(":args.bzl", "rewrite_args")
 load(":rewrite.bzl", "make_label_rewriter", "rewrite_locations_in_attr")
 load(":select.bzl", "map_attr")
-load(":setting.bzl", "validate_and_get_attr_name")
+load(":setting.bzl", "validate_and_get_internal_attr_name")
 load(":utils.bzl", "is_dict", "is_label", "is_list", "is_string")
 
 visibility("private")
@@ -157,7 +157,7 @@ def _wrapper(
     )
 
     alias_attrs = {
-        validate_and_get_attr_name(setting): value
+        validate_and_get_internal_attr_name(setting): value
         for setting, value in values.items()
     }
     if original_settings_label:

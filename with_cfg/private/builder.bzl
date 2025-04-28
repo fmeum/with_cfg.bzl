@@ -2,7 +2,7 @@ load("@bazel_features//:features.bzl", "bazel_features")
 load(":extend.bzl", "make_transitioned_rule")
 load(":frontend.bzl", "get_frontend")
 load(":select.bzl", "map_attr")
-load(":setting.bzl", "validate_and_get_attr_name")
+load(":setting.bzl", "validate_and_get_internal_attr_name")
 load(":transition.bzl", "make_transition")
 load(":transitioning_alias.bzl", "make_transitioning_alias")
 load(":utils.bzl", "is_label", "is_list")
@@ -50,7 +50,7 @@ def _make_builder(rule_info, *, values = {}, operations = {}):
             mutable_has_been_built = mutable_has_been_built,
             overrides_allowed = overrides_allowed,
         ),
-        set_to_attr = lambda setting, attr, *, attr_name = None, transform = lambda x: x: _set_to_attr(
+        set_by_attr = lambda setting, attr, *, attr_name = None, transform = lambda x: x: _set_by_attr(
             setting,
             attr,
             attr_name = attr_name,
@@ -104,12 +104,14 @@ def _build(*, rule_info, values, operations, mutable_has_been_built, mutable_ori
         transitioned_rule = make_transitioned_rule(
             rule_info = rule_info,
             transition = transition,
+            operations = operations,
             values = values,
         )
         if original_settings_label:
             transitioning_alias = make_transitioning_alias(
                 providers = rule_info.providers,
                 transition = transition,
+                operations = operations,
                 values = values,
                 original_settings_label = original_settings_label,
             )
@@ -119,6 +121,7 @@ def _build(*, rule_info, values, operations, mutable_has_been_built, mutable_ori
     transitioning_alias = make_transitioning_alias(
         providers = rule_info.providers,
         transition = transition,
+        operations = operations,
         values = values,
         original_settings_label = original_settings_label,
     )
@@ -156,8 +159,8 @@ _EXTEND_OP = _Op(
 def _extend(setting, value, *, self, values, operations, mutable_has_been_built, overrides_allowed):
     if mutable_has_been_built[0]:
         fail("extend() can only be called before build()")
-    validate_and_get_attr_name(setting)
-    if setting in values:
+    validate_and_get_internal_attr_name(setting)
+    if setting in operations:
         if setting in overrides_allowed:
             overrides_allowed.pop(setting)
         else:
@@ -179,8 +182,8 @@ _SET_OP = _Op(
 def _set(setting, value, *, self, values, operations, mutable_has_been_built, overrides_allowed):
     if mutable_has_been_built[0]:
         fail("set() can only be called before build()")
-    validate_and_get_attr_name(setting)
-    if setting in values:
+    validate_and_get_internal_attr_name(setting)
+    if setting in operations:
         if setting in overrides_allowed:
             overrides_allowed.pop(setting)
         else:
@@ -192,16 +195,16 @@ def _set(setting, value, *, self, values, operations, mutable_has_been_built, ov
     operations[setting] = _SET_OP
     return self
 
-def _set_to_attr(setting, attr, *, attr_name, transform, self, values, operations, mutable_has_been_built, overrides_allowed):
+def _set_by_attr(setting, attr, *, attr_name, transform, self, values, operations, mutable_has_been_built, overrides_allowed):
     if mutable_has_been_built[0]:
-        fail("set_to_attr() can only be called before build()")
-    if setting in values:
+        fail("set_by_attr() can only be called before build()")
+    validate_and_get_internal_attr_name(setting)
+    if setting in operations:
         if setting in overrides_allowed:
             overrides_allowed.pop(setting)
         else:
             fail("Cannot set setting '{}' because it has already been added to this builder (consider using clone())".format(setting))
 
-    values[setting] = None
     operations[setting] = _Op(
         type = "set",
         attr = attr,

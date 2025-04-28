@@ -1,14 +1,10 @@
 load(":args.bzl", "args_aspect")
 load(":providers.bzl", "FrontendInfo", "OriginalSettingsInfo")
-load(":setting.bzl", "get_attr_type", "validate_and_get_attr_name")
+load(":setting.bzl", "get_rule_attrs")
 
 visibility("private")
 
-def make_transitioning_alias(*, providers, transition, values, original_settings_label):
-    settings_attrs = {
-        validate_and_get_attr_name(setting): getattr(attr, get_attr_type(value))()
-        for setting, value in values.items()
-    }
+def make_transitioning_alias(*, providers, transition, operations, values, original_settings_label):
     if original_settings_label:
         resettable_attrs = {
             "internal_only_reset": attr.bool(default = True),
@@ -26,7 +22,7 @@ def make_transitioning_alias(*, providers, transition, values, original_settings
         resettable_attrs = {}
     return rule(
         implementation = _make_transitioning_alias_impl(providers = providers),
-        attrs = settings_attrs | resettable_attrs | {
+        attrs = get_rule_attrs(operations = operations, values = values) | resettable_attrs | {
             # This attribute name is internal only, so it can only help to choose a name that is
             # treated as a dependency attribute by the IntelliJ plugin:
             # https://github.com/bazelbuild/intellij/blob/11acaac819346f74e930c47594f37d81e274efb1/aspect/intellij_info_impl.bzl#L29

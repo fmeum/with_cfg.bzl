@@ -22,7 +22,13 @@ def make_valid_identifier(name):
     # Ensures that the attribute name starts with a letter as it needs to be a valid identifier
     return "s_{}".format(identifier)
 
-def validate_and_get_attr_name(setting):
+def get_rule_attrs(*, operations, values):
+    return {
+        get_default_public_attr_name() if operation.attr else validate_and_get_internal_attr_name(setting): operation.attr or getattr(attr, get_attr_type(values[setting]))()
+        for setting, operation in operations.items()
+    }
+
+def validate_and_get_internal_attr_name(setting):
     if is_label(setting):
         # Trigger an early error if the label refers to an invalid repo name.
         # buildifier: disable=no-effect
@@ -49,6 +55,13 @@ def validate_and_get_attr_name(setting):
         return "with_cfg_" + setting
     else:
         fail("Expected setting to be a Label or a string, got: {} ({})".format(repr(setting), type(setting)))
+
+def get_default_public_attr_name(setting, operation):
+    if operation.attr_name != None:
+        return operation.attr_name
+    if is_label(setting):
+        return setting.name
+    return setting
 
 def get_attr_type(attr):
     mutable_attr_type = [None]

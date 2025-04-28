@@ -1,7 +1,7 @@
 load("@with_cfg.bzl", "with_cfg")
 
 _builder = with_cfg(native.java_binary)
-_builder.set_to_attr(
+_builder.set_by_attr(
     "platforms",
     attr.label(mandatory = True),
     attr_name = "target_platform",
@@ -9,7 +9,7 @@ _builder.set_to_attr(
     # expose that to the user.
     transform = lambda x: [x],
 )
-_builder.set_to_attr(
+_builder.set_by_attr(
     "compilation_mode",
     attr.string(
         values = ["dbg", "fastbuild", "opt"],

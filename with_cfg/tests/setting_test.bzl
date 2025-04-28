@@ -1,5 +1,5 @@
 load("@rules_testing//lib:test_suite.bzl", "test_suite")
-load("//with_cfg/private:setting.bzl", "get_attr_type", "validate_and_get_attr_name")
+load("//with_cfg/private:setting.bzl", "get_attr_type", "validate_and_get_internal_attr_name")
 
 _GET_ATTR_TYPE_TEST_CASES = [
     (True, "bool"),
@@ -62,17 +62,17 @@ def _get_attr_type_test(env):
         env.expect.where(value = value).that_str(get_attr_type(value)).equals(expected_type)
 
 def _get_attr_name_test(env):
-    env.expect.that_str(validate_and_get_attr_name("platforms")).contains("platforms")
+    env.expect.that_str(validate_and_get_internal_attr_name("platforms")).contains("platforms")
 
-    some_setting_subject = env.expect.that_str(validate_and_get_attr_name(Label("@bazel_tools//:some_setting")))
+    some_setting_subject = env.expect.that_str(validate_and_get_internal_attr_name(Label("@bazel_tools//:some_setting")))
     some_setting_subject.contains("some_setting")
-    some_setting_subject.not_equals(validate_and_get_attr_name(Label("@bazel_tools//pkg:some_setting")))
+    some_setting_subject.not_equals(validate_and_get_internal_attr_name(Label("@bazel_tools//pkg:some_setting")))
 
 def _validate_attr_name_test(env):
     for value, name_is_valid, hash_is_valid in _VALIDATE_ATTR_NAME_TEST_CASES:
         env.expect.that_bool(_is_valid_identifier(value.name)).equals(name_is_valid)
         env.expect.that_bool(_is_valid_identifier(str(hash(str(value))))).equals(hash_is_valid)
-        env.expect.that_bool(_is_valid_identifier(validate_and_get_attr_name(value))).equals(True)
+        env.expect.that_bool(_is_valid_identifier(validate_and_get_internal_attr_name(value))).equals(True)
 
 def setting_test_suite(name):
     test_suite(
