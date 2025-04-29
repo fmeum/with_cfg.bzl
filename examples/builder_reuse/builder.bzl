@@ -1,6 +1,7 @@
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("@with_cfg.bzl", "with_cfg")
 
-_first_builder = with_cfg(native.cc_test)
+_first_builder = with_cfg(cc_test)
 _first_builder.set(
     "cxxopt",
     select({

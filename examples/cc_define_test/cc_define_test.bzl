@@ -1,8 +1,9 @@
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("@with_cfg.bzl", "with_cfg")
 
 _builder = with_cfg(
-    native.cc_test,
+    cc_test,
     # Verify that duplicated providers are handled gracefully.
     extra_providers = [DefaultInfo, CcInfo],
 )
