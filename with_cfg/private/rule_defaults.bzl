@@ -1,4 +1,9 @@
 load("@bazel_features//:features.bzl", "bazel_features")
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
+load("@rules_cc//cc/common:debug_package_info.bzl", "DebugPackageInfo")
+load("@rules_java//java/common:java_common.bzl", "java_common")
+load("@rules_java//java/common:java_info.bzl", "JavaInfo")
+load("@rules_java//java/common:java_plugin_info.bzl", "JavaPluginInfo")
 
 visibility("private")
 

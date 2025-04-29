@@ -1,4 +1,5 @@
 load("@bazel_features//:features.bzl", "bazel_features")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load("//dynamic_deps/rules:runfiles_dir.bzl", "runfiles_dir")
 load(":cc_define_binary.bzl", "cc_define_binary")
 

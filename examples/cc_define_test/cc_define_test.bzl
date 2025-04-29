@@ -1,3 +1,4 @@
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@with_cfg.bzl", "with_cfg")
 
 _builder = with_cfg(

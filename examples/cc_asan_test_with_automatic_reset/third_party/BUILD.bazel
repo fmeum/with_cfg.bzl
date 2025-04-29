@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 # This is a mock of a large third-party dependency that should not be built with
 # AddressSanitizer to reduce build time.
 cc_library(
