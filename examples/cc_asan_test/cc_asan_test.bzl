@@ -1,6 +1,7 @@
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("@with_cfg.bzl", "with_cfg")
 
-_builder = with_cfg(native.cc_test)
+_builder = with_cfg(cc_test)
 _builder.extend("copt", ["-fsanitize=address"])
 _builder.extend("linkopt", select({
     # link.exe doesn't require or recognize -fsanitize=address and would emit a warning.
