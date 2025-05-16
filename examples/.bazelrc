@@ -9,10 +9,6 @@ common --experimental_output_directory_naming_scheme=diff_against_dynamic_baseli
 # Required with Bazel 6
 common --experimental_cc_shared_library
 
-# Prevent Java compiler warnings such as:
-# [0.002s][warning][perf,memops] Cannot use file /tmp/hsperfdata_runner/2 because it is locked by another process (errno = 11)
-common --incompatible_sandbox_hermetic_tmp
-
 # Work around an issue in Bazel 6 where the Turbine native image does not
 # support the --release flag used by rules_jvm_external.
 common --nojava_header_compilation
