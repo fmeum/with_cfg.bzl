@@ -8,6 +8,12 @@ cc_no_copt_binary(
     data = [":data_target"],
 )
 
+# Implicit outputs are supported.
+alias(
+    name = "stripped_binary",
+    actual = "binary.stripped",
+)
+
 untransitioned_target(
     name = "data_target",
 )
