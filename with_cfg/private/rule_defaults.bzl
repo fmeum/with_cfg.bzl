@@ -46,6 +46,10 @@ IMPLICIT_TARGETS = {
         "{name}.dwp",
         "{name}.stripped",
     ],
+    "cc_test": [
+        "{name}.dwp",
+        "{name}.stripped",
+    ],
     "java_binary": [
         "{name}.jar",
         "{name}-src.jar",
