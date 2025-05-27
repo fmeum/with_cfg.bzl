@@ -34,6 +34,12 @@ untransitioned_target(
     name = "data_target",
 )
 
+# Implicit outputs are supported.
+alias(
+    name = "stripped_hello_world",
+    actual = "dir/hello_world.stripped",
+)
+
 original_settings(
     name = "cc_define_test_original_settings",
 )
