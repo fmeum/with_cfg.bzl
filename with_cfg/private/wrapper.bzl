@@ -192,6 +192,7 @@ def _wrapper(
             basename = basename,
             name = original_dirprefix + basename,
         )
+        print(sub_name)
         transitioning_alias(
             name = sub_name,
             exports = ":" + original_sub_name,
