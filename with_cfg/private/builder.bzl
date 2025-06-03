@@ -41,6 +41,15 @@ def _make_builder(rule_info, *, values = {}, operations = {}):
             mutable_has_been_built = mutable_has_been_built,
             overrides_allowed = overrides_allowed,
         ),
+        prepend = lambda setting, value: _prepend(
+            setting,
+            value,
+            self = self,
+            values = values,
+            operations = operations,
+            mutable_has_been_built = mutable_has_been_built,
+            overrides_allowed = overrides_allowed,
+        ),
         set = lambda setting, value: _set(
             setting,
             value,
@@ -140,6 +149,22 @@ def _extend(setting, value, *, self, values, operations, mutable_has_been_built,
     # This improves readability but is also necessary for clone() to work correctly.
     values[setting] = map_attr(_clone_value_deeply, value)
     operations[setting] = "extend"
+    return self
+
+def _prepend(setting, value, *, self, values, operations, mutable_has_been_built, overrides_allowed):
+    if mutable_has_been_built[0]:
+        fail("prepend() can only be called before build()")
+    validate_and_get_attr_name(setting)
+    if setting in values:
+        if setting in overrides_allowed:
+            overrides_allowed.pop(setting)
+        else:
+            fail("Cannot prepend setting '{}' because it has already been added to this builder (consider using clone())".format(setting))
+
+    # Make a deep copy so that subsequent modification doesn't affect the builder state.
+    # This improves readability but is also necessary for clone() to work correctly.
+    values[setting] = map_attr(_clone_value_deeply, value)
+    operations[setting] = "prepend"
     return self
 
 def _set(setting, value, *, self, values, operations, mutable_has_been_built, overrides_allowed):
