@@ -1,0 +1,29 @@
+# Cut a release whenever a new tag is pushed to the repo.
+# You should use an annotated tag, like `git tag -a v1.2.3`
+# and put the release notes into the commit message for the tag.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  id-token: write # Needed to attest provenance
+  attestations: write # Needed to attest provenance
+  contents: write # Needed to create release
+
+jobs:
+  release:
+    uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@9ed8d86404ac3214f80cfb02e49f44a1b28b17b0 # v7.2.2
+    with:
+      prerelease: false
+      release_files: with_cfg.bzl-*.tar.gz
+      tag_name: ${{ github.ref_name }}
+  publish:
+    needs: release
+    uses: ./.github/workflows/publish.yaml
+    with:
+      tag_name: ${{ github.ref_name }}
+    secrets:
+      publish_token: ${{ secrets.BCR_PUBLISH_TOKEN }}
