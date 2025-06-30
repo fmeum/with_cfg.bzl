@@ -59,6 +59,7 @@ bzl_library(
     deps = [
         ":providers",
         "@bazel_skylib//rules:common_settings",
+        "@rules_cc//cc/common",
     ],
 )
 
@@ -97,6 +98,7 @@ bzl_library(
     srcs = ["rule_defaults.bzl"],
     visibility = ["//with_cfg:__subpackages__"],
     deps = [
+        "@rules_cc//cc/common",
         "@rules_java//java/common",
     ],
 )
