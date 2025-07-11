@@ -18,7 +18,7 @@ bazel_dep(name = "rules_shell", version = "0.4.0")
 bazel_dep(name = "rules_jvm_external")
 git_override(
     module_name = "rules_jvm_external",
-    commit = "e4c9bf486029d027e1a26e8ba422431705a2bfce",
+    commit = "60bdf8626dd92f0958bda4b98160db2e020b2bcb",
     remote = "https://github.com/fmeum/rules_jvm_external.git",
 )
 
