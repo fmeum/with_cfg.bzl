@@ -84,6 +84,15 @@ def _args_aspect_impl(target, ctx):
             execpaths_expansion_to_files[execpaths_expansion] = files
             targets[target] = None
 
+    template_variables = {}
+    toolchains = getattr(ctx.rule.attr, "toolchains", [])
+    if type(toolchains) == type([]):
+        for toolchain in toolchains:
+            if platform_common.TemplateVariableInfo in toolchain:
+                template_variables.update(
+                    toolchain[platform_common.TemplateVariableInfo].variables,
+                )
+
     labels = {}
 
     def collect_label(label):
@@ -100,6 +109,7 @@ def _args_aspect_impl(target, ctx):
 
     return [
         OutputGroupInfo(**{_OUTPUT_GROUPS_PREFIX + label: f for label, f in labels_to_files.items()}),
+        platform_common.TemplateVariableInfo(template_variables),
     ]
 
 args_aspect = aspect(

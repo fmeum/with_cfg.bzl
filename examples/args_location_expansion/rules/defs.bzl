@@ -11,7 +11,12 @@ def _write_settings_rule_impl(ctx):
 
     out = ctx.actions.declare_file(ctx.label.name + "_" + rule_setting[0] + "_" + with_cfg_setting[0])
     ctx.actions.write(out, "name:{},rule_setting:{},with_cfg_setting:{}\n".format(out.basename, rule_setting, with_cfg_setting))
-    return [DefaultInfo(files = depset([out]))]
+    return [
+        DefaultInfo(files = depset([out])),
+        platform_common.TemplateVariableInfo({
+            "SETTINGS_FILE": out.short_path,
+        }),
+    ]
 
 write_settings_rule = rule(
     implementation = _write_settings_rule_impl,
@@ -52,6 +57,10 @@ def _transitioned_test_impl(ctx):
     ]
 
 transitioned_test = rule(
+    # Using a rule transition rather than a split transition on the data
+    # attribute is crucial since it also has to apply to the predefined
+    # toolchains attribute.
+    cfg = _data_transition,
     implementation = _transitioned_test_impl,
     attrs = {
         "binary": attr.label(
@@ -59,7 +68,6 @@ transitioned_test = rule(
             executable = True,
         ),
         "data": attr.label_list(
-            cfg = _data_transition,
             allow_files = True,
         ),
         "env": attr.string_dict(),
