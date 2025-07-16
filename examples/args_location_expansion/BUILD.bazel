@@ -24,6 +24,8 @@ doubly_transitioned_test(
         "$(rlocationpath @bazel_tools//tools/test:collect_coverage)",
         "_main/$(rootpath :single_rule)",
         "_main/$(location :single_rule)",
+        # Provided by :single_rule
+        "_main/$(SETTINGS_FILE)",
     ] + select({
         "@platforms//os:linux": ["$(rlocationpath //args_location_expansion/pkg:linux_only_rule)"],
         "//conditions:default": ["$(rlocationpath //args_location_expansion/pkg:generic_rule)"],
@@ -46,9 +48,12 @@ doubly_transitioned_test(
         "//conditions:default": ["//args_location_expansion/pkg:special_09!%-@^_\"#$&'(*-+,;<=>?[]{|}~/._characters_rule"],
     }),
     env = select({
-        "@platforms//os:windows": {"NUM_RUNFILES": "10"},
-        "//conditions:default": {"NUM_RUNFILES": "11"},
+        "@platforms//os:windows": {"NUM_RUNFILES": "11"},
+        "//conditions:default": {"NUM_RUNFILES": "12"},
     }),
+    toolchains = [
+        ":single_rule",
+    ],
 )
 
 sh_binary(

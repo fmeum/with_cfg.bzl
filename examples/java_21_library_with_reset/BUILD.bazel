@@ -12,6 +12,11 @@ java_binary(
 java_21_library(
     name = "primes",
     srcs = ["src/main/java/com/example/Primes.java"],
+    # Only used to verify that with_cfg.bzl supports the toolchains attribute on
+    # non-executable rules. Ignore for the purposes of this example.
+    toolchains = [
+        "@rules_java//toolchains:current_java_runtime",
+    ],
     deps = [":integer_type"],
 )
 

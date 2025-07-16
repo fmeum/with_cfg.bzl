@@ -70,6 +70,7 @@ def _transitioning_alias_base_impl(ctx, *, providers):
             executable = target[DefaultInfo].files_to_run.executable,
             providers = providers,
             run_environment_info = target[RunEnvironmentInfo] if RunEnvironmentInfo in target else None,
+            template_variable_info = target[platform_common.TemplateVariableInfo] if platform_common.TemplateVariableInfo in target else None,
         ))
 
     return returned_providers

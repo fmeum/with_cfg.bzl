@@ -12,6 +12,17 @@ def get_frontend(*, executable, test):
     else:
         return _frontend_default
 
+unwrap_template_variable_info = rule(
+    doc = "Extracts the TemplateVariableInfo from the FrontendInfo provider.",
+    implementation = lambda ctx: ctx.attr.exports[FrontendInfo].template_variable_info,
+    attrs = {
+        "exports": attr.label(
+            mandatory = True,
+            providers = [FrontendInfo],
+        ),
+    },
+)
+
 def _frontend_impl(ctx):
     # type: (ctx) -> None
     target = ctx.attr.exports
