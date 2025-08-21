@@ -118,12 +118,12 @@ _frontend_test_attrs = {
     "_lcov_merger": attr.label(
         default = configuration_field(fragment = "coverage", name = "output_generator"),
         executable = True,
-        cfg = "exec",
+        cfg = config.exec("test"),
     ),
     "_collect_cc_coverage": attr.label(
         default = "@bazel_tools//tools/test:collect_cc_coverage",
         executable = True,
-        cfg = "exec",
+        cfg = config.exec("test"),
     ),
 }
 
