@@ -36,7 +36,7 @@ jobs:
             test_args: "-- -//sh:test -//args_location_expansion:doubly_transitioned_test"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Configure Bazel version
         working-directory: ${{ matrix.folder }}
