@@ -1,11 +1,12 @@
 load("@rules_java//java:java_binary.bzl", "java_binary")
 load("@rules_java//java:java_library.bzl", "java_library")
 load("@with_cfg.bzl", "original_settings")
-load(":java_21_library.bzl", "java_21_library", "java_21_library_reset", "java_21_test")
+load(":java_21_library.bzl", "java_21_binary", "java_21_library", "java_21_library_reset", "java_21_test")
 
-java_binary(
+java_21_binary(
     name = "Main",
     srcs = ["src/main/java/com/example/Main.java"],
+    main_class = "com.example.Main",
     deps = [":primes"],
 )
 
@@ -23,48 +24,32 @@ java_21_library(
 java_21_library(
     name = "integer_type",
     srcs = ["src/main/java/com/example/IntegerType.java"],
-    deps = [":legacy_lib_reset"],
-)
-
-# The JDK 21 used for compilation with java_21_library doesn't support Java 7,
-# so a reset to the top-level settings is required to depend on this "legacy"
-# dependency.
-java_21_library_reset(
-    name = "legacy_lib_reset",
-    exports = ":legacy_lib",
-)
-
-java_library(
-    name = "legacy_lib",
-    srcs = ["src/main/java/com/example/LegacyIllegalArgumentException.java"],
-    javacopts = [
-        "-Xlint:-options",
-        "-source",
-        "7",
-        "-target",
-        "7",
-    ],
-)
-
-java_library(
-    name = "testonly_legacy_lib",
-    testonly = True,
-    srcs = ["src/main/java/com/example/LegacyIllegalArgumentException.java"],
 )
 
 java_21_test(
-    name = "tests",
-    srcs = ["src/test/java/com/example/LegacyIllegalArgumentExceptionTest.java"],
-    test_class = "com.example.LegacyIllegalArgumentExceptionTest",
-    deps = [":testonly_legacy_lib"],
+    name = "primes_tests",
+    srcs = [
+        "src/test/java/com/example/PrimesTest.java",
+    ],
+    test_class = "com.example.PrimesTest",
+    deps = [
+        ":primes",
+    ],
 )
 
-# This target exists purely to demonstrate (and verify) that implicit outputs of
-# the underlying rule, in this case source jars, are available on the rule
-# produced by with_cfg.
-alias(
-    name = "primes_sources",
-    actual = "libprimes-src.jar",
+java_21_test(
+    name = "main_tests",
+    srcs = [
+        "src/test/java/com/example/MainTest.java",
+    ],
+    test_class = "com.example.MainTest",
+    deps = [
+        ":Main",
+    ],
+)
+
+original_settings(
+    name = "java_21_binary_original_settings",
 )
 
 original_settings(
@@ -73,4 +58,8 @@ original_settings(
 
 original_settings(
     name = "java_21_test_original_settings",
+)
+
+original_settings(
+    name = "java_21_junit5_test_original_settings",
 )

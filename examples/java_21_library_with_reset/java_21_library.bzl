@@ -1,4 +1,5 @@
 load("@rules_java//java:java_library.bzl", "java_library")
+load("@rules_java//java:java_binary.bzl", "java_binary")
 load("@rules_java//java:java_test.bzl", "java_test")
 load("@with_cfg.bzl", "with_cfg")
 
@@ -6,6 +7,12 @@ _builder = with_cfg(java_library)
 _builder.set("java_language_version", "21").set("java_runtime_version", "remotejdk_21")
 _builder.resettable(Label(":java_21_library_original_settings"))
 java_21_library, java_21_library_reset = _builder.build()
+
+_binary_builder = with_cfg(java_binary)
+_binary_builder.set("java_language_version", "21").set("java_runtime_version", "remotejdk_21")
+_binary_builder.resettable(Label(":java_21_binary_original_settings"))
+_binary_builder.reset_on_attrs("deps", "runtime_deps")
+java_21_binary, java_21_binary_reset = _binary_builder.build()
 
 _test_builder = with_cfg(java_test)
 _test_builder.set("java_language_version", "21").set("java_runtime_version", "remotejdk_21")

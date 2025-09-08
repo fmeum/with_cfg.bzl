@@ -8,7 +8,7 @@ public sealed interface IntegerType permits IntegerType.Prime, IntegerType.Compo
 
   static IntegerType of(int n) {
     if (n < 2) {
-      throw new LegacyIllegalArgumentException("n must be >= 2");
+      throw new IllegalArgumentException("n must be >= 2");
     }
     for (int i = 2; i < n; i++) {
       if (n % i == 0) {
