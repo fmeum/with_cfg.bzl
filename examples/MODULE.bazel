@@ -8,11 +8,14 @@ local_path_override(
 
 bazel_dep(name = "bazel_features", version = "1.35.0")
 bazel_dep(name = "bazel_skylib", version = "1.8.1")
-bazel_dep(name = "contrib_rules_jvm", version = "0.27.0")
+bazel_dep(name = "contrib_rules_jvm", version = "0.30.0")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_cc", version = "0.2.4")
 bazel_dep(name = "rules_java", version = "8.15.2")
 bazel_dep(name = "rules_shell", version = "0.6.0")
+
+# Not a direct dep, update to fix compatibility with --incompatible_autoload_externally=.
+bazel_dep(name = "rules_foreign_cc", version = "0.15.0")
 
 # This fork restores compatibility with Bazel 6 and is based on 6.1.
 bazel_dep(name = "rules_jvm_external")
