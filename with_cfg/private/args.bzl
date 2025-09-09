@@ -33,6 +33,7 @@ complexities handled by the functions in this file:
    collect the files with the given paths.
 """
 
+load(":providers.bzl", "ArgsInfo")
 load(":rewrite.bzl", "rewrite_locations_in_attr", "rewrite_locations_in_single_value")
 
 visibility("private")
@@ -109,7 +110,7 @@ def _args_aspect_impl(target, ctx):
 
     return [
         OutputGroupInfo(**{_OUTPUT_GROUPS_PREFIX + label: f for label, f in labels_to_files.items()}),
-        platform_common.TemplateVariableInfo(template_variables),
+        ArgsInfo(template_variable_info = platform_common.TemplateVariableInfo(template_variables)),
     ]
 
 args_aspect = aspect(

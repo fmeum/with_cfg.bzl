@@ -14,6 +14,10 @@ RuleInfo = provider(fields = [
     "test",
 ])
 
+ArgsInfo = provider(fields = [
+    "template_variable_info",
+])
+
 FrontendInfo = provider(fields = [
     "executable",
     "providers",
