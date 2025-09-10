@@ -1,3 +1,10 @@
+load("@rules_java//java:java_binary.bzl", "java_binary")
+load("@rules_java//java:java_library.bzl", "java_library")
+load("@rules_java//java:java_test.bzl", "java_test")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+load("@rules_shell//shell:sh_library.bzl", "sh_library")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load("@rules_testing//lib:test_suite.bzl", "test_suite")
 load("@rules_testing//lib:unit_test.bzl", "unit_test")
 load("//with_cfg/private:with_cfg.bzl", "get_rule_name", "is_executable", "is_test")
@@ -26,21 +33,21 @@ def _is_executable_test(name):
             "cc_binary": attr.string(default = get_rule_name(native.cc_binary)),
             "cc_library": attr.string(default = get_rule_name(native.cc_library)),
             "cc_test": attr.string(default = get_rule_name(native.cc_test)),
-            "java_binary": attr.string(default = get_rule_name(native.java_binary)),
-            "java_library": attr.string(default = get_rule_name(native.java_library)),
-            "java_test": attr.string(default = get_rule_name(native.java_test)),
+            "java_binary": attr.string(default = get_rule_name(java_binary)),
+            "java_library": attr.string(default = get_rule_name(java_library)),
+            "java_test": attr.string(default = get_rule_name(java_test)),
             "my_binary": attr.string(default = get_rule_name(my_binary)),
             "my_library": attr.string(default = get_rule_name(my_library)),
             "my_test": attr.string(default = get_rule_name(my_test)),
             "my_macro_binary": attr.string(default = get_rule_name(my_macro_binary)),
             "my_macro_library": attr.string(default = get_rule_name(my_macro_library)),
             "my_macro_test": attr.string(default = get_rule_name(my_macro_test)),
-            "py_binary": attr.string(default = get_rule_name(native.py_binary)),
-            "py_library": attr.string(default = get_rule_name(native.py_library)),
-            "py_test": attr.string(default = get_rule_name(native.py_test)),
-            "sh_binary": attr.string(default = get_rule_name(native.sh_binary)),
-            "sh_library": attr.string(default = get_rule_name(native.sh_library)),
-            "sh_test": attr.string(default = get_rule_name(native.sh_test)),
+            "py_binary": attr.string(default = get_rule_name(py_binary)),
+            "py_library": attr.string(default = get_rule_name(py_library)),
+            "py_test": attr.string(default = get_rule_name(py_test)),
+            "sh_binary": attr.string(default = get_rule_name(sh_binary)),
+            "sh_library": attr.string(default = get_rule_name(sh_library)),
+            "sh_test": attr.string(default = get_rule_name(sh_test)),
         },
     )
 
@@ -72,21 +79,21 @@ def _is_test_test(name):
             "cc_binary": attr.string(default = get_rule_name(native.cc_binary)),
             "cc_library": attr.string(default = get_rule_name(native.cc_library)),
             "cc_test": attr.string(default = get_rule_name(native.cc_test)),
-            "java_binary": attr.string(default = get_rule_name(native.java_binary)),
-            "java_library": attr.string(default = get_rule_name(native.java_library)),
-            "java_test": attr.string(default = get_rule_name(native.java_test)),
+            "java_binary": attr.string(default = get_rule_name(java_binary)),
+            "java_library": attr.string(default = get_rule_name(java_library)),
+            "java_test": attr.string(default = get_rule_name(java_test)),
             "my_binary": attr.string(default = get_rule_name(my_binary)),
             "my_library": attr.string(default = get_rule_name(my_library)),
             "my_test": attr.string(default = get_rule_name(my_test)),
             "my_macro_binary": attr.string(default = get_rule_name(my_macro_binary)),
             "my_macro_library": attr.string(default = get_rule_name(my_macro_library)),
             "my_macro_test": attr.string(default = get_rule_name(my_macro_test)),
-            "py_binary": attr.string(default = get_rule_name(native.py_binary)),
-            "py_library": attr.string(default = get_rule_name(native.py_library)),
-            "py_test": attr.string(default = get_rule_name(native.py_test)),
-            "sh_binary": attr.string(default = get_rule_name(native.sh_binary)),
-            "sh_library": attr.string(default = get_rule_name(native.sh_library)),
-            "sh_test": attr.string(default = get_rule_name(native.sh_test)),
+            "py_binary": attr.string(default = get_rule_name(py_binary)),
+            "py_library": attr.string(default = get_rule_name(py_library)),
+            "py_test": attr.string(default = get_rule_name(py_test)),
+            "sh_binary": attr.string(default = get_rule_name(sh_binary)),
+            "sh_library": attr.string(default = get_rule_name(sh_library)),
+            "sh_test": attr.string(default = get_rule_name(sh_test)),
         },
     )
 
