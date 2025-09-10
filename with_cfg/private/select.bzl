@@ -166,15 +166,11 @@ def consume_single_value(r, pos):
         pos += 6
         string, after_string = _consume_string(r, pos)
 
-        # On Bazel 6, stringification of Labels may not include the leading `@@`.
         # Labels in the main repository are not prefixed with `@` at all since
         # their `repr` implementation doesn't use the unambiguous form as of
         # Bazel 8.
         if not string.startswith("@@"):
-            if string.startswith("@"):
-                string = "@" + string
-            else:
-                string = "@@" + string
+            string = "@@" + string
 
         # Skip over `)`.
         return Label(string), after_string + 1

@@ -1,5 +1,5 @@
-load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@with_cfg.bzl", "with_cfg")
 
 _builder = with_cfg(

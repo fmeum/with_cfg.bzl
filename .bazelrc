@@ -13,9 +13,6 @@ common --check_direct_dependencies=off
 # Improve build caching by redacting environment variables.
 common --incompatible_strict_action_env
 
-# Avoid building protoc from source.
-common --incompatible_enable_proto_toolchain_resolution
-
 # Debug where options came from
 common:ci --announce_rc
 # Don't rely on test logs being easily accessible from the test runner,

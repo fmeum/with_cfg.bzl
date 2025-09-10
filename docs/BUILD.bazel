@@ -1,7 +1,6 @@
 # This load statement must be in the docs/ package rather than anything users depend on
 # so that the dependency on stardoc doesn't leak to them.
 load("@aspect_bazel_lib//lib:docs.bzl", "stardoc_with_diff_test", "update_docs")
-load("@rules_proto//proto:proto_lang_toolchain.bzl", "proto_lang_toolchain")
 
 stardoc_with_diff_test(
     name = "defs",
@@ -9,17 +8,3 @@ stardoc_with_diff_test(
 )
 
 update_docs(name = "update")
-
-# Precompiled proto toolchain for stardoc
-proto_lang_toolchain(
-    name = "protoc_java_toolchain",
-    command_line = "--java_out=$(OUT)",
-    progress_message = "Generating java_proto_library %{label}",
-    runtime = "@protobuf_java//jar",
-)
-
-toolchain(
-    name = "protoc_java_toolchain.registration",
-    toolchain = ":protoc_java_toolchain",
-    toolchain_type = "@rules_java//java/proto:toolchain_type",
-)
