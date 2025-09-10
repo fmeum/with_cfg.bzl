@@ -2,17 +2,6 @@ common --enable_platform_specific_config
 common --enable_bzlmod
 startup --nowindows_enable_symlinks
 
-# Required with Bazel 6 (default on 7) to allow transitions to return to the
-# top-level configuration.
-common --experimental_output_directory_naming_scheme=diff_against_dynamic_baseline
-
-# Required with Bazel 6
-common --experimental_cc_shared_library
-
-# Work around an issue in Bazel 6 where the Turbine native image does not
-# support the --release flag used by rules_jvm_external.
-common --nojava_header_compilation
-
 common --java_language_version=17
 common --java_runtime_version=remotejdk_17
 

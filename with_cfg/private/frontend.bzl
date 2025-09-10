@@ -55,9 +55,7 @@ def _frontend_impl(ctx):
     data_runfiles = ctx.runfiles(additional_runfiles).merge(target[DefaultInfo].data_runfiles)
     default_runfiles = ctx.runfiles(additional_runfiles).merge(target[DefaultInfo].default_runfiles)
 
-    run_environment_info = _clean_run_environment_info(
-        target[FrontendInfo].run_environment_info,
-    ) or RunEnvironmentInfo(
+    run_environment_info = target[FrontendInfo].run_environment_info or RunEnvironmentInfo(
         environment = ctx.attr.env,
         inherited_environment = ctx.attr.env_inherit,
     )
@@ -78,25 +76,6 @@ def _frontend_impl(ctx):
         if provider in target
     ] + (
         [run_environment_info] if run_environment_info else []
-    )
-
-# Workaround for https://github.com/bazelbuild/bazel/pull/20349:
-# In Bazel 6.4.0, cc_test manually sets LCOV_MERGER to the lcov_merger executable in its own
-# configuration, which is not the configuration of the top-level test wrapping it when that happens
-# through a transition. Remove the variable to let TestActionBuilder set it to the correct value
-# instead.
-# TODO: Remove this workaround eventually.
-def _clean_run_environment_info(run_environment_info):
-    if not run_environment_info or not "LCOV_MERGER" in run_environment_info.environment:
-        return run_environment_info
-    cleaned_environment = {
-        key: value
-        for key, value in run_environment_info.environment.items()
-        if key != "LCOV_MERGER"
-    }
-    return RunEnvironmentInfo(
-        environment = cleaned_environment,
-        inherited_environment = run_environment_info.inherited_environment,
     )
 
 _frontend_attrs = {
