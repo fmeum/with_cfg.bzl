@@ -92,16 +92,18 @@ def _wrapper(
     else:
         tags_with_manual = tags
 
-    # Exec properties can refer to specific exec groups and referencing an
-    # undefined exec group is an error. We thus have to extract those that
-    # may apply to the frontend (only ever "test"). Since the intermediate
-    # targets don't have any interesting actions, they don't need any exec
+    # Exec properties can refer to specific exec groups and referencing an undefined exec group is
+    # an error. We thus have to extract those that may apply to the frontend (only ever "test").
+    # Since the intermediate targets don't have any interesting actions, they don't need any exec
     # properties.
-    frontend_exec_properties = {
-        k: v
-        for k, v in kwargs.get("exec_properties", {}).items()
-        if "." not in k or k.startswith("test.")
-    }
+    frontend_exec_properties = map_attr(
+        lambda d: {
+            k: v
+            for k, v in d.items()
+            if "." not in k or k.startswith("test.")
+        },
+        kwargs.get("exec_properties", {}),
+    )
 
     visibility = kwargs.pop("visibility", None)
     common_attrs = {

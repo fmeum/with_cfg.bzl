@@ -23,9 +23,15 @@ cc_define_test(
             "GREETING_RLOCATIONPATH": "$(rlocationpath :greeting_generic.txt)",
         },
     }),
-    exec_properties = {
-        # Exec groups of the underlying rule can be referenced.
-        "test.hello": "world",
+    exec_properties = select({
+        "//conditions:default": {
+            "foo": "bar",
+            # Exec groups of the underlying rule can be referenced.
+            "test.hello": "world",
+            "cpp_link.high_mem": "true",
+        },
+    }) | {
+        "with_cfg": "enabled",
     },
     deps = ["@bazel_tools//tools/cpp/runfiles"],
 )
