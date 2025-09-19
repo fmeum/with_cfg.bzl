@@ -99,7 +99,7 @@ def _wrapper(
     # properties.
     frontend_exec_properties = {
         k: v
-        for k, v in kwargs.get("exec_properties", {}}.items()
+        for k, v in kwargs.get("exec_properties", {}).items()
         if "." not in k or k.startswith("test.")
     }
 
