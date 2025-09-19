@@ -41,8 +41,7 @@ def make_wrapper(
 # hardcoded location and Make variable expansion logic that needs heavy hacks
 # to replicate the wrapped rule's expansion context.
 # exec_properties are treated specially since they may refer to different exec
-# groups, some of which need to be set on the original target and some of which
-# on the frontend.
+# groups, some of which aren't available on the frontend.
 _COMMON_ATTRS = [
     # keep sorted
     "compatible_with",
@@ -93,22 +92,15 @@ def _wrapper(
     else:
         tags_with_manual = tags
 
-    exec_properties = kwargs.pop("exec_properties", {})
-
     # Exec properties can refer to specific exec groups and referencing an
-    # undefined exec group is an error. We thus have to split them into those
-    # that apply to the frontend (only ever "test") and those that apply to the
-    # original target (all other exec groups). Since the intermediate targets
-    # don't have any interesting actions, they don't need any exec properties.
+    # undefined exec group is an error. We thus have to extract those that
+    # may apply to the frontend (only ever "test"). Since the intermediate 
+    # targets don't have any interesting actions, they don't need any exec 
+    # properties.
     frontend_exec_properties = {
         k: v
-        for k, v in exec_properties.items()
+        for k, v in kwargs.get("exec_properties", {}}.items()
         if "." not in k or k.startswith("test.")
-    }
-    original_target_exec_properties = {
-        k: v
-        for k, v in exec_properties.items()
-        if "." not in k or not k.startswith("test.")
     }
 
     visibility = kwargs.pop("visibility", None)
@@ -171,10 +163,6 @@ def _wrapper(
         )
         frontend_attrs["toolchains"] = [":" + unwrap_name]
 
-    original_target_attrs = {}
-    if original_target_exec_properties:
-        original_target_attrs["exec_properties"] = original_target_exec_properties
-
     processed_kwargs = _process_attrs_for_reset(
         attrs = kwargs,
         attrs_to_reset = attrs_to_reset,
@@ -191,7 +179,7 @@ def _wrapper(
         name = original_name,
         tags = tags_with_manual,
         visibility = ["//visibility:private"],
-        **(processed_kwargs | common_attrs | extra_attrs | original_target_attrs)
+        **(processed_kwargs | common_attrs | extra_attrs)
     )
 
     alias_attrs = {
