@@ -94,8 +94,8 @@ def _wrapper(
 
     # Exec properties can refer to specific exec groups and referencing an
     # undefined exec group is an error. We thus have to extract those that
-    # may apply to the frontend (only ever "test"). Since the intermediate 
-    # targets don't have any interesting actions, they don't need any exec 
+    # may apply to the frontend (only ever "test"). Since the intermediate
+    # targets don't have any interesting actions, they don't need any exec
     # properties.
     frontend_exec_properties = {
         k: v
