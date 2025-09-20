@@ -1,5 +1,4 @@
 common --enable_platform_specific_config
-common --enable_bzlmod
 startup --nowindows_enable_symlinks
 
 common --java_language_version=17
