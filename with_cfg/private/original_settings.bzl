@@ -38,7 +38,5 @@ def original_settings(*, name):
     _original_settings(
         name = name,
         build_setting_default = "",
-        # TODO: Use private visibility when the minimum supported version of Bazel has
-        #  `--incompatible_visibility_private_attributes_at_definition` flipped (Bazel 7).
-        visibility = ["//visibility:public"],
+        visibility = ["//visibility:private"],
     )
