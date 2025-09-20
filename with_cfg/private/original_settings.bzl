@@ -38,4 +38,5 @@ def original_settings(*, name):
     _original_settings(
         name = name,
         build_setting_default = "",
+        visibility = ["//visibility:private"],
     )
