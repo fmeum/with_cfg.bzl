@@ -41,7 +41,8 @@ def make_wrapper(
 # hardcoded location and Make variable expansion logic that needs heavy hacks
 # to replicate the wrapped rule's expansion context.
 # exec_properties are treated specially since they may refer to different exec
-# groups, some of which aren't available on the frontend.
+# groups, some of which aren't available on the frontend. The same applies to
+# exec_group_compatible_with.
 _COMMON_ATTRS = [
     # keep sorted
     "compatible_with",
@@ -95,7 +96,7 @@ def _wrapper(
     # Exec properties can refer to specific exec groups and referencing an undefined exec group is
     # an error. We thus have to extract those that may apply to the frontend (only ever "test").
     # Since the intermediate targets don't have any interesting actions, they don't need any exec
-    # properties.
+    # properties. The same applies to exec_group_compatible_with, which is non-configurable.
     frontend_exec_properties = map_attr(
         lambda d: {
             k: v
@@ -104,6 +105,7 @@ def _wrapper(
         },
         kwargs.get("exec_properties", {}),
     )
+    frontend_test_exec_group_compatible_with = kwargs.get("exec_group_compatible_with", {}).get("test")
 
     visibility = kwargs.pop("visibility", None)
     common_attrs = {
@@ -139,6 +141,10 @@ def _wrapper(
     frontend_attrs = {}
     if frontend_exec_properties:
         frontend_attrs["exec_properties"] = frontend_exec_properties
+    if frontend_test_exec_group_compatible_with:
+        frontend_attrs["exec_group_compatible_with"] = {
+            "test": frontend_test_exec_group_compatible_with,
+        }
     if "args" in kwargs and (rule_info.executable or rule_info.test):
         # Leave the args attribute in place on the original rule so that they can be read by the
         # args_aspect attached to the exports attribute of the transitioning_alias.
