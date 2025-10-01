@@ -8,10 +8,13 @@ java_binary(
     deps = [":primes"],
 )
 
+_COORDINATES = "foo:bar:0.0.1"
+
 java_21_library(
     name = "primes",
     srcs = ["src/main/java/com/example/Primes.java"],
     deps = [":integer_type"],
+    tags = ["maven_coordinates=" + _COORDINATES],
 )
 
 java_21_library(
@@ -29,6 +32,6 @@ alias(
 
 maven_export(
     name = "primes-export",
-    maven_coordinates = "foo:bar:0.0.1",
+    maven_coordinates = _COORDINATES,
     lib_name = "primes",
 )
