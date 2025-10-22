@@ -1,0 +1,9 @@
+load(":pip_compile_py3_8.bzl", "pip_compile_py3_8")
+
+# Generate a requirements.txt for a Python 3.8 environment, regardless of the
+# Python version otherwise used by Bazel.
+pip_compile_py3_8(
+    name = "generate_requirements_txt",
+    requirements_in = ":requirements.in",
+    requirements_txt = ":requirements.txt",
+)
