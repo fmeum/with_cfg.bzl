@@ -12,7 +12,7 @@ bazel_dep(name = "contrib_rules_jvm", version = "0.30.0")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_cc", version = "0.2.8")
 bazel_dep(name = "rules_java", version = "8.16.1")
-bazel_dep(name = "rules_jvm_external", version = "6.8")
+bazel_dep(name = "rules_jvm_external", version = "6.9")
 bazel_dep(name = "rules_shell", version = "0.6.1")
 
 # Not a direct dep, update to fix compatibility with --incompatible_autoload_externally=.
