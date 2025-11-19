@@ -17,10 +17,6 @@ def make_transitioning_alias(*, providers, transition, values, original_settings
                 default = original_settings_label,
                 providers = [OriginalSettingsInfo],
             ),
-            # Fail if --experimental_output_directory_naming_scheme=diff_against_dynamic_baseline isn't set.
-            "_check_for_diff_against_dynamic_baseline": attr.label(
-                default = ":resettable_check_for_diff_against_dynamic_baseline",
-            ),
         }
     else:
         resettable_attrs = {}
