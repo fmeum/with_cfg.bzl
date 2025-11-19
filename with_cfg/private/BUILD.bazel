@@ -1,25 +1,5 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
-alias(
-    name = "resettable_check_for_diff_against_dynamic_baseline",
-    actual = select(
-        {
-            ":uses_diff_against_dynamic_baseline": ":uses_diff_against_dynamic_baseline",
-        },
-        no_match_error = "resettable(...) requires --experimental_output_directory_naming_scheme=diff_against_dynamic_baseline, which is available and the default in Bazel 7.",
-    ),
-    # Do not fail if the with_cfg.bzl repository itself doesn't have the flag set.
-    tags = ["manual"],
-    visibility = ["//visibility:public"],
-)
-
-config_setting(
-    name = "uses_diff_against_dynamic_baseline",
-    values = {
-        "experimental_output_directory_naming_scheme": "diff_against_dynamic_baseline",
-    },
-)
-
 bzl_library(
     name = "args",
     srcs = ["args.bzl"],
