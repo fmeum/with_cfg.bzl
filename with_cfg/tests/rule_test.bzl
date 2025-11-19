@@ -1,3 +1,6 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("@rules_java//java:java_binary.bzl", "java_binary")
 load("@rules_java//java:java_library.bzl", "java_library")
 load("@rules_java//java:java_test.bzl", "java_test")
@@ -30,9 +33,9 @@ def _is_executable_test(name):
         name = name,
         impl = _is_executable_test_impl,
         attrs = {
-            "cc_binary": attr.string(default = get_rule_name(native.cc_binary)),
-            "cc_library": attr.string(default = get_rule_name(native.cc_library)),
-            "cc_test": attr.string(default = get_rule_name(native.cc_test)),
+            "cc_binary": attr.string(default = get_rule_name(cc_binary)),
+            "cc_library": attr.string(default = get_rule_name(cc_library)),
+            "cc_test": attr.string(default = get_rule_name(cc_test)),
             "java_binary": attr.string(default = get_rule_name(java_binary)),
             "java_library": attr.string(default = get_rule_name(java_library)),
             "java_test": attr.string(default = get_rule_name(java_test)),
@@ -76,9 +79,9 @@ def _is_test_test(name):
         name = name,
         impl = _is_test_test_impl,
         attrs = {
-            "cc_binary": attr.string(default = get_rule_name(native.cc_binary)),
-            "cc_library": attr.string(default = get_rule_name(native.cc_library)),
-            "cc_test": attr.string(default = get_rule_name(native.cc_test)),
+            "cc_binary": attr.string(default = get_rule_name(cc_binary)),
+            "cc_library": attr.string(default = get_rule_name(cc_library)),
+            "cc_test": attr.string(default = get_rule_name(cc_test)),
             "java_binary": attr.string(default = get_rule_name(java_binary)),
             "java_library": attr.string(default = get_rule_name(java_library)),
             "java_test": attr.string(default = get_rule_name(java_test)),
