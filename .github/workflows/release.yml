@@ -10,7 +10,14 @@ on:
 
 jobs:
   release:
-    uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@v7
-    with:
-      release_files: with_cfg.bzl-*.tar.gz
-      prerelease: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare release
+        run: .github/workflows/release_prep.sh > release_notes.md
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" --draft --title "${{ github.ref_name }}" --notes-file release_notes.md with_cfg.bzl-*.tar.gz
+          gh release edit "${{ github.ref_name }}" --draft=false
