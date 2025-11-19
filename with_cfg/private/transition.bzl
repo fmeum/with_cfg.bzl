@@ -1,5 +1,5 @@
 load(":setting.bzl", "validate_and_get_attr_name")
-load(":utils.bzl", "is_label", "is_string")
+load(":utils.bzl", "is_label", "is_list", "is_string")
 
 visibility("private")
 
@@ -44,14 +44,35 @@ def _transition_base_impl(settings, attr, *, operations, original_settings_label
     for setting, operation in operations.items():
         attr_name = validate_and_get_attr_name(setting)
         key = _get_settings_key(setting)
+        current_value = settings[key]
+        attr_value = getattr(attr, attr_name)
+
+        # Avoid false positives when setting to None or more complex values by not using
+        # 'not is_label(attr_value)'.
+        if is_label(current_value) and is_string(attr_value):
+            fail(
+                "Cannot transition '{}' from {} to {} because the old value is a label but the new value is a string. Please wrap the new value in Label(...) to ensure that it resolves correctly.".format(
+                    setting,
+                    current_value,
+                    attr_value,
+                ),
+            )
+        elif current_value and is_list(current_value) and is_list(attr_value) and all([is_label(v) for v in current_value]) and any([is_string(v) for v in attr_value]):
+            fail(
+                "Cannot transition '{}' from {} to {} because the old value is a list of labels but the new value is not a list of labels. Please wrap the new values in Label(...) to ensure that they resolve correctly.".format(
+                    setting,
+                    current_value,
+                    attr_value,
+                ),
+            )
         if operation == "set":
             # Always idempotent.
-            new_settings[key] = getattr(attr, attr_name)
+            new_settings[key] = attr_value
         elif operation == "extend":
             # Ensure idempotency by appending the tail only when the list-valued setting doesn't
             # already has the tail. This ensures that chaining transitioned rules doesn't result in
             # a blow-up of the list.
-            tail = getattr(attr, attr_name)
+            tail = attr_value
             if settings[key][-len(tail):] == tail:
                 new_settings[key] = settings[key]
             else:

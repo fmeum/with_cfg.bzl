@@ -1,0 +1,15 @@
+load(":java_linux_arm64_binary.bzl", "java_linux_arm64_binary")
+
+platform(
+    name = "linux_arm64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:arm64",
+    ],
+)
+
+java_linux_arm64_binary(
+    name = "java_linux_arm64_binary",
+    srcs = ["src/main/java/com/example/Main.java"],
+    main_class = "com.example.Main",
+)
