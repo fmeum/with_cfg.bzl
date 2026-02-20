@@ -34,3 +34,14 @@ maven.install(
     ],
 )
 use_repo(maven, "maven_java_test_suite_example")
+
+# Needed because JavaBuilder at HEAD now requires at least JDK 21, but we test with JDK 17.
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+http_archive(
+    name = "legacy_remote_java_tools",
+    url = "https://github.com/bazelbuild/java_tools/releases/download/java_v17.0/java_tools-v17.0.zip",
+    sha256 = "9a441ca2d4ae393edd305b0e465b0ed8ee86b22123c41c26455fb856bf9bc897",
+)
+
+# Deps only required by legacy_remote_java_tools.
+bazel_dep(name = "protobuf", version = "33.4", repo_name = "com_google_protobuf")
