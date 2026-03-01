@@ -96,16 +96,18 @@ def _wrapper(
     # Exec properties can refer to specific exec groups and referencing an undefined exec group is
     # an error. We thus have to extract those that may apply to the frontend (only ever "test").
     # Since the intermediate targets don't have any interesting actions, they don't need any exec
-    # properties. The same applies to exec_group_compatible_with, which is non-configurable.
+    # properties. Bazel macro inheritance can populate inherited attrs as None, so normalize that
+    # here before trying to filter the dict. The same applies to exec_group_compatible_with, which
+    # is non-configurable.
     frontend_exec_properties = map_attr(
         lambda d: {
             k: v
-            for k, v in d.items()
+            for k, v in (d or {}).items()
             if "." not in k or k.startswith("test.")
         },
-        kwargs.get("exec_properties", {}),
+        kwargs.get("exec_properties") or {},
     )
-    frontend_test_exec_group_compatible_with = kwargs.get("exec_group_compatible_with", {}).get("test")
+    frontend_test_exec_group_compatible_with = (kwargs.get("exec_group_compatible_with") or {}).get("test")
 
     visibility = kwargs.pop("visibility", None)
     common_attrs = {
