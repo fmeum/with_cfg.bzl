@@ -33,7 +33,7 @@ jobs:
             folder: "."
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Configure Bazel version
         working-directory: ${{ matrix.folder }}
