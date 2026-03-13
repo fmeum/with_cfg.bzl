@@ -45,4 +45,4 @@ http_archive(
 )
 
 # Deps only required by legacy_remote_java_tools.
-bazel_dep(name = "protobuf", version = "33.5", repo_name = "com_google_protobuf")
+bazel_dep(name = "protobuf", version = "34.0.bcr.1", repo_name = "com_google_protobuf")
