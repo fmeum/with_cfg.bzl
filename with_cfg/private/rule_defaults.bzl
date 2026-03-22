@@ -1,6 +1,7 @@
 load("@bazel_features//:features.bzl", "bazel_features")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@rules_cc//cc/common:debug_package_info.bzl", "DebugPackageInfo")
+load("@rules_cc//cc/toolchains:cc_toolchain_config_info.bzl", "CcToolchainConfigInfo")
 load("@rules_java//java/common:java_common.bzl", "java_common")
 load("@rules_java//java/common:java_info.bzl", "JavaInfo")
 load("@rules_java//java/common:java_plugin_info.bzl", "JavaPluginInfo")
@@ -55,7 +56,7 @@ IMPLICIT_TARGETS = {
     ],
     "java_library": [
         # It is not a typo that this uses `{name}` rather than `{basename}`: a java_library with
-        # `name = "dir/foo"` will product a jar at `libdir/foo.jar`, not `dir/libfoo.jar`.
+        # `name = "dir/foo"` will produce a jar at `libdir/foo.jar`, not `dir/libfoo.jar`.
         "lib{name}.jar",
         "lib{name}-src.jar",
     ],
