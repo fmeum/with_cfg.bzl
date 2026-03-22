@@ -79,6 +79,7 @@ bzl_library(
     visibility = ["//with_cfg:__subpackages__"],
     deps = [
         "@rules_cc//cc/common",
+        "@rules_cc//cc/toolchains:toolchain_rules",
         "@rules_java//java/common",
     ],
 )
