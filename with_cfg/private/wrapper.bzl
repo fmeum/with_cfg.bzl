@@ -43,11 +43,13 @@ def make_wrapper(
 # exec_properties are treated specially since they may refer to different exec
 # groups, some of which aren't available on the frontend. The same applies to
 # exec_group_compatible_with.
+# exec_compatible_with is not on this list since the intermediate targets don't
+# have any non-internal actions and the alias frontend doesn't support the
+# attribute.
 _COMMON_ATTRS = [
     # keep sorted
     "compatible_with",
     "deprecation",
-    "exec_compatible_with",
     "features",
     "restricted_to",
     "target_compatible_with",
