@@ -109,6 +109,8 @@ def _wrapper(
     frontend_test_exec_group_compatible_with = (kwargs.get("exec_group_compatible_with") or {}).get("test")
 
     visibility = kwargs.pop("visibility", None)
+    # Until https://github.com/bazelbuild/bazel/pull/24964 exec_compatible_with affected
+    # the test frontend, but the alias frontend doesn't have the attribute.
     common_attrs = {
         attr: kwargs.pop(attr)
         for attr in _COMMON_ATTRS + (["exec_compatible_with"] if rule_info.test else [])
