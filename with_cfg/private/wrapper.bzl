@@ -114,7 +114,7 @@ def _wrapper(
     visibility = kwargs.pop("visibility", None)
     common_attrs = {
         attr: kwargs.pop(attr)
-        for attr in _COMMON_ATTRS
+        for attr in _COMMON_ATTRS + (["exec_compatible_with"] if rule_info.test else [])
         if attr in kwargs
     }
 
