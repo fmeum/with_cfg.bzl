@@ -42,12 +42,11 @@ def make_wrapper(
 # to replicate the wrapped rule's expansion context.
 # exec_properties are treated specially since they may refer to different exec
 # groups, some of which aren't available on the frontend. The same applies to
-# exec_group_compatible_with.
+# exec_{group_,}compatible_with.
 _COMMON_ATTRS = [
     # keep sorted
     "compatible_with",
     "deprecation",
-    "exec_compatible_with",
     "features",
     "restricted_to",
     "target_compatible_with",
@@ -110,9 +109,12 @@ def _wrapper(
     frontend_test_exec_group_compatible_with = (kwargs.get("exec_group_compatible_with") or {}).get("test")
 
     visibility = kwargs.pop("visibility", None)
+
+    # Until https://github.com/bazelbuild/bazel/pull/24964 exec_compatible_with affected
+    # the test frontend, but the alias frontend doesn't have the attribute.
     common_attrs = {
         attr: kwargs.pop(attr)
-        for attr in _COMMON_ATTRS
+        for attr in _COMMON_ATTRS + (["exec_compatible_with"] if rule_info.test else [])
         if attr in kwargs
     }
 
