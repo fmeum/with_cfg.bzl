@@ -42,10 +42,25 @@ jobs:
       - name: Install and add ASAN runtime DLL to PATH on Windows
         if: matrix.os == 'windows-latest' && matrix.folder == 'examples'
         run: |
-          Start-Process "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" -ArgumentList 'modify --installPath "C:\Program Files\Microsoft Visual Studio\2022\Enterprise" --quiet --add Microsoft.VisualStudio.Component.VC.ASAN' -Wait -PassThru
-          dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC"
-          dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64"
-          echo "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $vsWherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $visualStudioInstallPath = & $vsWherePath -latest -products * -property installationPath
+          if (-not $visualStudioInstallPath) {
+            throw "Unable to determine Visual Studio installation path."
+          }
+
+          Start-Process "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" -ArgumentList "modify --installPath `"$visualStudioInstallPath`" --quiet --add Microsoft.VisualStudio.Component.VC.ASAN" -Wait -PassThru
+
+          $msvcToolsDir = Join-Path $visualStudioInstallPath "VC\Tools\MSVC"
+          $latestMsvcDir = Get-ChildItem $msvcToolsDir -Directory | Sort-Object Name -Descending | Select-Object -First 1
+          if (-not $latestMsvcDir) {
+            throw "Unable to locate MSVC tools in '$msvcToolsDir'."
+          }
+
+          $msvcBinDir = Join-Path $latestMsvcDir.FullName "bin\Hostx64\x64"
+          if (-not (Test-Path $msvcBinDir)) {
+            throw "Unable to locate MSVC binaries in '$msvcBinDir'."
+          }
+          $msvcBinDir | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: bazel test //...
         working-directory: ${{ matrix.folder }}
