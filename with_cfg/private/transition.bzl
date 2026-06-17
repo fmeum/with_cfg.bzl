@@ -70,13 +70,22 @@ def _transition_base_impl(settings, attr, *, operations, original_settings_label
             new_settings[key] = attr_value
         elif operation == "extend":
             # Ensure idempotency by appending the tail only when the list-valued setting doesn't
-            # already has the tail. This ensures that chaining transitioned rules doesn't result in
+            # already have the tail. This ensures that chaining transitioned rules doesn't result in
             # a blow-up of the list.
             tail = attr_value
             if settings[key][-len(tail):] == tail:
                 new_settings[key] = settings[key]
             else:
                 new_settings[key] = settings[key] + tail
+        elif operation == "prepend":
+            # Ensure idempotency by prepending the head only when the list-valued setting doesn't
+            # already have the head. This ensures that chaining transitioned rules doesn't result in
+            # a blow-up of the list.
+            head = getattr(attr, attr_name)
+            if settings[key][:len(head)] == head:
+                new_settings[key] = settings[key]
+            else:
+                new_settings[key] = head + settings[key]
         else:
             fail("Unknown operation: {}".format(operation))
 
