@@ -130,10 +130,19 @@ _STARLARK_TYPES = {
 
 def _encode_settings(settings):
     # Certain setting values supplied by Bazel are special StarlarkValue types and thus unsupported
-    # by json.encode. We work around this by converting everything that isn't a native Starlark type
-    # to a string.
+    # by json.encode. We work around this by converting everything that isn't a native Starlark
+    # type to a string. This also applies to the elements of list-valued settings such as
+    # --platforms, which contain Labels.
     fixed_settings = {
-        k: v if type(v) in _STARLARK_TYPES else str(v)
+        k: _encode_single_setting(v)
         for k, v in settings.items()
     }
     return json.encode(fixed_settings)
+
+def _encode_single_setting(value):
+    if is_list(value):
+        return [_encode_scalar(v) for v in value]
+    return _encode_scalar(value)
+
+def _encode_scalar(value):
+    return value if type(value) in _STARLARK_TYPES else str(value)

@@ -1,0 +1,55 @@
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
+load("@with_cfg.bzl", "original_settings")
+load(":platform_filegroup.bzl", "platform_filegroup", "platform_filegroup_reset")
+
+constraint_setting(name = "variant")
+
+constraint_value(
+    name = "transitioned",
+    constraint_setting = ":variant",
+)
+
+platform(
+    name = "transitioned_platform",
+    constraint_values = [":transitioned"],
+)
+
+config_setting(
+    name = "is_transitioned",
+    constraint_values = [":transitioned"],
+)
+
+# Resolves to a different file depending on whether the target platform is
+# :transitioned_platform.
+filegroup(
+    name = "variant_file",
+    srcs = select({
+        ":is_transitioned": ["transitioned.txt"],
+        "//conditions:default": ["original.txt"],
+    }),
+)
+
+platform_filegroup_reset(
+    name = "variant_file_reset",
+    exports = ":variant_file",
+)
+
+platform_filegroup(
+    name = "test_data",
+    srcs = [
+        ":variant_file",
+        ":variant_file_reset",
+    ],
+)
+
+sh_test(
+    name = "platform_filegroup_test",
+    size = "small",
+    srcs = ["platform_filegroup_test.sh"],
+    data = [":test_data"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
+
+original_settings(
+    name = "platform_filegroup_original_settings",
+)
