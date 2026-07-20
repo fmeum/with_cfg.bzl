@@ -181,8 +181,9 @@ def _all_providers(extra_providers):
         return DEFAULT_PROVIDERS
     all_providers = list(DEFAULT_PROVIDERS)
 
-    # Providers aren't hashable.
-    # TODO: Improve this after https://github.com/bazelbuild/bazel/pull/24848.
+    # Providers are only hashable as of Bazel 8.1.0
+    # (https://github.com/bazelbuild/bazel/pull/24848).
+    # TODO: Improve this when the minimum supported Bazel version is at least 8.1.0.
     for p in extra_providers:
         if p not in all_providers and p not in SPECIAL_CASED_PROVIDERS:
             all_providers.append(p)

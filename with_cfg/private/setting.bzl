@@ -26,7 +26,7 @@ def validate_and_get_attr_name(setting):
     if is_label(setting):
         # Trigger an early error if the label refers to an invalid repo name.
         # buildifier: disable=no-effect
-        setting.workspace_name
+        setting.repo_name
 
         return make_valid_identifier("{}_{}".format(hash(str(setting)), setting.name))
     elif is_string(setting):

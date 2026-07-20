@@ -42,13 +42,14 @@ It also comes with a "reset" rule `cc_asan_test_reset` that can be used to disab
 
 ```starlark
 # cc_asan_test.bzl
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("@with_cfg.bzl", "with_cfg")
 
-_builder = with_cfg(native.cc_test)
+_builder = with_cfg(cc_test)
 _builder.extend("copt", ["-fsanitize=address"])
 _builder.extend("linkopt", select({
     # link.exe doesn't require or recognize -fsanitize=address and would emit a warning.
-    "@rules_cc//cc/compiler:msvc-cl": [],
+    Label("@rules_cc//cc/compiler:msvc-cl"): [],
     "//conditions:default": ["-fsanitize=address"],
 }))
 _builder.resettable(Label(":cc_asan_test_original_settings"))
@@ -63,7 +64,7 @@ original_settings(
 )
 ```
 
-See [examples/cc_asan_test_with_reset](examples/cc_asan_test_with_reset) for the complete example.
+See [examples/cc_asan_test_with_automatic_reset](examples/cc_asan_test_with_automatic_reset) for the complete example.
 
 ## Documentation
 

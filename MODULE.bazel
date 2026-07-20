@@ -1,6 +1,7 @@
 module(
     name = "with_cfg.bzl",
     version = "0.0.0",
+    bazel_compatibility = [">=7.6.1"],
     compatibility_level = 1,
 )
 
