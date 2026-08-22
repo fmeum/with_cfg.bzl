@@ -1,4 +1,6 @@
 load("@rules_java//java:java_binary.bzl", "java_binary")
+load("@rules_java//java:java_import.bzl", "java_import")
+load("@rules_jvm_external//:defs.bzl", "maven_export")
 load(":java_21_library.bzl", "java_21_library")
 
 java_binary(
@@ -7,9 +9,12 @@ java_binary(
     deps = [":primes"],
 )
 
+_COORDINATES = "foo:bar:0.0.1"
+
 java_21_library(
     name = "primes",
     srcs = ["src/main/java/com/example/Primes.java"],
+    tags = ["maven_coordinates=" + _COORDINATES],
     deps = [":integer_type"],
 )
 
@@ -24,4 +29,28 @@ java_21_library(
 alias(
     name = "primes_sources",
     actual = "libprimes-src.jar",
+)
+
+# These targets exist purely to demonstrate (and verify) that maven_export works
+# correctly with a rule wrapped by with_cfg.
+maven_export(
+    name = "primes_export",
+    lib_name = "primes",
+    maven_coordinates = _COORDINATES,
+)
+
+filegroup(
+    name = "primes_export_jar",
+    srcs = [":primes_export"],
+)
+
+java_import(
+    name = "primes_import",
+    jars = [":primes_export_jar"],
+)
+
+java_21_library(
+    name = "use_export",
+    srcs = ["src/main/java/com/example/UseExport.java"],
+    deps = [":primes_import"],
 )
