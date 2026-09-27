@@ -2,6 +2,10 @@ load("@rules_testing//lib:test_suite.bzl", "test_suite")
 load("//with_cfg/private:setting.bzl", "get_attr_type", "validate_and_get_attr_name")
 
 _GET_ATTR_TYPE_TEST_CASES = [
+    (None, "string_list"),
+    ([], "string_list"),
+    (select({"//conditions:default": None}), "string_list"),
+    (select({"//conditions:default": []}), "string_list"),
     (True, "bool"),
     (select({"//conditions:default": True}), "bool"),
     (select({Label("//conditions:default"): True}), "bool"),
@@ -35,6 +39,9 @@ _GET_ATTR_TYPE_TEST_CASES = [
     ([Label("//:foo"), Label("//:bar")], "label_list"),
     (select({"//conditions:default": [Label("//:foo"), Label("//:bar")]}), "label_list"),
     ([Label("//:baz")] + select({Label("//conditions:default"): [Label("//:foo"), Label("//:bar")]}), "label_list"),
+    # Classify the first nonempty value without rebuilding the selector.
+    ([] + ([] + select({"//conditions:default": [Label("//:foo")]})), "label_list"),
+    (select({"@rules_cc//cc/compiler:msvc-cl": [1], "//conditions:default": [None]}), "int_list"),
     # Empty lists in selects.
     (select({"@rules_cc//cc/compiler:msvc-cl": [], "//conditions:default": ["-fsanitize=address"]}), "string_list"),
     (select({"@rules_cc//cc/compiler:msvc-cl": [], "//conditions:default": [Label("//:foo")]}), "label_list"),
