@@ -69,14 +69,23 @@ def _transition_base_impl(settings, attr, *, operations, original_settings_label
             # Always idempotent.
             new_settings[key] = attr_value
         elif operation == "extend":
+            if not is_list(current_value) or not is_list(attr_value):
+                fail(
+                    "Cannot extend '{}' from {} to {} because both values must be lists.".format(
+                        setting,
+                        current_value,
+                        attr_value,
+                    ),
+                )
+
             # Ensure idempotency by appending the tail only when the list-valued setting doesn't
             # already has the tail. This ensures that chaining transitioned rules doesn't result in
             # a blow-up of the list.
             tail = attr_value
-            if settings[key][-len(tail):] == tail:
-                new_settings[key] = settings[key]
+            if current_value[-len(tail):] == tail:
+                new_settings[key] = current_value
             else:
-                new_settings[key] = settings[key] + tail
+                new_settings[key] = current_value + tail
         else:
             fail("Unknown operation: {}".format(operation))
 
