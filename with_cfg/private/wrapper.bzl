@@ -6,7 +6,7 @@ load(":select.bzl", "map_attr")
 load(":setting.bzl", "validate_and_get_attr_name")
 load(":utils.bzl", "is_dict", "is_label", "is_list", "is_string")
 
-visibility("private")
+visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
 
 # buildifier: disable=unnamed-macro
 def make_wrapper(
@@ -143,12 +143,15 @@ def _wrapper(
             extra_attrs["env_inherit"] = kwargs.pop("env_inherit")
 
     frontend_attrs = {}
-    if frontend_exec_properties:
-        frontend_attrs["exec_properties"] = frontend_exec_properties
-    if frontend_test_exec_group_compatible_with:
-        frontend_attrs["exec_group_compatible_with"] = {
-            "test": frontend_test_exec_group_compatible_with,
-        }
+
+    # The alias used as the default frontend has no execution attributes.
+    if rule_info.executable or rule_info.test:
+        if frontend_exec_properties:
+            frontend_attrs["exec_properties"] = frontend_exec_properties
+        if frontend_test_exec_group_compatible_with:
+            frontend_attrs["exec_group_compatible_with"] = {
+                "test": frontend_test_exec_group_compatible_with,
+            }
     if "args" in kwargs and (rule_info.executable or rule_info.test):
         # Leave the args attribute in place on the original rule so that they can be read by the
         # args_aspect attached to the exports attribute of the transitioning_alias.

@@ -8,9 +8,11 @@ load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("@rules_shell//shell:sh_library.bzl", "sh_library")
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
+load("@rules_testing//lib:analysis_test.bzl", "analysis_test")
 load("@rules_testing//lib:test_suite.bzl", "test_suite")
 load("@rules_testing//lib:unit_test.bzl", "unit_test")
-load("//with_cfg/private:with_cfg.bzl", "get_rule_name", "is_executable", "is_test")
+load("//with_cfg/private:with_cfg.bzl", "get_rule_name", "is_executable", "is_test", "with_cfg")
+load("//with_cfg/private:wrapper.bzl", "make_wrapper")
 
 def _noop_impl(ctx):
     pass
@@ -27,6 +29,72 @@ def my_macro_library():
 
 def my_macro_test():
     pass
+
+_wrapped_genrule, _genrule_alias = with_cfg(native.genrule).build()
+
+def _default_frontend_exec_properties_test(name):
+    subject = name + "_subject"
+    _wrapped_genrule(
+        name = subject,
+        outs = [subject + ".txt"],
+        cmd = "touch $@",
+        exec_properties = {"pool": "all"},
+    )
+    analysis_test(
+        name = name,
+        target = subject,
+        impl = _default_frontend_exec_properties_test_impl,
+        attrs = {"expected_output": attr.string(default = "with_cfg/tests/" + subject + ".txt")},
+    )
+
+def _default_frontend_exec_properties_test_impl(env, target):
+    env.expect.that_depset_of_files(target[DefaultInfo].files).contains_exactly([env.ctx.attr.expected_output])
+
+def _execution_attrs_test(name):
+    unit_test(name = name, impl = _execution_attrs_test_impl)
+
+def _execution_attrs_test_impl(env):
+    properties = {"pool": "all", "test.pool": "test", "compile.pool": "compile"}
+    filtered = {"pool": "all", "test.pool": "test"}
+    constraints = ["@platforms//os:linux"]
+    groups = {"test": constraints, "compile": constraints}
+    for value, expected, exec_groups in [
+        (None, None, None),
+        (properties, filtered, groups),
+        (
+            select({"//conditions:default": None, "//with_cfg/tests:condition": properties}),
+            select({"//conditions:default": {}, "//with_cfg/tests:condition": filtered}),
+            groups,
+        ),
+    ]:
+        for executable, test in [(False, False), (True, False), (False, True)]:
+            calls = []
+            capture = lambda **kwargs: calls.append(kwargs)
+            wrapper = make_wrapper(
+                rule_info = struct(
+                    kind = capture,
+                    supports_inheritance = False,
+                    executable = executable,
+                    test = test,
+                    native = False,
+                    implicit_targets = [],
+                ),
+                frontend = capture,
+                transitioning_alias = capture,
+                values = {},
+                original_settings_label = None,
+                attrs_to_reset = [],
+            )
+            wrapper(name = "subject", exec_properties = value, exec_group_compatible_with = exec_groups)
+            original, alias, frontend = calls
+            expect = env.expect.where(value = value, executable = executable, test = test)
+            expect.that_str(repr(original["exec_properties"])).equals(repr(value))
+            expect.that_dict(original["exec_group_compatible_with"] or {}).contains_exactly(exec_groups or {})
+            expect.that_bool("exec_properties" in alias).equals(False)
+            expect.that_bool("exec_group_compatible_with" in alias).equals(False)
+            expect.that_str(repr(frontend.get("exec_properties"))).equals(repr(expected if executable or test else None))
+            expected_groups = {"test": constraints} if exec_groups and (executable or test) else {}
+            expect.that_dict(frontend.get("exec_group_compatible_with", {})).contains_exactly(expected_groups)
 
 def _is_executable_test(name):
     unit_test(
@@ -124,6 +192,8 @@ def rule_test_suite(name):
     test_suite(
         name = name,
         tests = [
+            _default_frontend_exec_properties_test,
+            _execution_attrs_test,
             _is_executable_test,
             _is_test_test,
         ],
