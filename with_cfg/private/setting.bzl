@@ -1,5 +1,5 @@
-load(":select.bzl", "map_attr")
-load(":utils.bzl", "is_bool", "is_int", "is_label", "is_list", "is_string")
+load(":select.bzl", "decompose_select_elements")
+load(":utils.bzl", "is_bool", "is_int", "is_label", "is_list", "is_select", "is_string")
 
 visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
 
@@ -51,18 +51,22 @@ def validate_and_get_attr_name(setting):
         fail("Expected setting to be a Label or a string, got: {} ({})".format(repr(setting), type(setting)))
 
 def get_attr_type(attr):
-    mutable_attr_type = [None]
+    if is_select(attr):
+        values = [
+            value
+            for in_select, element in decompose_select_elements(attr)
+            for value in (element.values() if in_select else [element])
+        ]
+    else:
+        values = [attr]
 
-    def update_type(value):
-        if not mutable_attr_type[0]:
-            mutable_attr_type[0] = _get_type_as_attr_type(value)
+    for value in values:
+        attr_type = _get_type_as_attr_type(value)
+        if attr_type:
+            return attr_type
 
-    map_attr(update_type, attr)
-    if not mutable_attr_type[0]:
-        # This can happen if all values are empty lists, None, or if there are
-        # no values at all. Each of these cases is supported by a string_list.
-        return "string_list"
-    return mutable_attr_type[0]
+    # Empty lists, None, and selectors with no values use a string_list.
+    return "string_list"
 
 def _get_type_as_attr_type(value):
     if value == None:
