@@ -1,3 +1,4 @@
+load("//:with_cfg.bzl", "original_settings")
 load(":rewrite_test.bzl", "rewrite_test_suite")
 load(":rule_test.bzl", "rule_test_suite")
 load(":select_test.bzl", "select_test_suite")
@@ -10,3 +11,5 @@ rule_test_suite(name = "rule_test")
 select_test_suite(name = "select_test")
 
 setting_test_suite(name = "setting_test")
+
+original_settings(name = "original_settings")

@@ -45,6 +45,11 @@ def _transitioning_alias_base_impl(ctx, *, providers):
 
     # The transition on exports is a split transition with a single outgoing configuration.
     target = ctx.attr.exports[0]
+    default_info = target[DefaultInfo]
+    files_to_run = default_info.files_to_run
+    if files_to_run == None:
+        fail("Expected exports to be a rule or a file, got: {}".format(target.label))
+
     returned_providers = [
         target[provider]
         for provider in providers
@@ -52,9 +57,9 @@ def _transitioning_alias_base_impl(ctx, *, providers):
     ] + [
         DefaultInfo(
             # Filter out executable to prevent an error since this rule doesn't create the artifact.
-            files = target[DefaultInfo].files,
-            data_runfiles = target[DefaultInfo].data_runfiles,
-            default_runfiles = target[DefaultInfo].default_runfiles,
+            files = default_info.files,
+            data_runfiles = default_info.data_runfiles,
+            default_runfiles = default_info.default_runfiles,
         ),
         coverage_common.instrumented_files_info(
             ctx = ctx,
@@ -63,7 +68,7 @@ def _transitioning_alias_base_impl(ctx, *, providers):
     ]
     if not is_reset_rule:
         returned_providers.append(FrontendInfo(
-            executable = target[DefaultInfo].files_to_run.executable,
+            executable = files_to_run.executable,
             providers = providers,
             run_environment_info = target[RunEnvironmentInfo] if RunEnvironmentInfo in target else None,
             template_variable_info = target[ArgsInfo].template_variable_info if ArgsInfo in target else None,
