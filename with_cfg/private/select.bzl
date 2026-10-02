@@ -73,28 +73,35 @@ def decompose_select_elements(value):
     fail("Failed to parse '{}'".format(r))
 
 def compose_select_value(items):
-    # Determine combinator for select items in a first pass.
-    # This is always `+=` unless the select contains dicts, in which case it is
-    # `|=`.
-    combine_as_dict = any([_is_dict_element(item) for item in items])
-    parts = [
-        select(element) if in_select else element
-        for in_select, element in items
-    ]
-    result = parts[0]
-    for part in parts[1:]:
+    # Start at a select so nullable prefixes never require None + None.
+    first_select = 0
+    for i, (in_select, _) in enumerate(items):
+        if in_select:
+            first_select = i
+            break
+
+    # Bazel chooses a selector's operator from its first branch, even when later
+    # branches have another type. Use the anchor's mapped representative value.
+    anchor_selected, anchor_element = items[first_select]
+    if anchor_selected:
+        result = select(anchor_element)
+        representative = anchor_element.values()[0]
+    else:
+        result = anchor_element
+        representative = anchor_element
+    combine_as_dict = is_dict(representative)
+    for _, part in reversed(items[:first_select]):
+        if combine_as_dict:
+            result = part | result
+        else:
+            result = part + result
+    for suffix_selected, suffix_element in items[first_select + 1:]:
+        part = select(suffix_element) if suffix_selected else suffix_element
         if combine_as_dict:
             result |= part
         else:
             result += part
     return result
-
-def _is_dict_element(item):
-    in_select, element = item
-    if in_select:
-        return any([is_dict(value) for value in element.values()])
-    else:
-        return is_dict(element)
 
 def _consume_compound_value(r, pos):
     c = r[pos]
