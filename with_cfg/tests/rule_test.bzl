@@ -11,8 +11,11 @@ load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load("@rules_testing//lib:analysis_test.bzl", "analysis_test")
 load("@rules_testing//lib:test_suite.bzl", "test_suite")
 load("@rules_testing//lib:unit_test.bzl", "unit_test")
-load("//with_cfg/private:with_cfg.bzl", "get_rule_name", "is_executable", "is_test", "with_cfg")
+load("//:with_cfg.bzl", "with_cfg")
+load("//with_cfg/private:with_cfg.bzl", "get_rule_name", "is_executable", "is_test")
 load("//with_cfg/private:wrapper.bzl", "make_wrapper")
+
+_filegroup, _filegroup_reset = with_cfg(native.filegroup).resettable(Label(":original_settings")).build()
 
 def _noop_impl(ctx):
     pass
@@ -188,6 +191,29 @@ def _is_test_test_impl(env):
     env.expect.where(rule = "sh_library").that_bool(is_test(env.ctx.attr.sh_library)).equals(False)
     env.expect.where(rule = "sh_test").that_bool(is_test(env.ctx.attr.sh_test)).equals(True)
 
+def _reset_files_test(name):
+    native.filegroup(name = name + "_files", srcs = ["rule_test.bzl"])
+    _filegroup_reset(name = name + "_source", exports = "rule_test.bzl")
+    _filegroup_reset(name = name + "_rule", exports = name + "_files")
+    native.config_setting(name = name + "_config", values = {"compilation_mode": "dbg"})
+    _filegroup_reset(name = name + "_empty", exports = name + "_config")
+    unit_test(
+        name = name,
+        impl = _reset_files_test_impl,
+        attrs = {
+            "resets": attr.label_list(default = [name + "_source", name + "_rule"]),
+            "empty_reset": attr.label(default = name + "_empty"),
+        },
+    )
+
+def _reset_files_test_impl(env):
+    for target in env.ctx.attr.resets:
+        env.expect.where(target = target.label).that_depset_of_files(target[DefaultInfo].files).contains_exactly([
+            "with_cfg/tests/rule_test.bzl",
+        ])
+        env.expect.where(target = target.label).that_bool(target[DefaultInfo].files_to_run.executable == None).equals(True)
+    env.expect.that_depset_of_files(env.ctx.attr.empty_reset[DefaultInfo].files).contains_exactly([])
+
 def rule_test_suite(name):
     test_suite(
         name = name,
@@ -196,5 +222,6 @@ def rule_test_suite(name):
             _execution_attrs_test,
             _is_executable_test,
             _is_test_test,
+            _reset_files_test,
         ],
     )
