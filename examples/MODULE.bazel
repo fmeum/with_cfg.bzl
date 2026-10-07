@@ -16,6 +16,15 @@ bazel_dep(name = "rules_jvm_external", version = "6.9")
 bazel_dep(name = "rules_go", version = "0.59.0")
 bazel_dep(name = "rules_shell", version = "0.6.1")
 
+# Remove `-noverify`, which the JDK 27 embedded in Bazel at HEAD rejects.
+# TODO: Drop this once a release of rules_jvm_external includes
+# https://github.com/bazel-contrib/rules_jvm_external/commit/e98a2bcebf3038243243941f458fefe940e980fb.
+single_version_override(
+    module_name = "rules_jvm_external",
+    patch_strip = 1,
+    patches = ["//:rules_jvm_external_noverify.patch"],
+)
+
 # Not a direct dep, update to fix compatibility with --incompatible_autoload_externally=.
 bazel_dep(name = "rules_foreign_cc", version = "0.15.1")
 
