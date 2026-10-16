@@ -1,0 +1,29 @@
+name: Starlark types
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sty:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: tamird/sty@f9c01a932380959b8e30a9085a49738499631414
+        continue-on-error: true
+        with:
+          files: |
+            with_cfg/private/args.bzl
+            with_cfg/private/frontend.bzl
+            examples/dynamic_deps/rules/runfiles_dir.bzl
