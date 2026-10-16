@@ -59,7 +59,8 @@ def rewrite_args(name, args, make_filegroup):
     return rewrite_locations_in_attr(args, rewrite_label), filegroup_labels
 
 def _args_aspect_impl(target, ctx):
-    if not hasattr(ctx.rule.attr, "args"):
+    args = getattr(ctx.rule.attr, "args", None)
+    if type(args) != "list":
         return []
 
     execpaths_expansion_to_files = {}
@@ -67,8 +68,8 @@ def _args_aspect_impl(target, ctx):
 
     # https://github.com/bazelbuild/bazel/blob/af8deb85cbc627a507605e67aa71e829f7db630f/src/main/java/com/google/devtools/build/lib/analysis/LocationExpander.java#L446-L516
     for attr in _LOCATION_EXPANSION_ARGS:
-        deps = getattr(ctx.rule.attr, attr, [])
-        if type(deps) != type([]):
+        deps = getattr(ctx.rule.attr, attr, None)
+        if type(deps) != "list":
             continue
         for target in deps:
             if type(target) != "Target":
@@ -101,7 +102,7 @@ def _args_aspect_impl(target, ctx):
         labels[label] = None
         return label
 
-    for arg in ctx.rule.attr.args:
+    for arg in args:
         rewrite_locations_in_single_value(arg, collect_label)
 
     labels_to_files = {}

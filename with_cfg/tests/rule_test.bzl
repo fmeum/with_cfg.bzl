@@ -53,6 +53,18 @@ def _args_non_dependency_test(name):
 def _args_non_dependency_test_impl(env, target):
     env.expect.that_depset_of_files(target[DefaultInfo].files).contains_exactly([])
 
+_int_args = rule(_noop_impl, attrs = {"args": attr.int()})
+
+def _int_args_macro(name, **kwargs):
+    _int_args(name = name, **kwargs)
+
+_wrapped_int_args, _int_args_alias = with_cfg(_int_args_macro).build()
+
+def _args_non_list_test(name):
+    subject = name + "_subject"
+    _wrapped_int_args(name = subject, args = 42)
+    analysis_test(name = name, target = subject, impl = _args_non_dependency_test_impl)
+
 def my_macro_binary():
     pass
 
@@ -263,6 +275,7 @@ def rule_test_suite(name):
         name = name,
         tests = [
             _args_non_dependency_test,
+            _args_non_list_test,
             _default_frontend_exec_properties_test,
             _execution_attrs_test,
             _is_executable_test,
