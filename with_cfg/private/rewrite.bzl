@@ -1,5 +1,5 @@
 load(":select.bzl", "map_attr")
-load(":utils.bzl", "is_dict", "is_list", "is_string")
+load(":utils.bzl", "is_string")
 
 visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
 
@@ -20,7 +20,7 @@ def rewrite_locations_in_attr(value, label_rewriter):
 def _rewrite_locations_in_value(value, label_rewriter):
     if not value:
         return value
-    if is_dict(value):
+    if type(value) == "dict":
         return {
             rewrite_locations_in_single_value(k, label_rewriter): _rewrite_locations_in_list_or_single_value(v, label_rewriter)
             for k, v in value.items()
@@ -30,7 +30,7 @@ def _rewrite_locations_in_value(value, label_rewriter):
 def _rewrite_locations_in_list_or_single_value(value, label_rewriter):
     if not value:
         return value
-    if is_list(value):
+    if type(value) == "list":
         return [rewrite_locations_in_single_value(v, label_rewriter) for v in value]
     return rewrite_locations_in_single_value(value, label_rewriter)
 
