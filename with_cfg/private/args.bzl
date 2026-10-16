@@ -71,6 +71,8 @@ def _args_aspect_impl(target, ctx):
         if type(deps) != type([]):
             continue
         for target in deps:
+            if type(target) != "Target":
+                continue
             default_info = target[DefaultInfo]
             if default_info.files_to_run and default_info.files_to_run.executable:
                 files = depset([default_info.files_to_run.executable])

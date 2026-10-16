@@ -26,6 +26,33 @@ my_binary = rule(_noop_impl, executable = True)
 my_library = rule(_noop_impl)
 my_test = rule(_noop_impl, test = True)
 
+_string_data = rule(
+    _noop_impl,
+    attrs = {
+        "args": attr.string_list(),
+        "data": attr.string_list(),
+        "srcs": attr.label_list(allow_files = True),
+    },
+)
+
+def _string_data_macro(name, **kwargs):
+    _string_data(name = name, **kwargs)
+
+_wrapped_string_data, _string_data_alias = with_cfg(_string_data_macro).build()
+
+def _args_non_dependency_test(name):
+    subject = name + "_subject"
+    _wrapped_string_data(
+        name = subject,
+        args = ["$(location :BUILD.bazel)"],
+        data = ["not a target"],
+        srcs = ["BUILD.bazel"],
+    )
+    analysis_test(name = name, target = subject, impl = _args_non_dependency_test_impl)
+
+def _args_non_dependency_test_impl(env, target):
+    env.expect.that_depset_of_files(target[DefaultInfo].files).contains_exactly([])
+
 def my_macro_binary():
     pass
 
@@ -235,6 +262,7 @@ def rule_test_suite(name):
     test_suite(
         name = name,
         tests = [
+            _args_non_dependency_test,
             _default_frontend_exec_properties_test,
             _execution_attrs_test,
             _is_executable_test,
