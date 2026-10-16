@@ -10,12 +10,14 @@ load("@rules_shell//shell:sh_library.bzl", "sh_library")
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load("@rules_testing//lib:analysis_test.bzl", "analysis_test")
 load("@rules_testing//lib:test_suite.bzl", "test_suite")
+load("@rules_testing//lib:truth.bzl", "matching")
 load("@rules_testing//lib:unit_test.bzl", "unit_test")
 load("//:with_cfg.bzl", "with_cfg")
 load("//with_cfg/private:with_cfg.bzl", "get_rule_name", "is_executable", "is_test")
 load("//with_cfg/private:wrapper.bzl", "make_wrapper")
 
 _filegroup, _filegroup_reset = with_cfg(native.filegroup).resettable(Label(":original_settings")).build()
+_executable_filegroup, _executable_filegroup_alias = with_cfg(native.filegroup, executable = True).build()
 
 def _noop_impl(ctx):
     pass
@@ -52,6 +54,21 @@ def _default_frontend_exec_properties_test(name):
 
 def _default_frontend_exec_properties_test_impl(env, target):
     env.expect.that_depset_of_files(target[DefaultInfo].files).contains_exactly([env.ctx.attr.expected_output])
+
+def _missing_executable_test(name):
+    subject = name + "_subject"
+    _executable_filegroup(name = subject)
+    analysis_test(
+        name = name,
+        target = subject,
+        impl = _missing_executable_test_impl,
+        expect_failure = True,
+    )
+
+def _missing_executable_test_impl(env, target):
+    env.expect.that_target(target).failures().contains_predicate(
+        matching.str_matches("Expected exports to provide an executable, got: *"),
+    )
 
 def _execution_attrs_test(name):
     unit_test(name = name, impl = _execution_attrs_test_impl)
@@ -222,6 +239,7 @@ def rule_test_suite(name):
             _execution_attrs_test,
             _is_executable_test,
             _is_test_test,
+            _missing_executable_test,
             _reset_files_test,
         ],
     )

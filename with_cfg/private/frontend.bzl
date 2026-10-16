@@ -26,6 +26,8 @@ def _frontend_impl(ctx):
     target = ctx.attr.exports
 
     original_executable = target[FrontendInfo].executable
+    if original_executable == None:
+        fail("Expected exports to provide an executable, got: {}".format(target.label))
     executable_basename = original_executable.basename
 
     # Create the executable in a subdirectory to ensure that its path depth below the exec root
