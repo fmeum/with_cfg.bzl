@@ -39,7 +39,7 @@ load(":rewrite.bzl", "rewrite_locations_in_attr", "rewrite_locations_in_single_v
 visibility("private")
 
 def rewrite_args(name, args, make_filegroup):
-    seen_labels = {}
+    seen_labels = {}  # type: dict[str, None]
     filegroup_labels = []
 
     def rewrite_label(label_string):

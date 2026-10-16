@@ -1,0 +1,3 @@
+"""Scalar predicates used by typed attribute helpers."""
+
+def is_string(value: object) -> TypeIs[str]: ...

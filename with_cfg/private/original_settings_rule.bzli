@@ -1,0 +1,5 @@
+"""The string setting stores its original JSON value."""
+
+load(":providers.bzl", "OriginalSettingsInfo")
+
+def _original_settings_impl(ctx) -> list[OriginalSettingsInfo]: ...
