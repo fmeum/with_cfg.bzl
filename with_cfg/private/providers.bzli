@@ -1,0 +1,7 @@
+"""Stored fields of the argument and original-settings providers."""
+
+def ArgsInfo(*, template_variable_info: TemplateVariableInfo) -> record[{
+    "template_variable_info": TemplateVariableInfo,
+}]: ...
+
+def OriginalSettingsInfo(*, json: str) -> record[{"json": str}]: ...
