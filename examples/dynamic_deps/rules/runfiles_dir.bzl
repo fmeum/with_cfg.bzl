@@ -47,6 +47,7 @@ runfiles_dir = rule(
         "executable": attr.label(
             cfg = "target",
             executable = True,
+            mandatory = True,
         ),
     },
 )
