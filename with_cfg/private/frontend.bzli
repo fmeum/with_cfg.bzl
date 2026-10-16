@@ -1,0 +1,3 @@
+"""The frontend forwards providers from its transitioned target."""
+
+def _frontend_impl(ctx: ctx) -> list[object]: ...

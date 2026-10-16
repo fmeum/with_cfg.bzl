@@ -1,0 +1,5 @@
+"""Providers returned by the argument-expansion aspect."""
+
+load(":providers.bzl", "ArgsInfo")
+
+def _args_aspect_impl(target: Target, ctx: ctx) -> list[OutputGroupInfo | ArgsInfo]: ...

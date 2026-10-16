@@ -60,7 +60,6 @@ def rewrite_args(name, args, make_filegroup):
     return rewrite_locations_in_attr(args, rewrite_label), filegroup_labels
 
 def _args_aspect_impl(target, ctx):
-    # type: (Target, ctx) -> list[Provider]
     if not hasattr(ctx.rule.attr, "args"):
         return []
 

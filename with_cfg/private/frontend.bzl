@@ -23,7 +23,6 @@ unwrap_template_variable_info = rule(
 )
 
 def _frontend_impl(ctx):
-    # type: (ctx) -> list
     target = ctx.attr.exports
 
     original_executable = target[FrontendInfo].executable
