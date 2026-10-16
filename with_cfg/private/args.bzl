@@ -95,7 +95,7 @@ def _args_aspect_impl(target, ctx):
                     toolchain[platform_common.TemplateVariableInfo].variables,
                 )
 
-    labels = {}
+    labels = {}  # type: dict[str, None]
 
     def collect_label(label):
         # type: (str) -> str
