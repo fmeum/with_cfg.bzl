@@ -2,3 +2,15 @@
 "with_cfg/private/args.bzl" = "with_cfg/private/args.bzli"
 "with_cfg/private/frontend.bzl" = "with_cfg/private/frontend.bzli"
 "examples/dynamic_deps/rules/runfiles_dir.bzl" = "examples/dynamic_deps/rules/runfiles_dir.bzli"
+
+[rules]
+# Nested helpers and the frontend factory lack complete signatures.
+missing-parameter-annotation = "ignore"
+missing-return-annotation = "ignore"
+missing-type-argument = "error"
+unsound-assignment = "error"
+# rewrite_locations_in_attr leaves its return element type unresolved.
+unsound-return-statement = "ignore"
+explicit-any = "error"
+# Native Bazel signatures and empty containers retain gradual types.
+non-static-type = "ignore"

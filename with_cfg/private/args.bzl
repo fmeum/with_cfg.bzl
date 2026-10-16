@@ -39,7 +39,6 @@ load(":rewrite.bzl", "rewrite_locations_in_attr", "rewrite_locations_in_single_v
 visibility("private")
 
 def rewrite_args(name, args, make_filegroup):
-    # type: (string, list[string], Any) -> tuple[list[string], list[Label]]
     seen_labels = {}
     filegroup_labels = []
 

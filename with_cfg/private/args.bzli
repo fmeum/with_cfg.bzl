@@ -3,3 +3,12 @@
 load(":providers.bzl", "ArgsInfo")
 
 def _args_aspect_impl(target: Target, ctx: ctx) -> list[OutputGroupInfo | ArgsInfo]: ...
+
+class _MakeFilegroup(Protocol):
+    def __call__(self, *, name: str, srcs: list[str], output_group: str) -> object: ...
+
+def rewrite_args(
+        name: str,
+        args: list[str],
+        make_filegroup: _MakeFilegroup,
+) -> tuple[list[str], list[Label]]: ...
