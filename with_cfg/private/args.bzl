@@ -95,6 +95,7 @@ def _args_aspect_impl(target, ctx):
     labels = {}
 
     def collect_label(label):
+        # type: (str) -> str
         labels[label] = None
         return label
 

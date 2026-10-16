@@ -1,10 +1,11 @@
 [type-interfaces]
 "with_cfg/private/args.bzl" = "with_cfg/private/args.bzli"
 "with_cfg/private/frontend.bzl" = "with_cfg/private/frontend.bzli"
+"with_cfg/private/rewrite.bzl" = "with_cfg/private/rewrite.bzli"
 "examples/dynamic_deps/rules/runfiles_dir.bzl" = "examples/dynamic_deps/rules/runfiles_dir.bzli"
 
 [rules]
-# Nested helpers and the frontend factory lack complete signatures.
+# Attribute rewriting and the frontend factory lack complete signatures.
 missing-parameter-annotation = "ignore"
 missing-return-annotation = "ignore"
 missing-type-argument = "error"

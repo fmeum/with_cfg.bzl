@@ -1,0 +1,11 @@
+"""Label callbacks used while rewriting location expressions."""
+
+def make_label_rewriter(label_map: Mapping[Label, str | Label]) -> Callable[[str], str]: ...
+
+def _label_rewriter_base(
+        label_string: str,
+        *,
+        label_map: Mapping[Label, str | Label],
+) -> str: ...
+
+def _rewrite_location(expr: str, label_rewriter: Callable[[str], str]) -> str: ...
