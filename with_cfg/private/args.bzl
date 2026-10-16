@@ -64,7 +64,7 @@ def _args_aspect_impl(target, ctx):
         return []
 
     execpaths_expansion_to_files = {}
-    targets = {}
+    targets = {}  # type: dict[Target, None]
 
     # https://github.com/bazelbuild/bazel/blob/af8deb85cbc627a507605e67aa71e829f7db630f/src/main/java/com/google/devtools/build/lib/analysis/LocationExpander.java#L446-L516
     for attr in _LOCATION_EXPANSION_ARGS:
@@ -87,10 +87,10 @@ def _args_aspect_impl(target, ctx):
             targets[target] = None
 
     template_variables = {}
-    toolchains = getattr(ctx.rule.attr, "toolchains", [])
-    if type(toolchains) == type([]):
+    toolchains = getattr(ctx.rule.attr, "toolchains", None)
+    if type(toolchains) == "list":
         for toolchain in toolchains:
-            if platform_common.TemplateVariableInfo in toolchain:
+            if type(toolchain) == "Target" and platform_common.TemplateVariableInfo in toolchain:
                 template_variables.update(
                     toolchain[platform_common.TemplateVariableInfo].variables,
                 )
