@@ -26,5 +26,7 @@ jobs:
           files: |
             with_cfg/private/args.bzl
             with_cfg/private/frontend.bzl
+            with_cfg/private/original_settings_rule.bzl
+            with_cfg/private/providers.bzl
             with_cfg/private/rewrite.bzl
             examples/dynamic_deps/rules/runfiles_dir.bzl
