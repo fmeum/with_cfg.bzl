@@ -15,7 +15,11 @@ def _label_rewriter_base(label_string, *, label_map):
     return str(rewritten_label)
 
 def rewrite_locations_in_attr(value, label_rewriter):
-    return map_attr(lambda v: _rewrite_locations_in_value(v, label_rewriter), value)
+    def rewrite_value(value):
+        # type: (object) -> object
+        return _rewrite_locations_in_value(value, label_rewriter)
+
+    return map_attr(rewrite_value, value)
 
 def _rewrite_locations_in_value(value, label_rewriter):
     if not value:
