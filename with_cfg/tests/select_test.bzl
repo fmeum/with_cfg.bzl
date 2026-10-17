@@ -23,14 +23,15 @@ _CONSUME_SINGLE_VALUE_TEST_CASES = [
 
 def _consume_single_value_test(env):
     for case in _CONSUME_SINGLE_VALUE_TEST_CASES:
-        r = repr(case)
+        for start in [0, 3]:
+            r = " " * start + repr(case)
 
-        # TODO: rules_testing doesn't accept tuples as collection subjects.
-        env.expect.that_collection(
-            list(consume_single_value(r, 0)),
-        ).contains_exactly(
-            [case, len(r)],
-        ).in_order()
+            # TODO: rules_testing doesn't accept tuples as collection subjects.
+            env.expect.that_collection(
+                list(consume_single_value(r, start)),
+            ).contains_exactly(
+                [case, len(r)],
+            ).in_order()
 
 def _consume_list_test(env):
     r = repr(_CONSUME_SINGLE_VALUE_TEST_CASES)

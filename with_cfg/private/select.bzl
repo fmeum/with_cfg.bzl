@@ -232,7 +232,7 @@ def consume_single_value(r, pos):
         return Label(string), after_string + 1
     elif c == "-" or c.isdigit():
         start = pos
-        for _ in range(len(r)):
+        for _ in range(start, len(r)):
             c = r[pos]
             if not c.isdigit() and c != "-":
                 if c == ".":
