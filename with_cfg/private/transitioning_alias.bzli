@@ -1,23 +1,21 @@
 """Provider forwarding through a single-output split transition."""
 
-type _Attrs = struct[{
-    "exports": list[Target],
-    "internal_only_reset": NotRequired[bool],
-}, ...]
+type _Attrs = struct[{"exports": Sequence[Target]}, ...]
+type _Context = ctx[object, _Attrs]
 
 def make_transitioning_alias[K: str | Label](
         *,
         providers: Sequence[ProviderKey],
-        transition: transition,
+        transition: transition[Literal["split"]],
         values: Mapping[K, object],
         original_settings_label: str | Label | None,
 ) -> rule: ...
 
 def _make_transitioning_alias_impl(
         *, providers: Sequence[ProviderKey],
-): ...
+) -> Callable[[_Context], list[object]]: ...
 
 def _transitioning_alias_base_impl(
-        ctx: ctx[bool | int | str | list[str] | set[str], _Attrs],
+        ctx: _Context,
         *, providers: Sequence[ProviderKey],
 ) -> list[object]: ...
