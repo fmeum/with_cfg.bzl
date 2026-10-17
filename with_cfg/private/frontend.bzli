@@ -3,6 +3,9 @@
 type _Strings = Iterable[str] | depset[str]
 type _Labels = Iterable[str | Label] | depset[str | Label]
 
+def filter_exec_properties(value: object) -> ExactDict[str, str] | select[dict[str, str], Literal["dict"]]: ...
+def _filter_exec_property_dict(value: object) -> ExactDict[str, str]: ...
+
 class _CommonKwargs(TypedDict):
     applicable_licenses: NotRequired[_Labels | None]
     aspect_hints: NotRequired[_Labels | select[_Labels | None] | None]

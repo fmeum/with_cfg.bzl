@@ -6,6 +6,7 @@ load(
     "consume_single_value",
     "decompose_select_elements",
     "map_attr",
+    "map_dict_attr",
     "map_string_list_attr",
 )
 
@@ -110,12 +111,26 @@ def _map_select_dict_test(env):
     selected = select({"//conditions:default": {"selected": "three", "shared": "selected"}})
     last = {"last": "four", "shared": "last"}
     value = first | (second | selected) | last
-    mapped = map_attr(lambda value: {key: item.upper() for key, item in value.items()}, value)
-    env.expect.that_dict(dict([
-        pair
-        for in_select, element in decompose_select_elements(mapped)
-        for pair in (element["//conditions:default"] if in_select else element).items()
-    ])).contains_exactly({"first": "ONE", "second": "TWO", "prefix": "SECOND", "selected": "THREE", "last": "FOUR", "shared": "LAST"})
+    calls = []
+
+    def uppercase(value):
+        calls.append(value)
+        return {key: item.upper() for key, item in value.items()}
+
+    for mapper in [map_attr, map_dict_attr]:
+        calls.clear()
+        mapped = mapper(uppercase, value)
+        env.expect.that_collection(calls).contains_exactly([
+            first,
+            second,
+            {"selected": "three", "shared": "selected"},
+            last,
+        ]).in_order()
+        env.expect.that_dict(dict([
+            pair
+            for in_select, element in decompose_select_elements(mapped)
+            for pair in (element["//conditions:default"] if in_select else element).items()
+        ])).contains_exactly({"first": "ONE", "second": "TWO", "prefix": "SECOND", "selected": "THREE", "last": "FOUR", "shared": "LAST"})
 
 _SelectedValueInfo = provider(fields = ["values"])
 
@@ -189,11 +204,20 @@ def _map_none_first_dict_test(env):
         (True, second),
     ]).in_order()
 
-    mapped = map_attr(lambda value: {} if value == None else value, value)
-    env.expect.that_collection(decompose_select_elements(mapped)).contains_exactly([
-        (True, {":first": {}, "//conditions:default": {"first": "one"}}),
-        (True, {":second": {}, "//conditions:default": {"second": "two"}}),
-    ]).in_order()
+    calls = []
+
+    def normalize(value):
+        calls.append(value)
+        return {} if value == None else value
+
+    for mapper in [map_attr, map_dict_attr]:
+        calls.clear()
+        mapped = mapper(normalize, value)
+        env.expect.that_collection(calls).contains_exactly([None, {"first": "one"}, None, {"second": "two"}]).in_order()
+        env.expect.that_collection(decompose_select_elements(mapped)).contains_exactly([
+            (True, {":first": {}, "//conditions:default": {"first": "one"}}),
+            (True, {":second": {}, "//conditions:default": {"second": "two"}}),
+        ]).in_order()
 
 def select_test_suite(name):
     test_suite(

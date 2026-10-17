@@ -1,6 +1,6 @@
 load("@bazel_features//:features.bzl", "bazel_features")
 load(":args.bzl", "rewrite_args")
-load(":frontend.bzl", "unwrap_template_variable_info")
+load(":frontend.bzl", "filter_exec_properties", "unwrap_template_variable_info")
 load(":rewrite.bzl", "make_label_rewriter", "rewrite_locations_in_attr")
 load(":select.bzl", "map_attr")
 load(":setting.bzl", "validate_and_get_attr_name")
@@ -95,17 +95,9 @@ def _wrapper(
     # Exec properties can refer to specific exec groups and referencing an undefined exec group is
     # an error. We thus have to extract those that may apply to the frontend (only ever "test").
     # Since the intermediate targets don't have any interesting actions, they don't need any exec
-    # properties. Bazel macro inheritance can populate inherited attrs as None, so normalize that
-    # here before trying to filter the dict. The same applies to exec_group_compatible_with, which
-    # is non-configurable.
-    frontend_exec_properties = map_attr(
-        lambda d: {
-            k: v
-            for k, v in (d or {}).items()
-            if "." not in k or k.startswith("test.")
-        },
-        kwargs.get("exec_properties") or {},
-    )
+    # properties. The filter normalizes missing or inherited None values. The same applies to
+    # exec_group_compatible_with, which is non-configurable.
+    frontend_exec_properties = filter_exec_properties(kwargs.get("exec_properties"))
     frontend_test_exec_group_compatible_with = (kwargs.get("exec_group_compatible_with") or {}).get("test")
 
     visibility = kwargs.pop("visibility", None)

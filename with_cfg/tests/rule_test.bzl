@@ -125,6 +125,11 @@ def _execution_attrs_test_impl(env):
             select({"//conditions:default": {}, "//with_cfg/tests:condition": filtered}),
             groups,
         ),
+        (
+            None + (None + select({"//conditions:default": None, "//with_cfg/tests:condition": properties})) + None,
+            {} | ({} | select({"//conditions:default": {}, "//with_cfg/tests:condition": filtered})) | {},
+            groups,
+        ),
     ]:
         for executable, test in [(False, False), (True, False), (False, True)]:
             calls = []

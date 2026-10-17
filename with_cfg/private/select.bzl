@@ -7,7 +7,7 @@ def map_attr(func, attribute):  # ty: ignore[missing-parameter-annotation]
     return _map_attr(func, attribute, _map_selected, compose_select_value)
 
 def _map_selected(func, branches):
-    return {key: func(value) for key, value in branches.items()}
+    return {_condition(key): func(value) for key, value in branches.items()}
 
 def _map_attr(func, attribute, map_selected, compose):
     if not is_select(attribute):
@@ -19,6 +19,15 @@ def _map_attr(func, attribute, map_selected, compose):
 
 def map_string_list_attr(func, attribute):
     return _map_attr(func, attribute, _map_list_selected, _compose_list)
+
+def map_dict_attr(func, attribute):
+    return _map_attr(func, attribute, _map_dict_selected, _compose_dict)
+
+def _map_dict_selected(func, branches):
+    return select(_map_selected(func, branches))
+
+def _compose_dict(items):
+    return _compose(items, lambda item: item[1], lambda _anchor, left, right: left | right)
 
 def _condition(key):
     if type(key) == "string" or type(key) == "Label":

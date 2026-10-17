@@ -52,6 +52,7 @@ bzl_library(
     visibility = ["//with_cfg:__subpackages__"],
     deps = [
         ":providers",
+        ":select",
         "@rules_cc//cc/common",
     ],
 )

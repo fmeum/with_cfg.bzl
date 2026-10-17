@@ -1,7 +1,27 @@
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load(":providers.bzl", "FrontendInfo")
+load(":select.bzl", "map_dict_attr")
 
 visibility("private")
+
+def filter_exec_properties(value):
+    return map_dict_attr(_filter_exec_property_dict, value)
+
+def _filter_exec_property_dict(value):
+    # Macro inheritance can supply None for the whole attribute or a branch.
+    if not value:
+        return {}
+    if type(value) != "dict":
+        fail("Expected execution properties to be a dictionary, got {}".format(type(value)))
+    result = {}  # type: dict[str, str]
+    for key, item in value.items():
+        if type(key) != "string":
+            fail("Expected an execution property name to be a string, got {}".format(type(key)))
+        if "." not in key or key.startswith("test."):
+            if type(item) != "string":
+                fail("Expected execution property '{}' to be a string, got {}".format(key, type(item)))
+            result[key] = item
+    return result
 
 def get_frontend(*, executable, test):
     if test:
