@@ -1,5 +1,5 @@
-load(":select.bzl", "map_attr")
-load(":utils.bzl", "is_string")
+load(":select.bzl", "map_parsed_select")
+load(":utils.bzl", "is_select", "is_string")
 
 visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
 
@@ -15,11 +15,14 @@ def _label_rewriter_base(label_string, *, label_map):
     return str(rewritten_label)
 
 def rewrite_locations_in_attr(value, label_rewriter):
-    def rewrite_value(value):
-        # type: (object) -> object
+    if not is_select(value):
         return _rewrite_locations_in_value(value, label_rewriter)
 
-    return map_attr(rewrite_value, value)
+    def rewrite_value(value):
+        # type: (_ParsedElement) -> _ParsedElement
+        return _rewrite_locations_in_parsed_value(value, label_rewriter)
+
+    return map_parsed_select(rewrite_value, value)
 
 def rewrite_locations_in_string_list(value, label_rewriter):
     if value == None:
@@ -63,7 +66,7 @@ def _rewrite_locations_in_list_or_single_value(value, label_rewriter):
     if not value:
         return value
     if type(value) == "list":
-        return [rewrite_locations_in_single_value(v, label_rewriter) for v in value]
+        return _rewrite_locations_in_list(value, label_rewriter)
     return rewrite_locations_in_single_value(value, label_rewriter)
 
 # Based on:
@@ -134,3 +137,23 @@ def _rewrite_location(expr, label_rewriter):
     if not label:
         return expr
     return type + " " + label_rewriter(label)
+
+def _rewrite_locations_in_list(value, label_rewriter):
+    return [rewrite_locations_in_single_value(v, label_rewriter) for v in value]
+
+def _rewrite_locations_in_parsed_value(value, label_rewriter):
+    if not value:
+        return value
+    if type(value) == "dict":
+        return {
+            rewrite_locations_in_single_value(k, label_rewriter): _rewrite_locations_in_parsed_list_or_single_value(v, label_rewriter)
+            for k, v in value.items()
+        }
+    return _rewrite_locations_in_parsed_list_or_single_value(value, label_rewriter)
+
+def _rewrite_locations_in_parsed_list_or_single_value(value, label_rewriter):
+    if not value:
+        return value
+    if type(value) == "list":
+        return _rewrite_locations_in_list(value, label_rewriter)
+    return rewrite_locations_in_single_value(value, label_rewriter)

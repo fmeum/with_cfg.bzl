@@ -1,5 +1,7 @@
 """Label callbacks used while rewriting location expressions."""
 
+load(":select.bzli", _CompoundValue = "CompoundValue", _ParsedElement = "ParsedElement")
+
 def make_label_rewriter(label_map: Mapping[Label, str | Label]) -> Callable[[str], str]: ...
 
 def _label_rewriter_base(
@@ -10,7 +12,7 @@ def _label_rewriter_base(
 
 def _rewrite_location(expr: str, label_rewriter: Callable[[str], str]) -> str: ...
 
-def rewrite_locations_in_attr(value: object, label_rewriter: Callable[[str], str]): ...
+def rewrite_locations_in_attr[T](value: T, label_rewriter: Callable[[str], str]) -> T | str | list[object] | dict[object, object] | select[_ParsedElement]: ...
 
 def rewrite_locations_in_string_list(
         value: object,
@@ -36,3 +38,9 @@ def rewrite_locations_in_single_value[T](
         expression: T,
         label_rewriter: Callable[[str], str],
 ) -> T | str: ...
+
+def _rewrite_locations_in_list[T](value: Sequence[T], label_rewriter: Callable[[str], str]) -> list[T | str]: ...
+
+def _rewrite_locations_in_parsed_value(value: _ParsedElement, label_rewriter: Callable[[str], str]) -> _ParsedElement: ...
+
+def _rewrite_locations_in_parsed_list_or_single_value(value: _CompoundValue, label_rewriter: Callable[[str], str]) -> _CompoundValue: ...

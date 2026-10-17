@@ -1,21 +1,21 @@
 """Values decoded from Starlark repr output."""
 
-type _Scalar = str | int | bool | Label | None
-type _ListOrScalar = list[_Scalar] | _Scalar
-type _CompoundValue = dict[_Scalar, _ListOrScalar] | _ListOrScalar
-type _ParsedElement = _CompoundValue | dict[_Scalar, _CompoundValue]
+type Scalar = str | int | bool | Label | None
+type ListOrScalar = list[Scalar] | Scalar
+type CompoundValue = ExactDict[Scalar, ListOrScalar] | ListOrScalar
+type ParsedElement = CompoundValue | ExactDict[Scalar, CompoundValue]
 # Dictionary pieces can have either tag; other values require the plain tag.
-type _SelectPiece = tuple[Literal[True], dict[_Scalar, _CompoundValue]] | tuple[Literal[False], _ParsedElement]
+type _SelectPiece = tuple[Literal[True], ExactDict[Scalar, CompoundValue]] | tuple[Literal[False], ParsedElement]
 
 def decompose_select_elements(value: object) -> list[_SelectPiece]: ...
 
-def _consume_compound_value(r: str, pos: int) -> tuple[_CompoundValue, int]: ...
+def _consume_compound_value(r: str, pos: int) -> tuple[CompoundValue, int]: ...
 
-def _consume_list_or_single_value(r: str, pos: int) -> tuple[_ListOrScalar, int]: ...
+def _consume_list_or_single_value(r: str, pos: int) -> tuple[ListOrScalar, int]: ...
 
-def consume_list(r: str, pos: int) -> tuple[list[_Scalar], int]: ...
+def consume_list(r: str, pos: int) -> tuple[list[Scalar], int]: ...
 
-def consume_single_value(r: str, pos: int) -> tuple[_Scalar, int]: ...
+def consume_single_value(r: str, pos: int) -> tuple[Scalar, int]: ...
 
 def _consume_string(r: str, pos: int) -> tuple[str, int]: ...
 
@@ -25,14 +25,14 @@ type _SelectedList = tuple[Literal["list"], select[_ListValue, Literal["list"]]]
 type _ListCarrier = tuple[Literal["list"], list[str] | select[_ListValue, Literal["list"]]] | tuple[Literal["none"], None | select[_ListValue, Literal["none"]]]
 type _DictCarrier[K, V] = ExactDict[K, V] | select[dict[K, V], Literal["dict"]]
 
-def _map_selected[T, R](func: Callable[[T], R], branches: Mapping[_Scalar, T]) -> dict[str | Label, R]: ...
+def _map_selected[T, R](func: Callable[[T], R], branches: Mapping[Scalar, T]) -> dict[str | Label, R]: ...
 
-def _map_attr[R, S, O](
-        func: Callable[[object], R],
-        attribute: object,
-        map_selected: Callable[[Callable[[object], R], Mapping[_Scalar, _CompoundValue]], S],
+def _map_select[R, S, O](
+        func: Callable[[ParsedElement], R],
+        attribute: select[object],
+        map_selected: Callable[[Callable[[ParsedElement], R], Mapping[Scalar, CompoundValue]], S],
         compose: Callable[[Sequence[_Piece[R, S]]], O],
-) -> R | O: ...
+) -> O: ...
 
 def map_string_list_attr(
         func: Callable[[object], _ListValue],
@@ -42,29 +42,61 @@ def map_string_list_attr(
 def map_dict_attr[K, V](func: Callable[[object], ExactDict[K, V]], attribute: object) -> _DictCarrier[K, V]: ...
 
 def _map_dict_selected[K, V](
-        func: Callable[[object], ExactDict[K, V]],
-        branches: Mapping[_Scalar, _CompoundValue],
+        func: Callable[[ParsedElement], ExactDict[K, V]],
+        branches: Mapping[Scalar, CompoundValue],
 ) -> select[dict[K, V], Literal["dict"]]: ...
 
 def _compose_dict[K, V](
         items: Sequence[_Piece[ExactDict[K, V], select[dict[K, V], Literal["dict"]]]],
 ) -> _DictCarrier[K, V]: ...
 
-def _condition(key: _Scalar) -> str | Label: ...
+def _condition(key: Scalar) -> str | Label: ...
 
 def _map_list_selected(
-        func: Callable[[object], _ListValue],
-        branches: Mapping[_Scalar, _CompoundValue],
+        func: Callable[[ParsedElement], _ListValue],
+        branches: Mapping[Scalar, CompoundValue],
 ) -> _SelectedList: ...
 
 def _list_value(item: _Piece[_ListValue, _SelectedList]) -> _ListCarrier: ...
 
-def _combine_list(_anchor: _ListCarrier, left: _ListCarrier, right: _ListCarrier) -> _ListCarrier: ...
+def _combine_list(value: _ListCarrier, result: _SelectedList, prepend: bool) -> _SelectedList: ...
 
 def _compose_list(items: Sequence[_Piece[_ListValue, _SelectedList]]) -> _ListValue | select[_ListValue]: ...
 
 def _compose[P, S, X](
         items: Sequence[_Piece[P, S]],
         embed: Callable[[_Piece[P, S]], X],
-        combine: Callable[[X, X, X], X],
-) -> X: ...
+        combine: Callable[[X, S, bool], S],
+) -> S: ...
+
+type _FiniteSelected = (
+    tuple[Literal["none"], select[ParsedElement, Literal["none"]]]
+    | tuple[Literal["str"], select[ParsedElement, Literal["str"]]]
+    | tuple[Literal["bool"], select[ParsedElement, Literal["bool"]]]
+    | tuple[Literal["list"], select[ParsedElement, Literal["list"]]]
+    | tuple[Literal["dict"], select[ParsedElement, Literal["dict"]]]
+    | tuple[Literal["label"], select[ParsedElement, Literal["label"]]]
+    | tuple[Literal["int"], select[ParsedElement, Literal["int"]]]
+)
+
+def _map_finite_selected(func: Callable[[ParsedElement], ParsedElement], branches: Mapping[Scalar, CompoundValue]) -> _FiniteSelected: ...
+
+type _FiniteCarrier = (
+    tuple[Literal["none"], None | select[ParsedElement, Literal["none"]]]
+    | tuple[Literal["str"], str | select[ParsedElement, Literal["str"]]]
+    | tuple[Literal["bool"], bool | select[ParsedElement, Literal["bool"]]]
+    | tuple[Literal["list"], list[Scalar] | select[ParsedElement, Literal["list"]]]
+    | tuple[Literal["dict"], ExactDict[Scalar, ListOrScalar] | ExactDict[Scalar, CompoundValue] | select[ParsedElement, Literal["dict"]]]
+    | tuple[Literal["label"], Label | select[ParsedElement, Literal["label"]]]
+    | tuple[Literal["int"], int | select[ParsedElement, Literal["int"]]]
+)
+
+def _finite_piece(item: _Piece[ParsedElement, _FiniteSelected]) -> _FiniteCarrier: ...
+
+def _combine_finite(value: _FiniteCarrier, result: _FiniteSelected, prepend: bool) -> _FiniteSelected: ...
+
+def _compose_finite(items: Sequence[_Piece[ParsedElement, _FiniteSelected]]) -> select[ParsedElement]: ...
+
+def map_parsed_select(func: Callable[[ParsedElement], ParsedElement], value: select[object]) -> select[ParsedElement]: ...
+
+def _map_compat_selected[T, R](func: Callable[[T], R], branches: Mapping[Scalar, T]) -> tuple[bool, select[R]]: ...

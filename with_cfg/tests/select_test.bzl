@@ -220,6 +220,24 @@ def _map_none_first_dict_test(env):
             (True, {":second": {}, "//conditions:default": {"second": "two"}}),
         ]).in_order()
 
+def _unconstrained_callback_results_test(env):
+    value = "prefix" + select({"//conditions:default": "selected"}) + "suffix"
+    mapped = map_attr(lambda item: (item,), value)
+    expected = ("prefix",) + select({"//conditions:default": ("selected",)}) + ("suffix",)
+    env.expect.that_str(repr(mapped)).equals(repr(expected))
+
+    calls = []
+    opaque = struct(value = 42)
+
+    def make_opaque(item):
+        calls.append(item)
+        return opaque
+
+    mapped = map_attr(make_opaque, value)
+    expected = opaque + select({"//conditions:default": opaque}) + opaque
+    env.expect.that_str(repr(mapped)).equals(repr(expected))
+    env.expect.that_collection(calls).contains_exactly(["prefix", "selected", "suffix"]).in_order()
+
 def select_test_suite(name):
     test_suite(
         name = name,
@@ -228,6 +246,7 @@ def select_test_suite(name):
             _none_first_dict_attribute_test,
         ],
         basic_tests = [
+            _unconstrained_callback_results_test,
             _consume_list_test,
             _consume_single_value_test,
             _decompose_select_value_test,
