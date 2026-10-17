@@ -61,6 +61,9 @@ def _rewrite_plain_args_test(name):
     empty = []
     rewritten, empty_labels = rewrite_args("empty", empty, make_filegroup)
     rewritten.append("--flag")
+    empty_dict = {}
+    rewritten_dict, empty_dict_labels = rewrite_args("empty_dict", empty_dict, make_filegroup)
+    rewritten_dict["--flag"] = None
     tuple_args = ("$(location :unchanged)",)
     tuple_result, tuple_labels = rewrite_args("tuple", tuple_args, make_filegroup)
     untouched_filegroups = list(filegroups)
@@ -73,6 +76,8 @@ def _rewrite_plain_args_test(name):
     def impl(env):
         env.expect.that_collection(empty).contains_exactly(["--flag"])
         env.expect.that_collection(empty_labels).contains_exactly([])
+        env.expect.that_dict(empty_dict).contains_exactly({"--flag": None})
+        env.expect.that_collection(empty_dict_labels).contains_exactly([])
         env.expect.that_str(repr(tuple_result)).equals(repr(tuple_args))
         env.expect.that_collection(tuple_labels).contains_exactly([])
         env.expect.that_collection(untouched_filegroups).contains_exactly([])
@@ -140,6 +145,10 @@ def _rewrite_dictionary_args_test(name):
             }),
             ["duplicate"],
         ),
+        (
+            {"$(location :plain_key)": ["$(location :plain_value)", 42], "plain": None},
+            ["$(location :" + name + "__args___Cplain_Ukey)", "plain"],
+        ),
     ]
     attrs = {}
     expected = []
@@ -171,10 +180,12 @@ def _rewrite_dictionary_args_test(name):
         ":list",
         ":dict_value",
         ":nested_value",
+        ":plain_key",
+        ":plain_value",
     ]
     expected_names = [name + "__args___C" + label[1:].replace("_", "_U") for label in expected_labels]
 
-    fallback_args = [expected[0], ["fallback", "fallback"], [], ["fallback", "fallback"]]
+    fallback_args = [expected[0], ["fallback", "fallback"], [], ["fallback", "fallback"], expected[4]]
 
     def impl(env):
         configured_args = expected if env.ctx.var["COMPILATION_MODE"] == "fastbuild" else fallback_args
