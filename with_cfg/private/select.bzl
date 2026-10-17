@@ -2,7 +2,8 @@ load(":utils.bzl", "is_dict", "is_select")
 
 visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
 
-def map_attr(func, attribute):
+# Repr decoding cannot prove the callback's original input type.
+def map_attr(func, attribute):  # ty: ignore[missing-parameter-annotation]
     if not is_select(attribute):
         return func(attribute)
 
@@ -24,7 +25,7 @@ def _apply_func(func, item):
 def decompose_select_elements(value):
     r = repr(value)
     pos = 0
-    items = []
+    items = []  # type: list[_SelectPiece]
     in_select = False
     for _ in range(len(r)):
         c = r[pos]
@@ -54,10 +55,10 @@ def decompose_select_elements(value):
                 pos += 2
                 value, pos = _consume_compound_value(r, pos)
                 element[key] = value
+            items.append((True, element) if in_select else (False, element))
         else:
             element, pos = _consume_compound_value(r, pos)
-
-        items.append((in_select, element))
+            items.append((False, element))
 
         if in_select:
             # Skip over `)`.
@@ -72,7 +73,8 @@ def decompose_select_elements(value):
 
     fail("Failed to parse '{}'".format(r))
 
-def compose_select_value(items):
+# Composition depends on the first mapped branch's runtime selector kind.
+def compose_select_value(items):  # ty: ignore[missing-parameter-annotation]
     # Start at a select so nullable prefixes never require None + None.
     first_select = 0
     for i, (in_select, _) in enumerate(items):
@@ -98,9 +100,9 @@ def compose_select_value(items):
     for suffix_selected, suffix_element in items[first_select + 1:]:
         part = select(suffix_element) if suffix_selected else suffix_element
         if combine_as_dict:
-            result |= part
+            result |= part  # ty: ignore[unsupported-operator]
         else:
-            result += part
+            result += part  # ty: ignore[unsupported-operator]
     return result
 
 def _consume_compound_value(r, pos):

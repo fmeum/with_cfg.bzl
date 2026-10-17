@@ -7,6 +7,7 @@ strict-generic-narrowing = true
 "with_cfg/private/original_settings_rule.bzl" = "with_cfg/private/original_settings_rule.bzli"
 "with_cfg/private/providers.bzl" = "with_cfg/private/providers.bzli"
 "with_cfg/private/rewrite.bzl" = "with_cfg/private/rewrite.bzli"
+"with_cfg/private/select.bzl" = "with_cfg/private/select.bzli"
 "with_cfg/private/setting.bzl" = "with_cfg/private/setting.bzli"
 "with_cfg/private/transitioning_alias.bzl" = "with_cfg/private/transitioning_alias.bzli"
 "with_cfg/private/utils.bzl" = "with_cfg/private/utils.bzli"
@@ -14,13 +15,12 @@ strict-generic-narrowing = true
 
 [rules]
 missing-parameter-annotation = "error"
-# Selector mapping and the split-transition callback lack return contracts.
+# Selector mapping, composition, and location rewriting lack return contracts.
 missing-return-annotation = "ignore"
 missing-type-argument = "error"
 unsound-assignment = "error"
-# Argument rewriting receives that unresolved selector-mapping result.
+# Location rewriting still receives the untyped selector-mapping result.
 unsound-return-statement = "ignore"
 explicit-any = "error"
-# Selector mapping, dynamic attribute constructors, and the split-transition
-# callback still contain gradual types.
+# Selector mapping and unmodeled native attribute schemas remain gradual.
 non-static-type = "ignore"

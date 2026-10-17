@@ -6,6 +6,7 @@ exports_files([
     "original_settings_rule.bzli",
     "providers.bzli",
     "rewrite.bzli",
+    "select.bzli",
     "setting.bzli",
     "transitioning_alias.bzli",
     "utils.bzli",

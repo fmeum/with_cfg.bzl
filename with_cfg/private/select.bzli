@@ -1,0 +1,28 @@
+"""Values decoded from Starlark repr output."""
+
+type _Scalar = str | int | bool | Label | None
+type _ListOrScalar = list[_Scalar] | _Scalar
+type _CompoundValue = dict[_Scalar, _ListOrScalar] | _ListOrScalar
+type _ParsedElement = _CompoundValue | dict[_Scalar, _CompoundValue]
+# Dictionary pieces can have either tag; other values require the plain tag.
+type _SelectPiece = tuple[Literal[True], dict[_Scalar, _CompoundValue]] | tuple[Literal[False], _ParsedElement]
+
+def decompose_select_elements(value: object) -> list[_SelectPiece]: ...
+
+def _consume_compound_value(r: str, pos: int) -> tuple[_CompoundValue, int]: ...
+
+def _consume_list_or_single_value(r: str, pos: int) -> tuple[_ListOrScalar, int]: ...
+
+def consume_list(r: str, pos: int) -> tuple[list[_Scalar], int]: ...
+
+def consume_single_value(r: str, pos: int) -> tuple[_Scalar, int]: ...
+
+def _consume_string(r: str, pos: int) -> tuple[str, int]: ...
+
+# Mapping preserves piece tags and keys, independently of selector composition.
+type _MappedPiece[T] = tuple[Literal[True], Mapping[_Scalar, T]] | tuple[Literal[False], T]
+
+def _apply_func[T, R](
+        func: Callable[[T], R],
+        item: _MappedPiece[T],
+) -> _MappedPiece[R]: ...
