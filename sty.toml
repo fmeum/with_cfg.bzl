@@ -11,13 +11,13 @@ strict-generic-narrowing = true
 "examples/dynamic_deps/rules/runfiles_dir.bzl" = "examples/dynamic_deps/rules/runfiles_dir.bzli"
 
 [rules]
-# Attribute rewriting and the frontend factory lack complete signatures.
-missing-parameter-annotation = "ignore"
+missing-parameter-annotation = "error"
+# Selector mapping leaves rewrite_locations_in_attr's return unresolved.
 missing-return-annotation = "ignore"
 missing-type-argument = "error"
 unsound-assignment = "error"
-# rewrite_locations_in_attr leaves its return element type unresolved.
+# Argument rewriting receives that unresolved selector-mapping result.
 unsound-return-statement = "ignore"
 explicit-any = "error"
-# Native Bazel signatures and empty containers retain gradual types.
+# Selector mapping still leaves callback inputs and reconstructed results gradual.
 non-static-type = "ignore"
