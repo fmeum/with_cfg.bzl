@@ -1,7 +1,33 @@
 """The frontend forwards providers from its transitioned target."""
 
+type _Strings = Iterable[str] | depset[str]
+type _Labels = Iterable[str | Label] | depset[str | Label]
+
+type _AliasKwargs = dict[{
+    "applicable_licenses": NotRequired[_Labels | None],
+    "aspect_hints": NotRequired[_Labels | select[_Labels | None] | None],
+    "compatible_with": NotRequired[_Labels | None],
+    "deprecation": NotRequired[str | None],
+    "features": NotRequired[_Strings | select[_Strings | None] | None],
+    "generator_function": NotRequired[str | None],
+    "generator_location": NotRequired[str | None],
+    "generator_name": NotRequired[str | None],
+    "package_metadata": NotRequired[_Labels | None],
+    "restricted_to": NotRequired[_Labels | None],
+    "tags": NotRequired[_Strings | None],
+    "target_compatible_with": NotRequired[_Labels | select[_Labels | None] | None],
+    "testonly": NotRequired[bool | Literal[0, 1] | None],
+    "transitive_configs": NotRequired[_Labels | None],
+    "visibility": NotRequired[_Labels | None],
+}]
+
 def get_frontend(*, executable: bool, test: bool): ...
 
 def _frontend_impl(ctx) -> list[object]: ...
 
-def _frontend_default(*, name: str, exports: str | Label | select[str | Label], **kwargs) -> None: ...
+def _frontend_default(
+        *,
+        name: str,
+        exports: str | Label | select[str | Label | None],
+        **kwargs: Unpack[_AliasKwargs],
+) -> None: ...
