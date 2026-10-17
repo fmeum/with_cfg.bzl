@@ -96,7 +96,7 @@ def _default_frontend_exec_properties_test_impl(env, target):
 
 def _missing_executable_test(name):
     subject = name + "_subject"
-    _executable_filegroup(name = subject)
+    _executable_filegroup(name = subject, tags = ["manual"])
     analysis_test(
         name = name,
         target = subject,
