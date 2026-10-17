@@ -12,6 +12,11 @@ def _rewrite_location(expr: str, label_rewriter: Callable[[str], str]) -> str: .
 
 def rewrite_locations_in_attr(value: object, label_rewriter: Callable[[str], str]): ...
 
+def rewrite_locations_in_string_list(
+        value: object,
+        label_rewriter: Callable[[str], str],
+) -> list[str] | None: ...
+
 def _rewrite_locations_in_value[T](
         value: T,
         label_rewriter: Callable[[str], str],

@@ -21,6 +21,29 @@ def rewrite_locations_in_attr(value, label_rewriter):
 
     return map_attr(rewrite_value, value)
 
+def rewrite_locations_in_string_list(value, label_rewriter):
+    if value == None:
+        return None
+    if type(value) == "dict":
+        # Bazel converts each selector piece to STRING_LIST before concatenation.
+        # Preserve rewritten-key collisions and value callbacks before taking keys.
+        keys = {}  # type: dict[str, None]
+        for key, item in value.items():
+            if type(key) != "string":
+                fail("Expected an argument string, got {}".format(type(key)))
+            rewritten_key = rewrite_locations_in_single_value(key, label_rewriter)
+            _rewrite_locations_in_list_or_single_value(item, label_rewriter)
+            keys[rewritten_key] = None
+        return keys.keys()
+    if type(value) != "list":
+        fail("Expected a list or dictionary of argument strings, got {}".format(type(value)))
+    result = []  # type: list[str]
+    for item in value:
+        if type(item) != "string":
+            fail("Expected an argument string, got {}".format(type(item)))
+        result.append(rewrite_locations_in_single_value(item, label_rewriter))
+    return result
+
 def _rewrite_locations_in_value(value, label_rewriter):
     if not value:
         return value

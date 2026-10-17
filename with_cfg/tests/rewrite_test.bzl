@@ -1,5 +1,5 @@
 load("@rules_testing//lib:test_suite.bzl", "test_suite")
-load("//with_cfg/private:rewrite.bzl", "rewrite_locations_in_attr")
+load("//with_cfg/private:rewrite.bzl", "rewrite_locations_in_attr", "rewrite_locations_in_string_list")
 
 def _mock_rewriter(label):
     return label + "_rewritten"
@@ -44,10 +44,34 @@ def _rewrite_locations_in_attr_test(env):
         {"@foo//:baz": ["$(rlocationpath :baz_rewritten)", "bar", "$(location :foo_rewritten)"]},
     )
 
+def _rewrite_string_list_dictionary_test(env):
+    calls = []
+
+    def rewrite_label(label):
+        calls.append(label)
+        return ":same"
+
+    value = {
+        "$(location :first)": ["$(location :value_one)", "$(location :value_two)"],
+        "middle": "$(location :scalar)",
+        "$(location :last)": "$(location :value_three)",
+    }
+    result = rewrite_locations_in_string_list(value, rewrite_label)
+    env.expect.that_collection(result).contains_exactly(["$(location :same)", "middle"]).in_order()
+    env.expect.that_collection(calls).contains_exactly([
+        ":first",
+        ":value_one",
+        ":value_two",
+        ":scalar",
+        ":last",
+        ":value_three",
+    ]).in_order()
+
 def rewrite_test_suite(name):
     test_suite(
         name = name,
         basic_tests = [
             _rewrite_locations_in_attr_test,
+            _rewrite_string_list_dictionary_test,
         ],
     )
