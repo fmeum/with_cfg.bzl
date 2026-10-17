@@ -1,6 +1,6 @@
 load("@rules_testing//lib:test_suite.bzl", "test_suite")
 load("@rules_testing//lib:unit_test.bzl", "unit_test")
-load(":args.bzl", "args_aspect")
+load(":args.bzl", "args_aspect", "rewrite_args")
 load(":providers.bzl", "ArgsInfo")
 
 visibility(["//with_cfg/tests"])
@@ -29,5 +29,29 @@ def _args_toolchain_test_impl(env):
     variables = env.ctx.attr.subject[ArgsInfo].template_variable_info.variables
     env.expect.that_dict(variables).contains_exactly({"CUSTOM": "value"})
 
+def _rewrite_nullable_args_test(env):
+    filegroups = []
+
+    def make_filegroup(*, name, srcs, output_group):
+        filegroups.append((name, srcs, output_group))
+
+    rewritten, labels = rewrite_args("plain", None, make_filegroup)
+    env.expect.that_bool(rewritten == None).equals(True)
+    env.expect.that_collection(labels).contains_exactly([])
+
+    for args in [
+        select({"//conditions:default": None}),
+        select({"//conditions:default": None, ":condition": ["--flag"]}),
+        select({"//conditions:default": ["--flag"], ":condition": None}),
+    ]:
+        rewritten, labels = rewrite_args("selected", args, make_filegroup)
+        env.expect.that_str(repr(rewritten)).equals(repr(args))
+        env.expect.that_collection(labels).contains_exactly([])
+    env.expect.that_collection(filegroups).contains_exactly([])
+
 def args_test_suite(name):
-    test_suite(name = name, tests = [_args_toolchain_test])
+    test_suite(
+        name = name,
+        basic_tests = [_rewrite_nullable_args_test],
+        tests = [_args_toolchain_test],
+    )
