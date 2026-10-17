@@ -4,23 +4,68 @@ visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
 
 # Repr decoding cannot prove the callback's original input type.
 def map_attr(func, attribute):  # ty: ignore[missing-parameter-annotation]
+    return _map_attr(func, attribute, _map_selected, compose_select_value)
+
+def _map_selected(func, branches):
+    return {key: func(value) for key, value in branches.items()}
+
+def _map_attr(func, attribute, map_selected, compose):
     if not is_select(attribute):
         return func(attribute)
-
-    return compose_select_value([
-        _apply_func(func, item)
+    return compose([
+        (True, map_selected(func, item[1])) if item[0] == True else (False, func(item[1]))
         for item in decompose_select_elements(attribute)
     ])
 
-def _apply_func(func, item):
-    in_select, element = item
-    if in_select:
-        return (True, {
-            k: func(v)
-            for k, v in element.items()
-        })
+def map_string_list_attr(func, attribute):
+    return _map_attr(func, attribute, _map_list_selected, _compose_list)
+
+def _condition(key):
+    if type(key) == "string" or type(key) == "Label":
+        return key
+    fail("Expected a select condition, got {}".format(key))
+
+def _map_list_selected(func, branches):
+    # Bazel derives the selector kind from its first branch. Seed that branch
+    # before mapping the rest; setdefault preserves it even for an unknown key.
+    pairs = branches.items()
+    first_pair = pairs[0]
+    key = _condition(first_pair[0])
+    first = func(first_pair[1])
+    if first == None:
+        mapped = {}  # type: dict[str | Label, list[str] | None]
+        mapped[key] = first
+        for later_key, later_value in pairs[1:]:
+            mapped.setdefault(_condition(later_key), func(later_value))
+        return ("none", select(mapped))
     else:
-        return (False, func(element))
+        mapped = {}  # type: dict[str | Label, list[str] | None]
+        mapped[key] = first
+        for later_key, later_value in pairs[1:]:
+            mapped.setdefault(_condition(later_key), func(later_value))
+        return ("list", select(mapped))
+
+def _list_value(item):
+    if item[0] == True:
+        return item[1]
+    value = item[1]
+    return ("none", None) if value == None else ("list", value)
+
+def _combine_list(_anchor, left, right):
+    if left[0] == "list" and right[0] == "list":
+        return ("list", left[1] + right[1])
+    if left[0] == "none" and right[0] == "none":
+        left_value = left[1]
+        right_value = right[1]
+        if left_value == None:
+            if right_value == None:
+                fail("Cannot add two plain None values")
+            return ("none", left_value + right_value)
+        return ("none", left_value + right_value)
+    fail("Cannot combine list and None selectors")
+
+def _compose_list(items):
+    return _compose(items, _list_value, _combine_list)[1]
 
 def decompose_select_elements(value):
     r = repr(value)
@@ -75,6 +120,13 @@ def decompose_select_elements(value):
 
 # Composition depends on the first mapped branch's runtime selector kind.
 def compose_select_value(items):  # ty: ignore[missing-parameter-annotation]
+    return _compose(
+        items,
+        lambda item: (is_dict(item[1].values()[0]), select(item[1])) if item[0] == True else (is_dict(item[1]), item[1]),
+        lambda anchor, left, right: (anchor[0], left[1] | right[1] if anchor[0] else left[1] + right[1]),
+    )[1]
+
+def _compose(items, embed, combine):
     # Start at a select so nullable prefixes never require None + None.
     first_select = 0
     for i, (in_select, _) in enumerate(items):
@@ -82,27 +134,13 @@ def compose_select_value(items):  # ty: ignore[missing-parameter-annotation]
             first_select = i
             break
 
-    # Bazel chooses a selector's operator from its first branch, even when later
-    # branches have another type. Use the anchor's mapped representative value.
-    anchor_selected, anchor_element = items[first_select]
-    if anchor_selected:
-        result = select(anchor_element)
-        representative = anchor_element.values()[0]
-    else:
-        result = anchor_element
-        representative = anchor_element
-    combine_as_dict = is_dict(representative)
-    for _, part in reversed(items[:first_select]):
-        if combine_as_dict:
-            result = part | result
-        else:
-            result = part + result
-    for suffix_selected, suffix_element in items[first_select + 1:]:
-        part = select(suffix_element) if suffix_selected else suffix_element
-        if combine_as_dict:
-            result |= part  # ty: ignore[unsupported-operator]
-        else:
-            result += part  # ty: ignore[unsupported-operator]
+    # The anchor chooses the operator for every prefix and suffix combination.
+    anchor = embed(items[first_select])
+    result = anchor
+    for item in reversed(items[:first_select]):
+        result = combine(anchor, embed(item), result)
+    for item in items[first_select + 1:]:
+        result = combine(anchor, result, embed(item))
     return result
 
 def _consume_compound_value(r, pos):

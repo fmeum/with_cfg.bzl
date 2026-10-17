@@ -6,6 +6,7 @@ load(
     "consume_single_value",
     "decompose_select_elements",
     "map_attr",
+    "map_string_list_attr",
 )
 
 _CONSUME_SINGLE_VALUE_TEST_CASES = [
@@ -62,23 +63,39 @@ def _decompose_select_value_test(env):
 
 def _map_nullable_select_test(env):
     value = None + (None + select({"//conditions:default": None})) + None + None
-    mapped = map_attr(lambda value: value, value)
-    env.expect.that_collection(decompose_select_elements(mapped)).contains_exactly([
-        (False, None),
-        (False, None),
-        (True, {"//conditions:default": None}),
-        (False, None),
-        (False, None),
-    ]).in_order()
+    for mapper in [map_attr, map_string_list_attr]:
+        mapped = mapper(lambda value: value, value)
+        env.expect.that_collection(decompose_select_elements(mapped)).contains_exactly([
+            (False, None),
+            (False, None),
+            (True, {"//conditions:default": None}),
+            (False, None),
+            (False, None),
+        ]).in_order()
 
 def _map_select_order_test(env):
-    values = ["first"] + (["second"] + select({"//conditions:default": ["selected"]})) + ["last"]
-    mapped = map_attr(lambda values: [value.upper() for value in values], values)
-    env.expect.that_collection([
-        value
-        for in_select, element in decompose_select_elements(mapped)
-        for value in (element["//conditions:default"] if in_select else element)
-    ]).contains_exactly(["FIRST", "SECOND", "SELECTED", "LAST"]).in_order()
+    values = ["first"] + (["second"] + select({"//conditions:default": ["selected"], ":other": ["other"]})) + ["last"]
+    calls = []
+
+    def uppercase(value):
+        calls.append(value)
+        return [item.upper() for item in value]
+
+    for mapper in [map_attr, map_string_list_attr]:
+        calls.clear()
+        mapped = mapper(uppercase, values)
+        env.expect.that_collection(calls).contains_exactly([
+            ["first"],
+            ["second"],
+            ["selected"],
+            ["other"],
+            ["last"],
+        ]).in_order()
+        env.expect.that_collection([
+            value
+            for in_select, element in decompose_select_elements(mapped)
+            for value in (element["//conditions:default"] if in_select else element)
+        ]).contains_exactly(["FIRST", "SECOND", "SELECTED", "LAST"]).in_order()
 
     value = "first" + ("second" + select({"//conditions:default": "selected"})) + "last"
     mapped = map_attr(lambda value: value.upper(), value)

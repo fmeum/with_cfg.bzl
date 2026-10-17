@@ -19,10 +19,40 @@ def consume_single_value(r: str, pos: int) -> tuple[_Scalar, int]: ...
 
 def _consume_string(r: str, pos: int) -> tuple[str, int]: ...
 
-# Mapping preserves piece tags and keys, independently of selector composition.
-type _MappedPiece[T] = tuple[Literal[True], Mapping[_Scalar, T]] | tuple[Literal[False], T]
+type _Piece[P, S] = tuple[Literal[True], S] | tuple[Literal[False], P]
+type _ListValue = list[str] | None
+type _SelectedList = tuple[Literal["list"], select[_ListValue, Literal["list"]]] | tuple[Literal["none"], select[_ListValue, Literal["none"]]]
+type _ListCarrier = tuple[Literal["list"], list[str] | select[_ListValue, Literal["list"]]] | tuple[Literal["none"], None | select[_ListValue, Literal["none"]]]
 
-def _apply_func[T, R](
-        func: Callable[[T], R],
-        item: _MappedPiece[T],
-) -> _MappedPiece[R]: ...
+def _map_selected[K, T, R](func: Callable[[T], R], branches: Mapping[K, T]) -> dict[K, R]: ...
+
+def _map_attr[R, S, O](
+        func: Callable[[object], R],
+        attribute: object,
+        map_selected: Callable[[Callable[[object], R], Mapping[_Scalar, _CompoundValue]], S],
+        compose: Callable[[Sequence[_Piece[R, S]]], O],
+) -> R | O: ...
+
+def map_string_list_attr(
+        func: Callable[[object], _ListValue],
+        attribute: object,
+) -> _ListValue | select[_ListValue]: ...
+
+def _condition(key: _Scalar) -> str | Label: ...
+
+def _map_list_selected(
+        func: Callable[[object], _ListValue],
+        branches: Mapping[_Scalar, _CompoundValue],
+) -> _SelectedList: ...
+
+def _list_value(item: _Piece[_ListValue, _SelectedList]) -> _ListCarrier: ...
+
+def _combine_list(_anchor: _ListCarrier, left: _ListCarrier, right: _ListCarrier) -> _ListCarrier: ...
+
+def _compose_list(items: Sequence[_Piece[_ListValue, _SelectedList]]) -> _ListValue | select[_ListValue]: ...
+
+def _compose[P, S, X](
+        items: Sequence[_Piece[P, S]],
+        embed: Callable[[_Piece[P, S]], X],
+        combine: Callable[[X, X, X], X],
+) -> X: ...
