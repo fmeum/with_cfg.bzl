@@ -19,7 +19,7 @@ def make_transitioning_alias(*, providers, transition, values, original_settings
             ),
         }
     else:
-        resettable_attrs = {}
+        resettable_attrs = {}  # type: dict[str, Attribute[bool | Target]]
     return rule(
         implementation = _make_transitioning_alias_impl(providers = providers),
         attrs = settings_attrs | resettable_attrs | {
