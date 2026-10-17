@@ -17,6 +17,11 @@ def rewrite_locations_in_string_list(
         label_rewriter: Callable[[str], str],
 ) -> list[str] | None: ...
 
+def rewrite_locations_in_string_dict(
+        value: object,
+        label_rewriter: Callable[[str], str],
+) -> dict[str, object]: ...
+
 def _rewrite_locations_in_value[T](
         value: T,
         label_rewriter: Callable[[str], str],

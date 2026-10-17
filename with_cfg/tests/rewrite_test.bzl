@@ -1,5 +1,5 @@
 load("@rules_testing//lib:test_suite.bzl", "test_suite")
-load("//with_cfg/private:rewrite.bzl", "rewrite_locations_in_attr", "rewrite_locations_in_string_list")
+load("//with_cfg/private:rewrite.bzl", "rewrite_locations_in_attr", "rewrite_locations_in_string_dict", "rewrite_locations_in_string_list")
 
 def _mock_rewriter(label):
     return label + "_rewritten"
@@ -56,8 +56,9 @@ def _rewrite_string_list_dictionary_test(env):
         "middle": "$(location :scalar)",
         "$(location :last)": "$(location :value_three)",
     }
-    result = rewrite_locations_in_string_list(value, rewrite_label)
-    env.expect.that_collection(result).contains_exactly(["$(location :same)", "middle"]).in_order()
+    rewritten = rewrite_locations_in_string_dict(value, rewrite_label)
+    env.expect.that_dict(rewritten).contains_exactly({"$(location :same)": "$(location :same)", "middle": "$(location :same)"})
+    env.expect.that_collection(rewritten.keys()).contains_exactly(["$(location :same)", "middle"]).in_order()
     env.expect.that_collection(calls).contains_exactly([
         ":first",
         ":value_one",
@@ -66,6 +67,10 @@ def _rewrite_string_list_dictionary_test(env):
         ":last",
         ":value_three",
     ]).in_order()
+
+    calls.clear()
+    result = rewrite_locations_in_string_list(value, rewrite_label)
+    env.expect.that_collection(result).contains_exactly(rewritten.keys()).in_order()
 
 def rewrite_test_suite(name):
     test_suite(

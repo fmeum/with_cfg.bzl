@@ -26,15 +26,7 @@ def rewrite_locations_in_string_list(value, label_rewriter):
         return None
     if type(value) == "dict":
         # Bazel converts each selector piece to STRING_LIST before concatenation.
-        # Preserve rewritten-key collisions and value callbacks before taking keys.
-        keys = {}  # type: dict[str, None]
-        for key, item in value.items():
-            if type(key) != "string":
-                fail("Expected an argument string, got {}".format(type(key)))
-            rewritten_key = rewrite_locations_in_single_value(key, label_rewriter)
-            _rewrite_locations_in_list_or_single_value(item, label_rewriter)
-            keys[rewritten_key] = None
-        return keys.keys()
+        return rewrite_locations_in_string_dict(value, label_rewriter).keys()
     if type(value) != "list":
         fail("Expected a list or dictionary of argument strings, got {}".format(type(value)))
     result = []  # type: list[str]
@@ -42,6 +34,19 @@ def rewrite_locations_in_string_list(value, label_rewriter):
         if type(item) != "string":
             fail("Expected an argument string, got {}".format(type(item)))
         result.append(rewrite_locations_in_single_value(item, label_rewriter))
+    return result
+
+def rewrite_locations_in_string_dict(value, label_rewriter):
+    if type(value) != "dict":
+        fail("Expected a dictionary of argument strings, got {}".format(type(value)))
+    result = {}  # type: dict[str, object]
+
+    # Rewrite keys before values; an overwritten key keeps its original position.
+    for key, item in value.items():
+        if type(key) != "string":
+            fail("Expected an argument string, got {}".format(type(key)))
+        rewritten_key = rewrite_locations_in_single_value(key, label_rewriter)
+        result[rewritten_key] = _rewrite_locations_in_list_or_single_value(item, label_rewriter)
     return result
 
 def _rewrite_locations_in_value(value, label_rewriter):
