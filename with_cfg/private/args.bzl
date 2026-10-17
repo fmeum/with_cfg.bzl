@@ -107,7 +107,7 @@ def _args_aspect_impl(target, ctx):
 
     labels_to_files = {}
     for label in labels.keys():
-        execpaths_expansion = ctx.expand_location("$(execpaths {})".format(label), targets = targets.keys())
+        execpaths_expansion = ctx.expand_location("$(execpaths {})".format(label), targets.keys())
         labels_to_files[label] = execpaths_expansion_to_files[execpaths_expansion]
 
     return [

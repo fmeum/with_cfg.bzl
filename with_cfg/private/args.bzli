@@ -2,7 +2,18 @@
 
 load(":providers.bzl", "ArgsInfo")
 
-def _args_aspect_impl(target: Target, ctx) -> list[OutputGroupInfo | ArgsInfo]: ...
+class _ArgsRule(Protocol):
+    @property
+    def attr(self) -> struct[object]: ...
+
+class _ArgsAspectContext(Protocol):
+    @property
+    def rule(self) -> _ArgsRule: ...
+
+    @property
+    def expand_location(self) -> Callable[[str, Sequence[Target]], str]: ...
+
+def _args_aspect_impl(target: Target, ctx: _ArgsAspectContext) -> list[OutputGroupInfo | ArgsInfo]: ...
 
 class _MakeFilegroup(Protocol):
     def __call__(self, *, name: str, srcs: list[str], output_group: str) -> object: ...
