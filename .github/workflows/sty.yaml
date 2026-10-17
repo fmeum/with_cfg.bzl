@@ -29,6 +29,7 @@ jobs:
             with_cfg/private/original_settings_rule.bzl
             with_cfg/private/providers.bzl
             with_cfg/private/rewrite.bzl
+            with_cfg/private/setting.bzl
             with_cfg/private/transitioning_alias.bzl
             with_cfg/private/utils.bzl
             examples/dynamic_deps/rules/runfiles_dir.bzl

@@ -7,6 +7,7 @@ strict-generic-narrowing = true
 "with_cfg/private/original_settings_rule.bzl" = "with_cfg/private/original_settings_rule.bzli"
 "with_cfg/private/providers.bzl" = "with_cfg/private/providers.bzli"
 "with_cfg/private/rewrite.bzl" = "with_cfg/private/rewrite.bzli"
+"with_cfg/private/setting.bzl" = "with_cfg/private/setting.bzli"
 "with_cfg/private/transitioning_alias.bzl" = "with_cfg/private/transitioning_alias.bzli"
 "with_cfg/private/utils.bzl" = "with_cfg/private/utils.bzli"
 "examples/dynamic_deps/rules/runfiles_dir.bzl" = "examples/dynamic_deps/rules/runfiles_dir.bzli"
