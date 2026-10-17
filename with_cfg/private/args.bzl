@@ -34,7 +34,9 @@ complexities handled by the functions in this file:
 """
 
 load(":providers.bzl", "ArgsInfo")
-load(":rewrite.bzl", "rewrite_locations_in_attr", "rewrite_locations_in_single_value")
+load(":rewrite.bzl", "rewrite_locations_in_attr", "rewrite_locations_in_single_value", "rewrite_locations_in_string_list")
+load(":select.bzl", "map_string_list_attr")
+load(":utils.bzl", "is_select")
 
 visibility("private")
 
@@ -56,7 +58,19 @@ def rewrite_args(name, args, make_filegroup):
             filegroup_labels.append(native.package_relative_label(filegroup_name))
         return ":" + filegroup_name
 
-    return rewrite_locations_in_attr(args, rewrite_label), filegroup_labels
+    if not is_select(args):
+        if not args:
+            return args, filegroup_labels
+
+        # Preserve the historical behavior for non-list values passed directly.
+        if type(args) != "list":
+            return rewrite_locations_in_attr(args, rewrite_label), filegroup_labels
+
+    def rewrite_list(value):
+        # type: (object) -> list[str] | None
+        return rewrite_locations_in_string_list(value, rewrite_label)
+
+    return map_string_list_attr(rewrite_list, args), filegroup_labels
 
 def _args_aspect_impl(target, ctx):
     args = getattr(ctx.rule.attr, "args", None)

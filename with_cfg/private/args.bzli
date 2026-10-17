@@ -42,12 +42,12 @@ def rewrite_args(
 @overload
 def rewrite_args(
         name: str,
-        args: select[list[str] | None],
+        args: select[list[str] | Mapping[str, object] | None],
         make_filegroup: _MakeFilegroup,
 ) -> tuple[select[list[str] | None], list[Label]]: ...
 
 def rewrite_args(
         name: str,
-        args: list[str] | select[list[str] | None] | None,
+        args: list[str] | select[list[str] | Mapping[str, object] | None] | None,
         make_filegroup: _MakeFilegroup,
 ) -> tuple[list[str] | select[list[str] | None] | None, list[Label]]: ...

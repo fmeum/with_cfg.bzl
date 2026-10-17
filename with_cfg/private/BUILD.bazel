@@ -18,6 +18,8 @@ bzl_library(
     visibility = ["//with_cfg:__subpackages__"],
     deps = [
         ":rewrite",
+        ":select",
+        ":utils",
     ],
 )
 
