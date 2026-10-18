@@ -15,12 +15,9 @@ strict-generic-narrowing = true
 
 [rules]
 missing-parameter-annotation = "error"
-# Selector mapping, composition, and location rewriting lack return contracts.
-missing-return-annotation = "ignore"
+missing-return-annotation = "error"
 missing-type-argument = "error"
 unsound-assignment = "error"
-# Location rewriting still receives the untyped selector-mapping result.
-unsound-return-statement = "ignore"
+unsound-return-statement = "error"
 explicit-any = "error"
-# Selector mapping and unmodeled native attribute schemas remain gradual.
-non-static-type = "ignore"
+non-static-type = "error"

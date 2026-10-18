@@ -1,19 +1,9 @@
-load(":utils.bzl", "is_dict", "is_select")
+load(":utils.bzl", "is_select")
 
 visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
 
-# Repr decoding cannot prove the callback's original input type.
-def map_attr(func, attribute):  # ty: ignore[missing-parameter-annotation]
-    if not is_select(attribute):
-        return func(attribute)
-    return _map_select(func, attribute, _map_compat_selected, _compose_compat)
-
 def _map_selected(func, branches):
     return {_condition(key): func(value) for key, value in branches.items()}
-
-def _map_compat_selected(func, branches):
-    mapped = _map_selected(func, branches)
-    return (is_dict(mapped.values()[0]), select(mapped))
 
 def _map_select(func, attribute, map_selected, compose):
     return compose([
@@ -220,17 +210,6 @@ def decompose_select_elements(value):
             pos += 3
 
     fail("Failed to parse '{}'".format(r))
-
-# Composition depends on the first mapped branch's runtime selector kind.
-def _compose_compat(items):  # ty: ignore[missing-parameter-annotation]
-    return _compose(
-        items,
-        lambda item: item[1] if item[0] == True else (is_dict(item[1]), item[1]),
-        lambda value, result, prepend: (
-            result[0],
-            (value[1] | result[1] if prepend else result[1] | value[1]) if result[0] else (value[1] + result[1] if prepend else result[1] + value[1]),
-        ),
-    )[1]
 
 def _compose(items, embed, combine):
     # Every operation includes the selected accumulator, including prefixes.
