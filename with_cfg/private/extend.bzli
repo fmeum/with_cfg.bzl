@@ -1,0 +1,24 @@
+"""Inherited rule creation and transition setting initialization."""
+
+load(":providers.bzli", "RuleInfo")
+
+def make_transitioned_rule[K: str | Label](
+        *,
+        rule_info: RuleInfo[rule],
+        transition: transition[Literal["split"]],
+        values: Mapping[K, object],
+) -> rule: ...
+
+class _ParentContext[R](Protocol):
+    def super(self) -> R: ...
+
+def _transitioned_rule_impl[R](ctx: _ParentContext[R]) -> R: ...
+
+def _initializer_base[K: str | Label](
+        *,
+        kwargs: dict[str, object],
+        values: Mapping[K, object],
+) -> dict[str, object]: ...
+
+class _Initializer(Protocol):
+    def __call__(self, **kwargs: object) -> dict[str, object]: ...

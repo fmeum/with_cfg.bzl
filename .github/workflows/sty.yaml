@@ -20,11 +20,12 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
-      - uses: tamird/sty@ec7c566c6abed0c87bc1bd5c82d327371df7fa81
+      - uses: tamird/sty@36091ef6131ef9ea276db3c4329084fd5ec3c5c2
         with:
           audit-loads: true
           files: |
             with_cfg/private/args.bzl
+            with_cfg/private/extend.bzl
             with_cfg/private/frontend.bzl
             with_cfg/private/original_settings_rule.bzl
             with_cfg/private/providers.bzl

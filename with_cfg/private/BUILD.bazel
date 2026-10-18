@@ -2,6 +2,7 @@ load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 exports_files([
     "args.bzli",
+    "extend.bzli",
     "frontend.bzli",
     "original_settings_rule.bzli",
     "providers.bzli",

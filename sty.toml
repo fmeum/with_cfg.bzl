@@ -3,6 +3,7 @@ strict-generic-narrowing = true
 
 [type-interfaces]
 "with_cfg/private/args.bzl" = "with_cfg/private/args.bzli"
+"with_cfg/private/extend.bzl" = "with_cfg/private/extend.bzli"
 "with_cfg/private/frontend.bzl" = "with_cfg/private/frontend.bzli"
 "with_cfg/private/original_settings_rule.bzl" = "with_cfg/private/original_settings_rule.bzli"
 "with_cfg/private/providers.bzl" = "with_cfg/private/providers.bzli"
