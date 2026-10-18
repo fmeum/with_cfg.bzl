@@ -44,3 +44,34 @@ def _rewrite_locations_in_list[T](value: Sequence[T], label_rewriter: Callable[[
 def _rewrite_locations_in_parsed_value(value: _ParsedElement, label_rewriter: Callable[[str], str]) -> _ParsedElement: ...
 
 def _rewrite_locations_in_parsed_list_or_single_value(value: _CompoundValue, label_rewriter: Callable[[str], str]) -> _CompoundValue: ...
+
+class _ResetTarget(Protocol):
+    def __call__(self, *, name: str, exports: Label) -> object: ...
+
+type _Dependency = str | Label
+type _ReplacedDependency = None | _Dependency | list[_Dependency] | ExactDict[_Dependency, object]
+
+def rewrite_dependency_labels(
+        value: object,
+        *,
+        label_map: dict[Label, str],
+        reset_target: _ResetTarget,
+        name: str,
+) -> _ReplacedDependency | select[_ParsedElement]: ...
+
+def _replace_dep_value(value: object, replace: Callable[[object], _Dependency]) -> _ReplacedDependency: ...
+
+def _replace_parsed_dep_value(value: _ParsedElement, replace: Callable[[object], _Dependency]) -> _ParsedElement: ...
+
+def _replace_dep_list[R](value: Sequence[object], replace: Callable[[object], R]) -> list[R]: ...
+
+def _replace_dep_dict[V, R](items: Iterable[tuple[object, V]], replace: Callable[[object], R]) -> ExactDict[R, V]: ...
+
+def _replace_single_dep(
+        *,
+        label_string: object,
+        label_map: dict[Label, str],
+        reset_target: _ResetTarget,
+        name_prefix: str,
+        mutable_num_calls: list[int],
+) -> _Dependency: ...

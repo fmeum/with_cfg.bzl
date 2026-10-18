@@ -1,5 +1,5 @@
 load(":select.bzl", "map_parsed_select")
-load(":utils.bzl", "is_select", "is_string")
+load(":utils.bzl", "is_label", "is_select", "is_string")
 
 visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
 
@@ -157,3 +157,75 @@ def _rewrite_locations_in_parsed_list_or_single_value(value, label_rewriter):
     if type(value) == "list":
         return _rewrite_locations_in_list(value, label_rewriter)
     return rewrite_locations_in_single_value(value, label_rewriter)
+
+def rewrite_dependency_labels(value, *, label_map, reset_target, name):
+    mutable_num_calls = [0]
+
+    def replace(label_string):
+        # type: (object) -> str | Label
+        return _replace_single_dep(
+            label_string = label_string,
+            label_map = label_map,
+            reset_target = reset_target,
+            name_prefix = name,
+            mutable_num_calls = mutable_num_calls,
+        )
+
+    if not is_select(value):
+        return _replace_dep_value(value, replace)
+
+    def replace_parsed(dep):
+        # type: (_ParsedElement) -> _ParsedElement
+        return _replace_parsed_dep_value(dep, replace)
+
+    return map_parsed_select(replace_parsed, value)
+
+def _replace_dep_value(value, replace):
+    if value == None:
+        return None
+    if type(value) == "list":
+        return _replace_dep_list(value, replace)
+    if type(value) == "dict":
+        return _replace_dep_dict(value.items(), replace)
+    return replace(value)
+
+def _replace_parsed_dep_value(value, replace):
+    if value == None:
+        return None
+    if type(value) == "list":
+        return _replace_dep_list(value, replace)
+    if type(value) == "dict":
+        return _replace_dep_dict(value.items(), replace)
+    return replace(value)
+
+def _replace_dep_list(value, replace):
+    return [replace(dep) for dep in value]
+
+def _replace_dep_dict(items, replace):
+    return {replace(key): item for key, item in items}
+
+def _replace_single_dep(
+        *,
+        label_string,
+        label_map,
+        reset_target,
+        name_prefix,
+        mutable_num_calls):
+    use_label = is_label(label_string)
+    if not use_label and not is_string(label_string):
+        fail("Expected dependency, got '{}' of type {}".format(label_string, type(label_string)))
+    label = native.package_relative_label(label_string)
+    if label in label_map:
+        target_label_string = label_map[label]
+    else:
+        # Multiple targets can be referenced in a single logical dep if that dep is a select.
+        target_name = name_prefix + "_" + str(mutable_num_calls[0])
+        reset_target(
+            name = target_name,
+            exports = label,
+        )
+        target_label_string = ":" + target_name
+        label_map[label] = target_label_string
+        mutable_num_calls[0] += 1
+
+    return native.package_relative_label(target_label_string) if use_label else target_label_string

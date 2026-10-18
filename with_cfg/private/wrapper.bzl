@@ -1,10 +1,8 @@
 load("@bazel_features//:features.bzl", "bazel_features")
 load(":args.bzl", "rewrite_args")
 load(":frontend.bzl", "filter_exec_properties", "unwrap_template_variable_info")
-load(":rewrite.bzl", "make_label_rewriter", "rewrite_locations_in_attr")
-load(":select.bzl", "map_attr")
+load(":rewrite.bzl", "make_label_rewriter", "rewrite_dependency_labels", "rewrite_locations_in_attr")
 load(":setting.bzl", "validate_and_get_attr_name")
-load(":utils.bzl", "is_dict", "is_label", "is_list", "is_string")
 
 visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
 
@@ -245,15 +243,12 @@ def _process_attrs_for_reset(*, attrs, attrs_to_reset, reset_target, name_prefix
     for attr in attrs_to_reset:
         if not attr in attrs:
             continue
-        mutable_num_calls = [0]
-        attr_func = lambda dep: _replace_dep_attr(
-            dep = dep,
+        first_pass_attrs[attr] = rewrite_dependency_labels(
+            attrs[attr],
             label_map = label_map,
             reset_target = reset_target,
-            name_prefix = name_prefix + "__" + attr,
-            mutable_num_calls = mutable_num_calls,
+            name = name_prefix + "__" + attr,
         )
-        first_pass_attrs[attr] = map_attr(attr_func, attrs[attr])
 
     # In a second pass, now over all attributes, rewrite all $(location ...) expressions. These can
     # even appear in attributes that are reset (as values in attr.label_keyed_string_dict).
@@ -263,66 +258,3 @@ def _process_attrs_for_reset(*, attrs, attrs_to_reset, reset_target, name_prefix
         second_pass_attrs[attr] = rewrite_locations_in_attr(value, label_rewriter)
 
     return second_pass_attrs
-
-def _replace_dep_attr(*, dep, label_map, reset_target, name_prefix, mutable_num_calls):
-    if dep == None:
-        return dep
-    if is_list(dep):
-        # attr.label_list
-        return [
-            _replace_single_dep(
-                label_string = label_string,
-                label_map = label_map,
-                reset_target = reset_target,
-                name_prefix = name_prefix,
-                mutable_num_calls = mutable_num_calls,
-            )
-            for label_string in dep
-        ]
-    if is_dict(dep):
-        # attr.label_keyed_string_dict (only the keys represent deps)
-        return {
-            _replace_single_dep(
-                label_string = label_string,
-                label_map = label_map,
-                reset_target = reset_target,
-                name_prefix = name_prefix,
-                mutable_num_calls = mutable_num_calls,
-            ): v
-            for label_string, v in dep.items()
-        }
-
-    # attr.label
-    return _replace_single_dep(
-        label_string = dep,
-        label_map = label_map,
-        reset_target = reset_target,
-        name_prefix = name_prefix,
-        mutable_num_calls = mutable_num_calls,
-    )
-
-def _replace_single_dep(
-        *,
-        label_string,
-        label_map,
-        reset_target,
-        name_prefix,
-        mutable_num_calls):
-    use_label = is_label(label_string)
-    if not use_label and not is_string(label_string):
-        fail("Expected dependency, got '{}' of type {}".format(label_string, type(label_string)))
-    label = native.package_relative_label(label_string)
-    if label in label_map:
-        target_label_string = label_map[label]
-    else:
-        # Multiple targets can be referenced in a single logical dep if that dep is a select.
-        target_name = name_prefix + "_" + str(mutable_num_calls[0])
-        reset_target(
-            name = target_name,
-            exports = label,
-        )
-        target_label_string = ":" + target_name
-        label_map[label] = target_label_string
-        mutable_num_calls[0] += 1
-
-    return native.package_relative_label(target_label_string) if use_label else target_label_string

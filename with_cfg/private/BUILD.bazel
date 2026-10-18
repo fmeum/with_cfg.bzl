@@ -160,9 +160,7 @@ bzl_library(
     deps = [
         ":args",
         ":rewrite",
-        ":select",
         ":setting",
-        ":utils",
         "@bazel_features//:features",
     ],
 )
