@@ -73,9 +73,10 @@ def rewrite_args(name, args, make_filegroup):
         return rewrite_locations_in_string_list(args, rewrite_label), filegroup_labels
 
     def rewrite_list(value):
-        # type: (object) -> list[str] | None
+        # type: (object) -> list[str]
         if value == None:
-            return None
+            # The executable and test frontends use the implicit args default [].
+            return []
         return rewrite_locations_in_string_list(value, rewrite_label)
 
     return map_string_list_select(rewrite_list, args), filegroup_labels

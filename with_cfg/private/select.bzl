@@ -31,40 +31,10 @@ def _condition(key):
     fail("Expected a select condition, got {}".format(key))
 
 def _map_list_selected(func, branches):
-    # Bazel derives the selector kind from its first branch. Seed that branch
-    # before mapping the rest; setdefault preserves it even for an unknown key.
-    pairs = branches.items()
-    first_pair = pairs[0]
-    key = _condition(first_pair[0])
-    first = func(first_pair[1])
-    if first == None:
-        mapped = {}  # type: dict[str | Label, list[str] | None]
-        mapped[key] = first
-        for later_key, later_value in pairs[1:]:
-            mapped.setdefault(_condition(later_key), func(later_value))
-        return ("none", select(mapped))
-    else:
-        mapped = {}  # type: dict[str | Label, list[str] | None]
-        mapped[key] = first
-        for later_key, later_value in pairs[1:]:
-            mapped.setdefault(_condition(later_key), func(later_value))
-        return ("list", select(mapped))
-
-def _list_value(item):
-    if item[0] == True:
-        return item[1]
-    value = item[1]
-    return ("none", None) if value == None else ("list", value)
-
-def _combine_list(value, result, prepend):
-    if value[0] == "list" and result[0] == "list":
-        return ("list", value[1] + result[1] if prepend else result[1] + value[1])
-    if value[0] == "none" and result[0] == "none":
-        return ("none", value[1] + result[1] if prepend else result[1] + value[1])
-    fail("Cannot combine list and None selectors")
+    return select(_map_selected(func, branches))
 
 def _compose_list(items):
-    return _compose(items, _list_value, _combine_list)[1]
+    return _compose(items, lambda item: item[1], lambda value, result, prepend: value + result if prepend else result + value)
 
 def _map_finite_selected(func, branches):
     # Construct each selector where its first value is narrowed, so the value

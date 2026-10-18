@@ -65,22 +65,23 @@ def _decompose_select_value_test(env):
 
 def _map_nullable_select_test(env):
     value = None + (None + select({"//conditions:default": None})) + None + None
-    for mapper in [map_parsed_select, map_string_list_select]:
-        mapped = mapper(lambda value: value, value)
-        env.expect.that_collection(decompose_select_elements(mapped)).contains_exactly([
-            (False, None),
-            (False, None),
-            (True, {"//conditions:default": None}),
-            (False, None),
-            (False, None),
-        ]).in_order()
+    mapped = map_parsed_select(lambda value: value, value)
+    env.expect.that_collection(decompose_select_elements(mapped)).contains_exactly([
+        (False, None),
+        (False, None),
+        (True, {"//conditions:default": None}),
+        (False, None),
+        (False, None),
+    ]).in_order()
 
 def _map_select_order_test(env):
-    values = ["first"] + (["second"] + select({"//conditions:default": ["selected"], ":other": ["other"]})) + ["last"]
+    values = ["first"] + (["second"] + select({"//conditions:default": ["selected"], ":unset": None, ":other": ["other"]})) + ["last"]
     calls = []
 
     def uppercase(value):
         calls.append(value)
+        if value == None:
+            return []
         return [item.upper() for item in value]
 
     mapped = map_string_list_select(uppercase, values)
@@ -88,6 +89,7 @@ def _map_select_order_test(env):
         ["first"],
         ["second"],
         ["selected"],
+        None,
         ["other"],
         ["last"],
     ]).in_order()

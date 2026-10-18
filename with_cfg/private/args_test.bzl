@@ -32,25 +32,45 @@ def _args_toolchain_test_impl(env):
     variables = env.ctx.attr.subject[ArgsInfo].template_variable_info.variables
     env.expect.that_dict(variables).contains_exactly({"CUSTOM": "value"})
 
-def _rewrite_nullable_args_test(env):
+def _rewrite_nullable_args_test(name):
+    condition = name + "_fastbuild"
+    native.config_setting(name = condition, values = {"compilation_mode": "fastbuild"})
+    condition = ":" + condition
     filegroups = []
 
     def make_filegroup(*, name, srcs, output_group):
         filegroups.append((name, srcs, output_group))
 
-    rewritten, labels = rewrite_args("plain", None, make_filegroup)
-    env.expect.that_bool(rewritten == None).equals(True)
-    env.expect.that_collection(labels).contains_exactly([])
+    plain, plain_labels = rewrite_args("plain", None, make_filegroup)
+    cases = [
+        (select({"//conditions:default": None}), [], []),
+        (select({"//conditions:default": None, condition: ["--flag"]}), ["--flag"], []),
+        (select({"//conditions:default": ["--flag"], condition: None}), [], ["--flag"]),
+        (["prefix"] + select({"//conditions:default": ["--flag"], condition: None}) + ["suffix"], ["prefix", "suffix"], ["prefix", "--flag", "suffix"]),
+        (select({"//conditions:default": None, condition: ["first"]}) + select({"//conditions:default": None, condition: ["second"]}), ["first", "second"], []),
+    ]
+    attrs = {}
+    labels = []
+    for i, (args, _fastbuild, _fallback) in enumerate(cases):
+        rewritten, rewritten_labels = rewrite_args(name, args, make_filegroup)
+        labels.extend(rewritten_labels)
+        for side, value in [("old", args), ("new", rewritten)]:
+            target = name + "_" + side + str(i)
+            _subject(name = target, args = value)
+            attrs[side + str(i)] = attr.label(default = native.package_relative_label(target))
 
-    for args in [
-        select({"//conditions:default": None}),
-        select({"//conditions:default": None, ":condition": ["--flag"]}),
-        select({"//conditions:default": ["--flag"], ":condition": None}),
-    ]:
-        rewritten, labels = rewrite_args("selected", args, make_filegroup)
-        env.expect.that_str(repr(rewritten)).equals(repr(args))
+    def impl(env):
+        env.expect.that_bool(plain == None).equals(True)
+        env.expect.that_collection(plain_labels).contains_exactly([])
         env.expect.that_collection(labels).contains_exactly([])
-    env.expect.that_collection(filegroups).contains_exactly([])
+        env.expect.that_collection(filegroups).contains_exactly([])
+        for i, (_args, fastbuild, fallback) in enumerate(cases):
+            expected = fastbuild if env.ctx.var["COMPILATION_MODE"] == "fastbuild" else fallback
+            for side in ["old", "new"]:
+                actual = getattr(env.ctx.attr, side + str(i))[_ArgsValueInfo].args
+                env.expect.that_collection(actual).contains_exactly(expected).in_order()
+
+    unit_test(name = name, impl = impl, attrs = attrs)
 
 def _rewrite_plain_args_test(name):
     filegroups = []
@@ -202,6 +222,5 @@ def _rewrite_dictionary_args_test(name):
 def args_test_suite(name):
     test_suite(
         name = name,
-        basic_tests = [_rewrite_nullable_args_test],
-        tests = [_args_toolchain_test, _rewrite_plain_args_test, _rewrite_selected_args_test, _rewrite_dictionary_args_test],
+        tests = [_args_toolchain_test, _rewrite_nullable_args_test, _rewrite_plain_args_test, _rewrite_selected_args_test, _rewrite_dictionary_args_test],
     )
