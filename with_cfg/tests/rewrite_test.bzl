@@ -1,5 +1,5 @@
 load("@rules_testing//lib:test_suite.bzl", "test_suite")
-load("//with_cfg/private:rewrite.bzl", "rewrite_dependency_labels", "rewrite_locations_in_attr", "rewrite_locations_in_string_dict", "rewrite_locations_in_string_list")
+load("//with_cfg/private:rewrite.bzl", "rewrite_dependency_attrs", "rewrite_dependency_labels", "rewrite_locations_in_attr", "rewrite_locations_in_string_dict", "rewrite_locations_in_string_list")
 
 def _mock_rewriter(label):
     return label + "_rewritten"
@@ -167,15 +167,67 @@ def _check_dependency_rewrites(env, result):
     env.expect.that_str(result.string).equals(":deps_0")
     env.expect.that_str(str(result.label)).equals(str(result.expected_label))
 
+def _dependency_attr_rewrites():
+    calls = []
+
+    def reset_target(*, name, exports):
+        calls.append((name, exports))
+
+    attrs = {
+        "deps": [":a"] + select({"//conditions:default": [":b"], ":other": [":a"]}),
+        "tools": {":a": "$(location :b)", ":c": "$(location :a)"},
+        "cmd": "$(location :c) $(location :b)",
+    }
+    original = repr(attrs)
+    rewritten = rewrite_dependency_attrs(
+        attrs = attrs,
+        attrs_to_reset = ["missing", "deps", "tools"],
+        reset_target = reset_target,
+        name = "target",
+    )
+    unchanged = {"value": "before"}
+    alias = rewrite_dependency_attrs(attrs = unchanged, attrs_to_reset = [], reset_target = reset_target, name = "unused")
+    alias["value"] = "after"
+    return struct(
+        attrs = attrs,
+        original = original,
+        rewritten = rewritten,
+        calls = calls,
+        unchanged = unchanged,
+        expected_calls = [
+            ("target__deps_0", native.package_relative_label(":a")),
+            ("target__deps_1", native.package_relative_label(":b")),
+            ("target__tools_0", native.package_relative_label(":c")),
+        ],
+        expected_deps = [":target__deps_0"] + select({"//conditions:default": [":target__deps_1"], ":other": [":target__deps_0"]}),
+    )
+
+def _check_dependency_attr_rewrites(env, result):
+    env.expect.that_str(repr(result.attrs)).equals(result.original)
+    env.expect.that_collection(result.calls).contains_exactly(result.expected_calls).in_order()
+    env.expect.that_collection(result.rewritten.keys()).contains_exactly(["deps", "tools", "cmd"]).in_order()
+    env.expect.that_str(repr(result.rewritten["deps"])).equals(repr(result.expected_deps))
+    env.expect.that_dict(result.rewritten["tools"]).contains_exactly({
+        ":target__deps_0": "$(location :target__deps_1)",
+        ":target__tools_0": "$(location :target__deps_0)",
+    })
+    env.expect.that_str(result.rewritten["cmd"]).equals("$(location :target__tools_0) $(location :target__deps_1)")
+    env.expect.that_dict(result.unchanged).contains_exactly({"value": "after"})
+
 def rewrite_test_suite(name):
     dependency_rewrites = _dependency_rewrites()
+    dependency_attr_rewrites = _dependency_attr_rewrites()
 
     def _rewrite_dependency_labels_test(env):
         _check_dependency_rewrites(env, dependency_rewrites)
 
+    def _rewrite_dependency_attrs_test(env):
+        _check_dependency_attr_rewrites(env, dependency_attr_rewrites)
+
     test_suite(
         name = name,
         basic_tests = [
+            _rewrite_dependency_attrs_test,
             _rewrite_dependency_labels_test,
             _rewrite_parsed_select_test,
             _rewrite_locations_in_attr_test,

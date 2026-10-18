@@ -1,7 +1,7 @@
 load("@bazel_features//:features.bzl", "bazel_features")
 load(":args.bzl", "rewrite_args")
 load(":frontend.bzl", "filter_exec_properties", "unwrap_template_variable_info")
-load(":rewrite.bzl", "make_label_rewriter", "rewrite_dependency_labels", "rewrite_locations_in_attr")
+load(":rewrite.bzl", "rewrite_dependency_attrs")
 load(":setting.bzl", "validate_and_get_attr_name")
 
 visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
@@ -168,7 +168,7 @@ def _wrapper(
         )
         frontend_attrs["toolchains"] = [":" + unwrap_name]
 
-    processed_kwargs = _process_attrs_for_reset(
+    processed_kwargs = rewrite_dependency_attrs(
         attrs = kwargs,
         attrs_to_reset = attrs_to_reset,
         reset_target = lambda *, name, exports: transitioning_alias(
@@ -178,7 +178,7 @@ def _wrapper(
             tags = ["manual"],
             visibility = ["//visibility:private"],
         ),
-        name_prefix = name,
+        name = name,
     )
     rule_info.kind(
         name = original_name,
@@ -230,31 +230,3 @@ def _wrapper(
             visibility = visibility,
             **(alias_attrs | common_attrs)
         )
-
-def _process_attrs_for_reset(*, attrs, attrs_to_reset, reset_target, name_prefix):
-    if not attrs_to_reset:
-        return attrs
-
-    # In a first pass over only the attributes to reset, replace all labels representing
-    # dependencies with labels of a `reset_target` target that forwards the dep's providers while
-    # applying the reset transition. Along the way collect a map of original to new labels.
-    label_map = {}
-    first_pass_attrs = dict(attrs)
-    for attr in attrs_to_reset:
-        if not attr in attrs:
-            continue
-        first_pass_attrs[attr] = rewrite_dependency_labels(
-            attrs[attr],
-            label_map = label_map,
-            reset_target = reset_target,
-            name = name_prefix + "__" + attr,
-        )
-
-    # In a second pass, now over all attributes, rewrite all $(location ...) expressions. These can
-    # even appear in attributes that are reset (as values in attr.label_keyed_string_dict).
-    second_pass_attrs = {}
-    label_rewriter = make_label_rewriter(label_map)
-    for attr, value in first_pass_attrs.items():
-        second_pass_attrs[attr] = rewrite_locations_in_attr(value, label_rewriter)
-
-    return second_pass_attrs

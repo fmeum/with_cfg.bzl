@@ -75,3 +75,11 @@ def _replace_single_dep(
         name_prefix: str,
         mutable_num_calls: list[int],
 ) -> _Dependency: ...
+
+def rewrite_dependency_attrs[V](
+        *,
+        attrs: dict[str, V],
+        attrs_to_reset: Sequence[str],
+        reset_target: _ResetTarget,
+        name: str,
+) -> dict[str, V] | dict[str, object]: ...

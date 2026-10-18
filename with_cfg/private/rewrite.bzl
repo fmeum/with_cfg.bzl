@@ -227,3 +227,42 @@ def _replace_single_dep(
         mutable_num_calls[0] += 1
 
     return native.package_relative_label(target_label_string) if use_label else target_label_string
+
+def rewrite_dependency_attrs(*, attrs, attrs_to_reset, reset_target, name):
+    """Resets dependency attributes and rewrites locations across all attributes.
+
+    Args:
+        attrs: Original target attributes, returned unchanged when no reset is requested.
+        attrs_to_reset: Dependency attributes to reset, in first-use naming order.
+        reset_target: Creates a reset target from name and exports keyword arguments.
+        name: Prefix for generated reset targets.
+
+    Returns:
+        Attributes with shared dependency replacements and matching location expressions.
+    """
+    if not attrs_to_reset:
+        return attrs
+
+    # In a first pass over only the attributes to reset, replace all labels representing
+    # dependencies with labels of a `reset_target` target that forwards the dep's providers while
+    # applying the reset transition. Along the way collect a map of original to new labels.
+    label_map = {}  # type: dict[Label, str]
+    first_pass_attrs = dict(attrs)  # type: dict[str, object]
+    for attr in attrs_to_reset:
+        if not attr in attrs:
+            continue
+        first_pass_attrs[attr] = rewrite_dependency_labels(
+            attrs[attr],
+            label_map = label_map,
+            reset_target = reset_target,
+            name = name + "__" + attr,
+        )
+
+    # In a second pass, now over all attributes, rewrite all $(location ...) expressions. These can
+    # even appear in attributes that are reset (as values in attr.label_keyed_string_dict).
+    second_pass_attrs = {}  # type: dict[str, object]
+    label_rewriter = make_label_rewriter(label_map)
+    for attr, value in first_pass_attrs.items():
+        second_pass_attrs[attr] = rewrite_locations_in_attr(value, label_rewriter)
+
+    return second_pass_attrs
