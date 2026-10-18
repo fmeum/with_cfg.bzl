@@ -25,8 +25,6 @@ def rewrite_locations_in_attr(value, label_rewriter):
     return map_parsed_select(rewrite_value, value)
 
 def rewrite_locations_in_string_list(value, label_rewriter):
-    if value == None:
-        return None
     if type(value) == "dict":
         # Bazel converts each selector piece to STRING_LIST before concatenation.
         return rewrite_locations_in_string_dict(value, label_rewriter).keys()

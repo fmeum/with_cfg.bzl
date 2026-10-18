@@ -11,9 +11,7 @@ def _map_select(func, attribute, map_selected, compose):
         for item in decompose_select_elements(attribute)
     ])
 
-def map_string_list_attr(func, attribute):
-    if not is_select(attribute):
-        return func(attribute)
+def map_string_list_select(func, attribute):
     return _map_select(func, attribute, _map_list_selected, _compose_list)
 
 def map_dict_attr(func, attribute):

@@ -7,7 +7,7 @@ load(
     "decompose_select_elements",
     "map_dict_attr",
     "map_parsed_select",
-    "map_string_list_attr",
+    "map_string_list_select",
 )
 
 _CONSUME_SINGLE_VALUE_TEST_CASES = [
@@ -65,7 +65,7 @@ def _decompose_select_value_test(env):
 
 def _map_nullable_select_test(env):
     value = None + (None + select({"//conditions:default": None})) + None + None
-    for mapper in [map_parsed_select, map_string_list_attr]:
+    for mapper in [map_parsed_select, map_string_list_select]:
         mapped = mapper(lambda value: value, value)
         env.expect.that_collection(decompose_select_elements(mapped)).contains_exactly([
             (False, None),
@@ -83,7 +83,7 @@ def _map_select_order_test(env):
         calls.append(value)
         return [item.upper() for item in value]
 
-    mapped = map_string_list_attr(uppercase, values)
+    mapped = map_string_list_select(uppercase, values)
     env.expect.that_collection(calls).contains_exactly([
         ["first"],
         ["second"],
@@ -142,7 +142,7 @@ def _map_list_attribute_test(name):
     value = select({"//conditions:default": "selected"}) + "suffix"
     _selected_string_list(
         name = subject,
-        values = map_string_list_attr(lambda value: ["a"] if value == "selected" else ["b"], value),
+        values = map_string_list_select(lambda value: ["a"] if value == "selected" else ["b"], value),
     )
     analysis_test(
         name = name,

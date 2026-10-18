@@ -17,7 +17,7 @@ def rewrite_locations_in_attr[T](value: T, label_rewriter: Callable[[str], str])
 def rewrite_locations_in_string_list(
         value: object,
         label_rewriter: Callable[[str], str],
-) -> list[str] | None: ...
+) -> list[str]: ...
 
 def rewrite_locations_in_string_dict(
         value: object,
