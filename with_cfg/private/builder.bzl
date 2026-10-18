@@ -1,11 +1,10 @@
 load("@bazel_features//:features.bzl", "bazel_features")
 load(":extend.bzl", "make_transitioned_rule")
 load(":frontend.bzl", "get_frontend")
-load(":select.bzl", "map_attr")
-load(":setting.bzl", "validate_and_get_attr_name")
+load(":setting.bzl", "clone_setting_value", "validate_and_get_attr_name")
 load(":transition.bzl", "make_transition")
 load(":transitioning_alias.bzl", "make_transitioning_alias")
-load(":utils.bzl", "is_label", "is_list")
+load(":utils.bzl", "is_label")
 load(":wrapper.bzl", "make_wrapper")
 
 visibility("private")
@@ -138,7 +137,7 @@ def _extend(setting, value, *, self, values, operations, mutable_has_been_built,
 
     # Make a deep copy so that subsequent modification doesn't affect the builder state.
     # This improves readability but is also necessary for clone() to work correctly.
-    values[setting] = map_attr(_clone_value_deeply, value)
+    values[setting] = clone_setting_value(value)
     operations[setting] = "extend"
     return self
 
@@ -154,7 +153,7 @@ def _set(setting, value, *, self, values, operations, mutable_has_been_built, ov
 
     # Make a deep copy so that subsequent modification doesn't affect the builder state.
     # This improves readability but is also necessary for clone() to work correctly.
-    values[setting] = map_attr(_clone_value_deeply, value)
+    values[setting] = clone_setting_value(value)
     operations[setting] = "set"
     return self
 
@@ -180,11 +179,3 @@ def _reset_on_attrs(attrs, *, self, attrs_to_reset, mutable_has_been_built):
 
 def _clone(*, rule_info, values, operations):
     return _make_builder(rule_info, values = values, operations = operations)
-
-def _clone_value_deeply(value):
-    # We only support valid types for settings values.
-    if is_list(value):
-        return list(value)
-
-    # All other valid types are immutable.
-    return value

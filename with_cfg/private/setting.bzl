@@ -1,4 +1,4 @@
-load(":select.bzl", "decompose_select_elements")
+load(":select.bzl", "decompose_select_elements", "map_parsed_select")
 load(":utils.bzl", "is_bool", "is_int", "is_label", "is_select", "is_string")
 
 visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
@@ -91,3 +91,16 @@ def _get_type_as_attr_type(value):
         return "bool"
 
     fail("Failed to determine type of '{}'".format(value))
+
+def clone_setting_value(value):
+    if is_select(value):
+        return map_parsed_select(_clone_parsed_setting_value, value)
+    if type(value) == "list":
+        return list(value)
+    return value
+
+def _clone_parsed_setting_value(value):
+    # Setting lists must not share mutable state with the builder's caller.
+    if type(value) == "list":
+        return list(value)
+    return value
