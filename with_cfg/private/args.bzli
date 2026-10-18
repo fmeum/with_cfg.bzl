@@ -21,6 +21,13 @@ class _MakeFilegroup(Protocol):
 @overload
 def rewrite_args(
         name: str,
+        args: str,
+        make_filegroup: _MakeFilegroup,
+) -> tuple[str, list[Label]]: ...
+
+@overload
+def rewrite_args(
+        name: str,
         args: Mapping[str, object],
         make_filegroup: _MakeFilegroup,
 ) -> tuple[Mapping[str, object], list[Label]]: ...
@@ -55,6 +62,6 @@ def rewrite_args(
 
 def rewrite_args(
         name: str,
-        args: list[str] | Mapping[str, object] | tuple[str, ...] | select[list[str] | Mapping[str, object] | None] | None,
+        args: str | list[str] | Mapping[str, object] | tuple[str, ...] | select[list[str] | Mapping[str, object] | None] | None,
         make_filegroup: _MakeFilegroup,
-) -> tuple[list[str] | Mapping[str, object] | tuple[str, ...] | select[list[str]] | None, list[Label]]: ...
+) -> tuple[str | list[str] | Mapping[str, object] | tuple[str, ...] | select[list[str]] | None, list[Label]]: ...

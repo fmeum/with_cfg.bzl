@@ -34,7 +34,7 @@ complexities handled by the functions in this file:
 """
 
 load(":providers.bzl", "ArgsInfo")
-load(":rewrite.bzl", "rewrite_locations_in_attr", "rewrite_locations_in_single_value", "rewrite_locations_in_string_dict", "rewrite_locations_in_string_list")
+load(":rewrite.bzl", "rewrite_locations_in_single_value", "rewrite_locations_in_string_dict", "rewrite_locations_in_string_list")
 load(":select.bzl", "map_string_list_select")
 load(":utils.bzl", "is_select")
 
@@ -65,7 +65,7 @@ def rewrite_args(name, args, make_filegroup):
         if type(args) == "dict":
             return rewrite_locations_in_string_dict(args, rewrite_label), filegroup_labels
         if type(args) == "string":
-            return rewrite_locations_in_attr(args, rewrite_label), filegroup_labels
+            return rewrite_locations_in_single_value(args, rewrite_label), filegroup_labels
 
         # Tuples and other plain values historically pass through unchanged.
         if type(args) != "list":
