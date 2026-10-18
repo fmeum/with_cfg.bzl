@@ -65,3 +65,9 @@ def rewrite_args(
         args: str | list[str] | Mapping[str, object] | tuple[str, ...] | select[list[str] | Mapping[str, object] | None] | None,
         make_filegroup: _MakeFilegroup,
 ) -> tuple[str | list[str] | Mapping[str, object] | tuple[str, ...] | select[list[str]] | None, list[Label]]: ...
+
+def _make_arg_rewriter(name: str, make_filegroup: _MakeFilegroup) -> struct[{
+    "label": Callable[[str], str],
+    "selected_list": Callable[[object], list[str]],
+    "labels": list[Label],
+}]: ...

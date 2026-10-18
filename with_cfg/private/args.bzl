@@ -41,8 +41,26 @@ load(":utils.bzl", "is_select")
 visibility("private")
 
 def rewrite_args(name, args, make_filegroup):
+    rewriter = _make_arg_rewriter(name, make_filegroup)
+    if not is_select(args):
+        if not args:
+            return args, rewriter.labels
+
+        if type(args) == "dict":
+            return rewrite_locations_in_string_dict(args, rewriter.label), rewriter.labels
+        if type(args) == "string":
+            return rewrite_locations_in_single_value(args, rewriter.label), rewriter.labels
+
+        # Tuples and other plain values historically pass through unchanged.
+        if type(args) != "list":
+            return args, rewriter.labels
+        return rewrite_locations_in_string_list(args, rewriter.label), rewriter.labels
+
+    return map_string_list_select(rewriter.selected_list, args), rewriter.labels
+
+def _make_arg_rewriter(name, make_filegroup):
     seen_labels = {}  # type: dict[str, None]
-    filegroup_labels = []
+    filegroup_labels = []  # type: list[Label]
 
     def rewrite_label(label_string):
         # type: (string) -> string
@@ -58,20 +76,6 @@ def rewrite_args(name, args, make_filegroup):
             filegroup_labels.append(native.package_relative_label(filegroup_name))
         return ":" + filegroup_name
 
-    if not is_select(args):
-        if not args:
-            return args, filegroup_labels
-
-        if type(args) == "dict":
-            return rewrite_locations_in_string_dict(args, rewrite_label), filegroup_labels
-        if type(args) == "string":
-            return rewrite_locations_in_single_value(args, rewrite_label), filegroup_labels
-
-        # Tuples and other plain values historically pass through unchanged.
-        if type(args) != "list":
-            return args, filegroup_labels
-        return rewrite_locations_in_string_list(args, rewrite_label), filegroup_labels
-
     def rewrite_list(value):
         # type: (object) -> list[str]
         if value == None:
@@ -79,7 +83,7 @@ def rewrite_args(name, args, make_filegroup):
             return []
         return rewrite_locations_in_string_list(value, rewrite_label)
 
-    return map_string_list_select(rewrite_list, args), filegroup_labels
+    return struct(label = rewrite_label, selected_list = rewrite_list, labels = filegroup_labels)
 
 def _args_aspect_impl(target, ctx):
     args = getattr(ctx.rule.attr, "args", None)
