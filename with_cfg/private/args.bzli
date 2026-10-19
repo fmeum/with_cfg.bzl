@@ -26,11 +26,11 @@ def rewrite_args(
 ) -> tuple[str, list[Label]]: ...
 
 @overload
-def rewrite_args(
+def rewrite_args[M: Mapping[str, object]](
         name: str,
-        args: Mapping[str, object],
+        args: M,
         make_filegroup: _MakeFilegroup,
-) -> tuple[Mapping[str, object], list[Label]]: ...
+) -> tuple[M | dict[str, object], list[Label]]: ...
 
 @overload
 def rewrite_args(
