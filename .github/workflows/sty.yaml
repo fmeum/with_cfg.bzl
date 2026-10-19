@@ -22,8 +22,10 @@ jobs:
         include:
           - name: with_cfg
             directory: .
+            files: with_cfg/private/original_settings.bzl
           - name: examples
             directory: examples
+            files: ''
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -31,5 +33,6 @@ jobs:
       - uses: tamird/sty@f9027c84126ec3ed1d498b36fe6e407a50e87506
         with:
           audit-loads: true
+          files: ${{ matrix.files }}
           working-directory: ${{ matrix.directory }}
           artifact-name: sty-${{ matrix.name }}
