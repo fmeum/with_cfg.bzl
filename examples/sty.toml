@@ -1,0 +1,18 @@
+[analysis]
+strict-generic-narrowing = true
+
+[type-interfaces]
+"dynamic_deps/rules/runfiles_dir.bzl" = "dynamic_deps/rules/runfiles_dir.bzli"
+
+[rules]
+missing-parameter-annotation = "error"
+missing-return-annotation = "error"
+missing-type-argument = "error"
+unsound-assignment = "error"
+unsound-return-statement = "error"
+explicit-any = "error"
+non-static-type = "error"
+blanket-ignore-comment = "error"
+possibly-unresolved-reference = "error"
+possibly-missing-attribute = "error"
+division-by-zero = "error"

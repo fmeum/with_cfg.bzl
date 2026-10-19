@@ -16,22 +16,20 @@ jobs:
   sty:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: with_cfg
+            directory: .
+          - name: examples
+            directory: examples
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
-      - uses: tamird/sty@36091ef6131ef9ea276db3c4329084fd5ec3c5c2
+      - uses: tamird/sty@f9027c84126ec3ed1d498b36fe6e407a50e87506
         with:
           audit-loads: true
-          files: |
-            with_cfg/private/args.bzl
-            with_cfg/private/extend.bzl
-            with_cfg/private/frontend.bzl
-            with_cfg/private/original_settings_rule.bzl
-            with_cfg/private/providers.bzl
-            with_cfg/private/rewrite.bzl
-            with_cfg/private/select.bzl
-            with_cfg/private/setting.bzl
-            with_cfg/private/transitioning_alias.bzl
-            with_cfg/private/utils.bzl
-            examples/dynamic_deps/rules/runfiles_dir.bzl
+          working-directory: ${{ matrix.directory }}
+          artifact-name: sty-${{ matrix.name }}

@@ -12,7 +12,6 @@ strict-generic-narrowing = true
 "with_cfg/private/setting.bzl" = "with_cfg/private/setting.bzli"
 "with_cfg/private/transitioning_alias.bzl" = "with_cfg/private/transitioning_alias.bzli"
 "with_cfg/private/utils.bzl" = "with_cfg/private/utils.bzli"
-"examples/dynamic_deps/rules/runfiles_dir.bzl" = "examples/dynamic_deps/rules/runfiles_dir.bzli"
 
 [rules]
 missing-parameter-annotation = "error"
