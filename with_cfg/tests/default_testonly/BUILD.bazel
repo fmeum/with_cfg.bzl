@@ -1,0 +1,5 @@
+load(":defs.bzl", "default_testonly_test")
+
+package(default_testonly = True)
+
+default_testonly_test(name = "default_testonly_test")
