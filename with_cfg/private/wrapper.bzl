@@ -162,7 +162,7 @@ def _wrapper(
                 name = name,
                 srcs = srcs,
                 output_group = output_group,
-                testonly = common_attrs.get("testonly", False),
+                testonly = common_attrs.get("testonly"),
                 tags = ["manual"],
                 visibility = ["//visibility:private"],
             ),
@@ -172,7 +172,7 @@ def _wrapper(
         unwrap_template_variable_info(
             name = unwrap_name,
             exports = ":" + alias_name,
-            testonly = common_attrs.get("testonly", False),
+            testonly = common_attrs.get("testonly"),
             tags = ["manual"],
             visibility = ["//visibility:private"],
         )
@@ -184,7 +184,7 @@ def _wrapper(
         reset_target = lambda *, name, exports: transitioning_alias(
             name = name,
             exports = exports,
-            testonly = common_attrs.get("testonly", False),
+            testonly = common_attrs.get("testonly"),
             tags = ["manual"],
             visibility = ["//visibility:private"],
         ),
