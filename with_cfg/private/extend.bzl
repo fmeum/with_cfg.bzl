@@ -4,7 +4,7 @@ load(":setting.bzl", "get_attr_type", "validate_and_get_attr_name")
 
 visibility("private")
 
-def make_transitioned_rule(*, rule_info, transition, values):
+def make_transitioned_rule(*, parent, transition, values):
     settings_attrs = {
         validate_and_get_attr_name(setting): getattr(attr, get_attr_type(value))()
         for setting, value in values.items()
@@ -12,7 +12,7 @@ def make_transitioned_rule(*, rule_info, transition, values):
     initializer = lambda **kwargs: _initializer_base(kwargs = kwargs, values = values)  # type: _Initializer
     return rule(
         implementation = _transitioned_rule_impl,
-        parent = rule_info.kind,
+        parent = parent,
         cfg = transition,
         initializer = initializer,
         attrs = settings_attrs,

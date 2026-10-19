@@ -1,3 +1,4 @@
+load("@bazel_features//:features.bzl", "bazel_features")
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
@@ -13,7 +14,7 @@ load("@rules_testing//lib:test_suite.bzl", "test_suite")
 load("@rules_testing//lib:truth.bzl", "matching")
 load("@rules_testing//lib:unit_test.bzl", "unit_test")
 load("//:with_cfg.bzl", "with_cfg")
-load("//with_cfg/private:with_cfg.bzl", "get_rule_name", "is_executable", "is_test")
+load("//with_cfg/private:with_cfg.bzl", "get_extension_parent", "get_rule_name", "is_executable", "is_test")
 load("//with_cfg/private:wrapper.bzl", "make_wrapper")
 
 _filegroup, _filegroup_reset = with_cfg(native.filegroup).resettable(Label(":original_settings")).build()
@@ -25,6 +26,12 @@ def _noop_impl(ctx):
 my_binary = rule(_noop_impl, executable = True)
 my_library = rule(_noop_impl)
 my_test = rule(_noop_impl, test = True)
+
+# A rule stored in a list is not exported as a global rule.
+_unexported_rule = [rule(_noop_impl)]
+_symbolic_macro = bazel_features.globals.macro(
+    implementation = lambda name, visibility: None,
+) if bazel_features.globals.macro else None
 
 _string_data = rule(
     _noop_impl,
@@ -160,6 +167,18 @@ def _execution_attrs_test_impl(env):
             expected_groups = {"test": constraints} if exec_groups and (executable or test) else {}
             expect.that_dict(frontend.get("exec_group_compatible_with", {})).contains_exactly(expected_groups)
 
+def _extension_parent_test(name):
+    unit_test(name = name, impl = _extension_parent_test_impl)
+
+def _extension_parent_test_impl(env):
+    for kind in [my_binary, my_library, my_test]:
+        env.expect.that_bool(get_extension_parent(kind) == kind).equals(True)
+    for kind in [native.filegroup, my_macro_library, _symbolic_macro, _unexported_rule[0]]:
+        env.expect.that_bool(get_extension_parent(kind) == None).equals(True)
+    if not bazel_features.cc.rules_support_extension:
+        for kind in [cc_binary, cc_test]:
+            env.expect.that_bool(get_extension_parent(kind) == None).equals(True)
+
 def _is_executable_test(name):
     unit_test(
         name = name,
@@ -283,6 +302,7 @@ def rule_test_suite(name):
             _args_non_list_test,
             _default_frontend_exec_properties_test,
             _execution_attrs_test,
+            _extension_parent_test,
             _is_executable_test,
             _is_test_test,
             _missing_executable_test,

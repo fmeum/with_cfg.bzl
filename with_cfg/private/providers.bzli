@@ -22,20 +22,20 @@ def OriginalSettingsInfo(*, json: str) -> record[{"json": str}]: ...
 def RuleInfo[K](
     *,
     executable: bool,
+    extension_parent: rule | None,
     implicit_targets: Iterable[str],
     kind: K,
     native: bool,
     providers: Sequence[ProviderKey],
-    supports_extension: bool,
     supports_inheritance: bool,
     test: bool,
 ) -> record[{
     "executable": bool,
+    "extension_parent": rule | None,
     "implicit_targets": Iterable[str],
     "kind": K,
     "native": bool,
     "providers": Sequence[ProviderKey],
-    "supports_extension": bool,
     "supports_inheritance": bool,
     "test": bool,
 }]: ...

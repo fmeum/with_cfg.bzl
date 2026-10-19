@@ -1,10 +1,8 @@
 """Inherited rule creation and transition setting initialization."""
 
-load(":providers.bzli", "RuleInfo")
-
 def make_transitioned_rule[K: str | Label](
         *,
-        rule_info: RuleInfo[rule],
+        parent: rule,
         transition: transition[Literal["split"]],
         values: Mapping[K, object],
 ) -> rule: ...

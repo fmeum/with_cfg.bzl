@@ -88,9 +88,10 @@ def _build(*, rule_info, values, operations, mutable_has_been_built, mutable_ori
     )
 
     # Resetting attributes is not yet supported with the extended rule approach.
-    if bazel_features.rules.rule_extension_apis_available and rule_info.supports_extension and not attrs_to_reset:
+    extension_parent = rule_info.extension_parent
+    if bazel_features.rules.rule_extension_apis_available and extension_parent and not attrs_to_reset:
         transitioned_rule = make_transitioned_rule(
-            rule_info = rule_info,
+            parent = extension_parent,
             transition = transition,
             values = values,
         )
