@@ -76,10 +76,10 @@ def _replace_single_dep(
         mutable_num_calls: list[int],
 ) -> _Dependency: ...
 
-def rewrite_dependency_attrs[V](
+def rewrite_dependency_attrs[M: Mapping[str, object]](
         *,
-        attrs: dict[str, V],
+        attrs: M,
         attrs_to_reset: Sequence[str],
         reset_target: _ResetTarget,
         name: str,
-) -> dict[str, V] | dict[str, object]: ...
+) -> M | dict[str, object]: ...
