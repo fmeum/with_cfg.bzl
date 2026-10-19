@@ -30,6 +30,7 @@ def make_transitioning_alias(*, providers, transition, values, original_settings
                 allow_files = True,
                 cfg = transition,
                 aspects = [args_aspect],
+                mandatory = True,
             ),
             "_allowlist_function_transition": attr.label(
                 default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
