@@ -148,15 +148,18 @@ def get_rule_name(kind):
         fail("Not a rule or macro: " + s)
 
 def is_executable(rule_name):
+    # type: (str) -> bool
     return rule_name.endswith("_binary")
 
 def is_test(rule_name):
+    # type: (str) -> bool
     # rules_go's go_test is a macro called go_test_macro. Macro wrappers should
     # generally try to have the same name as the rule they are wrapping, so this
     # shouldn't become configurable.
     return rule_name.endswith("_test") or rule_name == "go_test_macro"
 
 def _is_native(kind):
+    # type: (object) -> bool
     return str(kind).startswith("<built-in rule ")
 
 def _supports_inheritance(kind):
@@ -180,6 +183,7 @@ def get_extension_parent(kind):
     return None
 
 def get_implicit_targets(rule_name):
+    # type: (str) -> list[str]
     return IMPLICIT_TARGETS.get(rule_name, [])
 
 def _all_providers(extra_providers):
