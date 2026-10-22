@@ -128,7 +128,6 @@ def with_cfg(
         implicit_targets = implicit_targets,
         providers = _all_providers(extra_providers),
         native = _is_native(kind),
-        supports_inheritance = _supports_inheritance(kind),
         extension_parent = get_extension_parent(kind),
     )
     return make_builder(rule_info)
@@ -161,10 +160,6 @@ def is_test(rule_name):
 def _is_native(kind):
     # type: (object) -> bool
     return str(kind).startswith("<built-in rule ")
-
-def _supports_inheritance(kind):
-    # Legacy macros don't support inheritance.
-    return not str(kind).startswith("<function ")
 
 # Rules that need https://github.com/bazelbuild/bazel/pull/24778 to be extendable.
 _NOT_EXTENDABLE = [

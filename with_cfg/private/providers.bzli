@@ -27,7 +27,6 @@ def RuleInfo[K](
     kind: K,
     native: bool,
     providers: Sequence[ProviderKey],
-    supports_inheritance: bool,
     test: bool,
 ) -> record[{
     "executable": bool,
@@ -36,6 +35,5 @@ def RuleInfo[K](
     "kind": K,
     "native": bool,
     "providers": Sequence[ProviderKey],
-    "supports_inheritance": bool,
     "test": bool,
 }]: ...

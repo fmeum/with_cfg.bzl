@@ -168,7 +168,6 @@ def _execution_attrs_test_impl(env):
             wrapper = make_wrapper(
                 rule_info = struct(
                     kind = capture,
-                    supports_inheritance = False,
                     executable = executable,
                     test = test,
                     native = False,
