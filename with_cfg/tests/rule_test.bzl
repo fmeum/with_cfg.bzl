@@ -13,6 +13,7 @@ load("@rules_testing//lib:analysis_test.bzl", "analysis_test")
 load("@rules_testing//lib:test_suite.bzl", "test_suite")
 load("@rules_testing//lib:truth.bzl", "matching")
 load("@rules_testing//lib:unit_test.bzl", "unit_test")
+load("@rules_testing//lib:util.bzl", "testing_aspect")
 load("//:with_cfg.bzl", "with_cfg")
 load("//with_cfg/private:with_cfg.bzl", "get_extension_parent", "get_rule_name", "is_executable", "is_test")
 load("//with_cfg/private:wrapper.bzl", "make_wrapper")
@@ -59,6 +60,29 @@ def _args_non_dependency_test(name):
 
 def _args_non_dependency_test_impl(env, target):
     env.expect.that_depset_of_files(target[DefaultInfo].files).contains_exactly([])
+
+def _forwarded_tags_test(name):
+    frontend_tags = {}
+    originals = []
+    for suffix, tags in [("tuple", ("example",)), ("depset", depset(["example"]))]:
+        subject = name + "_" + suffix
+        _wrapped_string_data(name = subject, tags = tags)
+        frontend_tags[suffix] = list(native.existing_rule(subject)["tags"])
+        originals.append(subject + "_/" + subject)
+    unit_test(
+        name = name,
+        impl = _forwarded_tags_test_impl,
+        attrs = {
+            "frontend_tags": attr.string_list_dict(default = frontend_tags),
+            "originals": attr.label_list(default = originals, aspects = [testing_aspect]),
+        },
+    )
+
+def _forwarded_tags_test_impl(env):
+    for kind, tags in env.ctx.attr.frontend_tags.items():
+        env.expect.where(kind = kind).that_collection(tags).contains_exactly(["example"])
+    for original in env.ctx.attr.originals:
+        env.expect.that_target(original).tags().contains_exactly(["example", "manual"])
 
 _int_args = rule(_noop_impl, attrs = {"args": attr.int()})
 
@@ -303,6 +327,7 @@ def rule_test_suite(name):
             _default_frontend_exec_properties_test,
             _execution_attrs_test,
             _extension_parent_test,
+            _forwarded_tags_test,
             _is_executable_test,
             _is_test_test,
             _missing_executable_test,

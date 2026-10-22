@@ -83,12 +83,9 @@ def _wrapper(
     alias_name = name + "_with_cfg"
 
     tags = kwargs.pop("tags", None)
-    if not tags:
-        tags_with_manual = ["manual"]
-    elif "manual" not in tags:
-        tags_with_manual = tags + ["manual"]
-    else:
-        tags_with_manual = tags
+    tags_with_manual = tags.to_list() if type(tags) == "depset" else list(tags or [])
+    if "manual" not in tags_with_manual:
+        tags_with_manual.append("manual")
 
     # Exec properties can refer to specific exec groups and referencing an undefined exec group is
     # an error. We thus have to extract those that may apply to the frontend (only ever "test").
