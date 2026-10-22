@@ -111,10 +111,11 @@ def _wrapper(
 
     # Due to --trim_test_configuration, all targets that depend on tests (such as our
     # transitioning_alias) must be marked as testonly to avoid action conflicts.
-    if rule_info.test:
-        common_attrs["testonly"] = True
-    elif "testonly" in kwargs:
-        common_attrs["testonly"] = kwargs.pop("testonly")
+    if rule_info.test or "testonly" in kwargs:
+        testonly = True if rule_info.test else kwargs.pop("testonly")
+        common_attrs["testonly"] = testonly
+    else:
+        testonly = None
 
     if rule_info.test:
         extra_attrs = {
@@ -153,7 +154,7 @@ def _wrapper(
                 name = name,
                 srcs = srcs,
                 output_group = output_group,
-                testonly = common_attrs.get("testonly"),
+                testonly = testonly,
                 tags = ["manual"],
                 visibility = ["//visibility:private"],
             ),
@@ -163,7 +164,7 @@ def _wrapper(
         unwrap_template_variable_info(
             name = unwrap_name,
             exports = ":" + alias_name,
-            testonly = common_attrs.get("testonly"),
+            testonly = testonly,
             tags = ["manual"],
             visibility = ["//visibility:private"],
         )
@@ -175,7 +176,7 @@ def _wrapper(
         reset_target = lambda *, name, exports: transitioning_alias(
             name = name,
             exports = exports,
-            testonly = common_attrs.get("testonly"),
+            testonly = testonly,
             tags = ["manual"],
             visibility = ["//visibility:private"],
         ),
