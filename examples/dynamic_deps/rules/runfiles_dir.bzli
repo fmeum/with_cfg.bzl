@@ -1,0 +1,9 @@
+"""The runfiles directory rule returns its output files."""
+
+def _runfiles_dir_impl(ctx) -> list[DefaultInfo]: ...
+
+class _WorkspaceContext(Protocol):
+    @property
+    def workspace_name(self) -> str: ...
+
+def _rlocationpath(ctx: _WorkspaceContext, f: File) -> str: ...

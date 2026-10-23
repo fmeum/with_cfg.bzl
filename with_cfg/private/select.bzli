@@ -1,0 +1,94 @@
+"""Values decoded from Starlark repr output."""
+
+type Scalar = str | int | bool | Label | None
+type ListOrScalar = list[Scalar] | Scalar
+type CompoundValue = ExactDict[Scalar, ListOrScalar] | ListOrScalar
+type ParsedElement = CompoundValue | ExactDict[Scalar, CompoundValue]
+# Dictionary pieces can have either tag; other values require the plain tag.
+type _SelectPiece = tuple[Literal[True], ExactDict[Scalar, CompoundValue]] | tuple[Literal[False], ParsedElement]
+
+def decompose_select_elements(value: object) -> list[_SelectPiece]: ...
+
+def _consume_compound_value(r: str, pos: int) -> tuple[CompoundValue, int]: ...
+
+def _consume_list_or_single_value(r: str, pos: int) -> tuple[ListOrScalar, int]: ...
+
+def consume_list(r: str, pos: int) -> tuple[list[Scalar], int]: ...
+
+def consume_single_value(r: str, pos: int) -> tuple[Scalar, int]: ...
+
+def _consume_string(r: str, pos: int) -> tuple[str, int]: ...
+
+type _Piece[P, S] = tuple[Literal[True], S] | tuple[Literal[False], P]
+type _SelectedList = select[list[str], Literal["list"]]
+type _DictCarrier[K, V] = ExactDict[K, V] | select[dict[K, V], Literal["dict"]]
+
+def _map_selected[T, R](func: Callable[[T], R], branches: Mapping[Scalar, T]) -> dict[str | Label, R]: ...
+
+def _map_select[R, S, O](
+        func: Callable[[ParsedElement], R],
+        attribute: select[object],
+        map_selected: Callable[[Callable[[ParsedElement], R], Mapping[Scalar, CompoundValue]], S],
+        compose: Callable[[Sequence[_Piece[R, S]]], O],
+) -> O: ...
+
+def map_string_list_select(
+        func: Callable[[object], list[str]],
+        attribute: select[object],
+) -> _SelectedList: ...
+
+def map_dict_attr[K, V](func: Callable[[object], ExactDict[K, V]], attribute: object) -> _DictCarrier[K, V]: ...
+
+def _map_dict_selected[K, V](
+        func: Callable[[ParsedElement], ExactDict[K, V]],
+        branches: Mapping[Scalar, CompoundValue],
+) -> select[dict[K, V], Literal["dict"]]: ...
+
+def _compose_dict[K, V](
+        items: Sequence[_Piece[ExactDict[K, V], select[dict[K, V], Literal["dict"]]]],
+) -> _DictCarrier[K, V]: ...
+
+def _condition(key: Scalar) -> str | Label: ...
+
+def _map_list_selected(
+        func: Callable[[ParsedElement], list[str]],
+        branches: Mapping[Scalar, CompoundValue],
+) -> _SelectedList: ...
+
+def _compose_list(items: Sequence[_Piece[list[str], _SelectedList]]) -> _SelectedList: ...
+
+def _compose[P, S, X](
+        items: Sequence[_Piece[P, S]],
+        embed: Callable[[_Piece[P, S]], X],
+        combine: Callable[[X, S, bool], S],
+) -> S: ...
+
+type _FiniteSelected = (
+    tuple[Literal["none"], select[ParsedElement, Literal["none"]]]
+    | tuple[Literal["str"], select[ParsedElement, Literal["str"]]]
+    | tuple[Literal["bool"], select[ParsedElement, Literal["bool"]]]
+    | tuple[Literal["list"], select[ParsedElement, Literal["list"]]]
+    | tuple[Literal["dict"], select[ParsedElement, Literal["dict"]]]
+    | tuple[Literal["label"], select[ParsedElement, Literal["label"]]]
+    | tuple[Literal["int"], select[ParsedElement, Literal["int"]]]
+)
+
+def _map_finite_selected(func: Callable[[ParsedElement], ParsedElement], branches: Mapping[Scalar, CompoundValue]) -> _FiniteSelected: ...
+
+type _FiniteCarrier = (
+    tuple[Literal["none"], None | select[ParsedElement, Literal["none"]]]
+    | tuple[Literal["str"], str | select[ParsedElement, Literal["str"]]]
+    | tuple[Literal["bool"], bool | select[ParsedElement, Literal["bool"]]]
+    | tuple[Literal["list"], list[Scalar] | select[ParsedElement, Literal["list"]]]
+    | tuple[Literal["dict"], ExactDict[Scalar, ListOrScalar] | ExactDict[Scalar, CompoundValue] | select[ParsedElement, Literal["dict"]]]
+    | tuple[Literal["label"], Label | select[ParsedElement, Literal["label"]]]
+    | tuple[Literal["int"], int | select[ParsedElement, Literal["int"]]]
+)
+
+def _finite_piece(item: _Piece[ParsedElement, _FiniteSelected]) -> _FiniteCarrier: ...
+
+def _combine_finite(value: _FiniteCarrier, result: _FiniteSelected, prepend: bool) -> _FiniteSelected: ...
+
+def _compose_finite(items: Sequence[_Piece[ParsedElement, _FiniteSelected]]) -> select[ParsedElement]: ...
+
+def map_parsed_select(func: Callable[[ParsedElement], ParsedElement], value: select[object]) -> select[ParsedElement]: ...

@@ -34,14 +34,33 @@ complexities handled by the functions in this file:
 """
 
 load(":providers.bzl", "ArgsInfo")
-load(":rewrite.bzl", "rewrite_locations_in_attr", "rewrite_locations_in_single_value")
+load(":rewrite.bzl", "rewrite_locations_in_single_value", "rewrite_locations_in_string_dict", "rewrite_locations_in_string_list")
+load(":select.bzl", "map_string_list_select")
+load(":utils.bzl", "is_select")
 
 visibility("private")
 
 def rewrite_args(name, args, make_filegroup):
-    # type: (string, list[string], Any) -> tuple[list[string], list[Label]]
-    seen_labels = {}
-    filegroup_labels = []
+    rewriter = _make_arg_rewriter(name, make_filegroup)
+    if not is_select(args):
+        if not args:
+            return args, rewriter.labels
+
+        if type(args) == "dict":
+            return rewrite_locations_in_string_dict(args, rewriter.label), rewriter.labels
+        if type(args) == "string":
+            return rewrite_locations_in_single_value(args, rewriter.label), rewriter.labels
+
+        # Tuples and other plain values historically pass through unchanged.
+        if type(args) != "list":
+            return args, rewriter.labels
+        return rewrite_locations_in_string_list(args, rewriter.label), rewriter.labels
+
+    return map_string_list_select(rewriter.selected_list, args), rewriter.labels
+
+def _make_arg_rewriter(name, make_filegroup):
+    seen_labels = {}  # type: dict[str, None]
+    filegroup_labels = []  # type: list[Label]
 
     def rewrite_label(label_string):
         # type: (string) -> string
@@ -57,22 +76,31 @@ def rewrite_args(name, args, make_filegroup):
             filegroup_labels.append(native.package_relative_label(filegroup_name))
         return ":" + filegroup_name
 
-    return rewrite_locations_in_attr(args, rewrite_label), filegroup_labels
+    def rewrite_list(value):
+        # type: (object) -> list[str]
+        if value == None:
+            # The executable and test frontends use the implicit args default [].
+            return []
+        return rewrite_locations_in_string_list(value, rewrite_label)
+
+    return struct(label = rewrite_label, selected_list = rewrite_list, labels = filegroup_labels)
 
 def _args_aspect_impl(target, ctx):
-    # type: (Target, ctx) -> list[Provider]
-    if not hasattr(ctx.rule.attr, "args"):
+    args = getattr(ctx.rule.attr, "args", None)
+    if type(args) != "list":
         return []
 
     execpaths_expansion_to_files = {}
-    targets = {}
+    targets = {}  # type: dict[Target, None]
 
     # https://github.com/bazelbuild/bazel/blob/af8deb85cbc627a507605e67aa71e829f7db630f/src/main/java/com/google/devtools/build/lib/analysis/LocationExpander.java#L446-L516
     for attr in _LOCATION_EXPANSION_ARGS:
-        deps = getattr(ctx.rule.attr, attr, [])
-        if type(deps) != type([]):
+        deps = getattr(ctx.rule.attr, attr, None)
+        if type(deps) != "list":
             continue
         for target in deps:
+            if type(target) != "Target":
+                continue
             default_info = target[DefaultInfo]
             if default_info.files_to_run and default_info.files_to_run.executable:
                 files = depset([default_info.files_to_run.executable])
@@ -86,26 +114,27 @@ def _args_aspect_impl(target, ctx):
             targets[target] = None
 
     template_variables = {}
-    toolchains = getattr(ctx.rule.attr, "toolchains", [])
-    if type(toolchains) == type([]):
+    toolchains = getattr(ctx.rule.attr, "toolchains", None)
+    if type(toolchains) == "list":
         for toolchain in toolchains:
-            if platform_common.TemplateVariableInfo in toolchain:
+            if type(toolchain) == "Target" and platform_common.TemplateVariableInfo in toolchain:
                 template_variables.update(
                     toolchain[platform_common.TemplateVariableInfo].variables,
                 )
 
-    labels = {}
+    labels = {}  # type: dict[str, None]
 
     def collect_label(label):
+        # type: (str) -> str
         labels[label] = None
         return label
 
-    for arg in ctx.rule.attr.args:
+    for arg in args:
         rewrite_locations_in_single_value(arg, collect_label)
 
     labels_to_files = {}
     for label in labels.keys():
-        execpaths_expansion = ctx.expand_location("$(execpaths {})".format(label), targets = targets.keys())
+        execpaths_expansion = ctx.expand_location("$(execpaths {})".format(label), targets.keys())
         labels_to_files[label] = execpaths_expansion_to_files[execpaths_expansion]
 
     return [

@@ -1,0 +1,28 @@
+[analysis]
+require-valid-suppressions = true
+strict-generic-narrowing = true
+
+[type-interfaces]
+"with_cfg/private/args.bzl" = "with_cfg/private/args.bzli"
+"with_cfg/private/extend.bzl" = "with_cfg/private/extend.bzli"
+"with_cfg/private/frontend.bzl" = "with_cfg/private/frontend.bzli"
+"with_cfg/private/original_settings_rule.bzl" = "with_cfg/private/original_settings_rule.bzli"
+"with_cfg/private/providers.bzl" = "with_cfg/private/providers.bzli"
+"with_cfg/private/rewrite.bzl" = "with_cfg/private/rewrite.bzli"
+"with_cfg/private/select.bzl" = "with_cfg/private/select.bzli"
+"with_cfg/private/setting.bzl" = "with_cfg/private/setting.bzli"
+"with_cfg/private/transitioning_alias.bzl" = "with_cfg/private/transitioning_alias.bzli"
+"with_cfg/private/utils.bzl" = "with_cfg/private/utils.bzli"
+
+[rules]
+missing-parameter-annotation = "error"
+missing-return-annotation = "error"
+missing-type-argument = "error"
+unsound-assignment = "error"
+unsound-return-statement = "error"
+explicit-any = "error"
+non-static-type = "error"
+blanket-ignore-comment = "error"
+possibly-unresolved-reference = "error"
+possibly-missing-attribute = "error"
+division-by-zero = "error"

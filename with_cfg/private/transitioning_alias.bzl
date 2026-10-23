@@ -19,7 +19,7 @@ def make_transitioning_alias(*, providers, transition, values, original_settings
             ),
         }
     else:
-        resettable_attrs = {}
+        resettable_attrs = {}  # type: dict[str, Attribute[bool | Target]]
     return rule(
         implementation = _make_transitioning_alias_impl(providers = providers),
         attrs = settings_attrs | resettable_attrs | {
@@ -30,6 +30,7 @@ def make_transitioning_alias(*, providers, transition, values, original_settings
                 allow_files = True,
                 cfg = transition,
                 aspects = [args_aspect],
+                mandatory = True,
             ),
             "_allowlist_function_transition": attr.label(
                 default = "@bazel_tools//tools/allowlists/function_transition_allowlist",

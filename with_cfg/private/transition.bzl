@@ -29,11 +29,19 @@ def _transition_base_impl(settings, attr, *, operations, original_settings_label
     # internal_only_reset may be missing if this transition is attached to an extended rule rather
     # than a transitioning alias.
     if original_settings_label and getattr(attr, "internal_only_reset", False):
-        original_settings = settings[str(original_settings_label)]
+        original_settings = _get_original_settings(settings, str(original_settings_label))
         if original_settings:
             # The reset rule is used in the transitive closure of the transitioning rule. Reset the
             # settings to the recorded original values.
-            return json.decode(original_settings)
+            decoded_settings = json.decode(original_settings)
+            if type(decoded_settings) != "dict":
+                fail(
+                    "Expected original settings build setting '{}' to contain a JSON object, got {}".format(
+                        original_settings_label,
+                        type(decoded_settings),
+                    ),
+                )
+            return decoded_settings
         else:
             # The reset rule is used in the untransitioned (e.g. the top-level) configuration. We do
             # not want to force users to tag the reset rule target as "manual", so we just make the
@@ -91,7 +99,7 @@ def _transition_base_impl(settings, attr, *, operations, original_settings_label
 
     if original_settings_label:
         original_settings_label_str = str(original_settings_label)
-        original_settings = settings[original_settings_label_str]
+        original_settings = _get_original_settings(settings, original_settings_label_str)
 
         if original_settings:
             # If the transitioning rule is used again in the transitive closure, we distinguish
@@ -131,6 +139,12 @@ def _get_settings_key(setting):
         return "//command_line_option:" + setting
     else:
         fail("Expected Label or string, got: {} ({})".format(setting, type(setting)))
+
+def _get_original_settings(settings, key):
+    value = settings[key]
+    if type(value) != "string":
+        fail("Expected original settings build setting '{}' to contain a string, got {}".format(key, type(value)))
+    return value
 
 _STARLARK_TYPES = {
     type(t): None

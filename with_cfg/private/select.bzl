@@ -1,30 +1,137 @@
-load(":utils.bzl", "is_dict", "is_select")
+load(":utils.bzl", "is_select")
 
 visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
 
-def map_attr(func, attribute):
-    if not is_select(attribute):
-        return func(attribute)
+def _map_selected(func, branches):
+    return {_condition(key): func(value) for key, value in branches.items()}
 
-    return compose_select_value([
-        _apply_func(func, item)
+def _map_select(func, attribute, map_selected, compose):
+    return compose([
+        (True, map_selected(func, item[1])) if item[0] == True else (False, func(item[1]))
         for item in decompose_select_elements(attribute)
     ])
 
-def _apply_func(func, item):
-    in_select, element = item
-    if in_select:
-        return (True, {
-            k: func(v)
-            for k, v in element.items()
-        })
+def map_string_list_select(func, attribute):
+    return _map_select(func, attribute, _map_list_selected, _compose_list)
+
+def map_dict_attr(func, attribute):
+    if not is_select(attribute):
+        return func(attribute)
+    return _map_select(func, attribute, _map_dict_selected, _compose_dict)
+
+def _map_dict_selected(func, branches):
+    return select(_map_selected(func, branches))
+
+def _compose_dict(items):
+    return _compose(items, lambda item: item[1], lambda value, result, prepend: value | result if prepend else result | value)
+
+def _condition(key):
+    if type(key) == "string" or type(key) == "Label":
+        return key
+    fail("Expected a select condition, got {}".format(key))
+
+def _map_list_selected(func, branches):
+    return select(_map_selected(func, branches))
+
+def _compose_list(items):
+    return _compose(items, lambda item: item[1], lambda value, result, prepend: value + result if prepend else result + value)
+
+def _map_finite_selected(func, branches):
+    # Construct each selector where its first value is narrowed, so the value
+    # and native kind remain related. setdefault preserves that first branch.
+    pairs = branches.items()
+    first_pair = pairs[0]
+    key = _condition(first_pair[0])
+    first = func(first_pair[1])
+    if type(first) == "NoneType":
+        mapped = {}  # type: dict[str | Label, ParsedElement]
+        mapped[key] = first
+        for later_key, later_value in pairs[1:]:
+            mapped.setdefault(_condition(later_key), func(later_value))
+        return ("none", select(mapped))
+    elif type(first) == "string":
+        mapped = {}  # type: dict[str | Label, ParsedElement]
+        mapped[key] = first
+        for later_key, later_value in pairs[1:]:
+            mapped.setdefault(_condition(later_key), func(later_value))
+        return ("str", select(mapped))
+    elif type(first) == "bool":
+        mapped = {}  # type: dict[str | Label, ParsedElement]
+        mapped[key] = first
+        for later_key, later_value in pairs[1:]:
+            mapped.setdefault(_condition(later_key), func(later_value))
+        return ("bool", select(mapped))
+    elif type(first) == "list":
+        mapped = {}  # type: dict[str | Label, ParsedElement]
+        mapped[key] = first
+        for later_key, later_value in pairs[1:]:
+            mapped.setdefault(_condition(later_key), func(later_value))
+        return ("list", select(mapped))
+    elif type(first) == "dict":
+        mapped = {}  # type: dict[str | Label, ParsedElement]
+        mapped[key] = first
+        for later_key, later_value in pairs[1:]:
+            mapped.setdefault(_condition(later_key), func(later_value))
+        return ("dict", select(mapped))
+    elif type(first) == "Label":
+        mapped = {}  # type: dict[str | Label, ParsedElement]
+        mapped[key] = first
+        for later_key, later_value in pairs[1:]:
+            mapped.setdefault(_condition(later_key), func(later_value))
+        return ("label", select(mapped))
     else:
-        return (False, func(element))
+        mapped = {}  # type: dict[str | Label, ParsedElement]
+        mapped[key] = first
+        for later_key, later_value in pairs[1:]:
+            mapped.setdefault(_condition(later_key), func(later_value))
+        return ("int", select(mapped))
+
+def _finite_piece(item):
+    if item[0] == True:
+        return item[1]
+    value = item[1]
+    if type(value) == "NoneType":
+        return ("none", value)
+    elif type(value) == "string":
+        return ("str", value)
+    elif type(value) == "bool":
+        return ("bool", value)
+    elif type(value) == "list":
+        return ("list", value)
+    elif type(value) == "dict":
+        return ("dict", value)
+    elif type(value) == "Label":
+        return ("label", value)
+    return ("int", value)
+
+def _combine_finite(value, result, prepend):
+    if result[0] == "none" and value[0] == "none":
+        return ("none", value[1] + result[1] if prepend else result[1] + value[1])
+    elif result[0] == "str" and value[0] == "str":
+        return ("str", value[1] + result[1] if prepend else result[1] + value[1])
+    elif result[0] == "bool" and value[0] == "bool":
+        return ("bool", value[1] + result[1] if prepend else result[1] + value[1])
+    elif result[0] == "list" and value[0] == "list":
+        return ("list", value[1] + result[1] if prepend else result[1] + value[1])
+    elif result[0] == "dict" and value[0] == "dict":
+        return ("dict", value[1] | result[1] if prepend else result[1] | value[1])
+    elif result[0] == "label" and value[0] == "label":
+        return ("label", value[1] + result[1] if prepend else result[1] + value[1])
+    elif result[0] == "int" and value[0] == "int":
+        # Bazel distinguishes integer implementation classes within type int.
+        return ("int", value[1] + result[1] if prepend else result[1] + value[1])
+    fail("Cannot combine selectors with different native kinds")
+
+def _compose_finite(items):
+    return _compose(items, _finite_piece, _combine_finite)[1]
+
+def map_parsed_select(func, value):
+    return _map_select(func, value, _map_finite_selected, _compose_finite)
 
 def decompose_select_elements(value):
     r = repr(value)
     pos = 0
-    items = []
+    items = []  # type: list[_SelectPiece]
     in_select = False
     for _ in range(len(r)):
         c = r[pos]
@@ -54,10 +161,10 @@ def decompose_select_elements(value):
                 pos += 2
                 value, pos = _consume_compound_value(r, pos)
                 element[key] = value
+            items.append((True, element) if in_select else (False, element))
         else:
             element, pos = _consume_compound_value(r, pos)
-
-        items.append((in_select, element))
+            items.append((False, element))
 
         if in_select:
             # Skip over `)`.
@@ -72,36 +179,17 @@ def decompose_select_elements(value):
 
     fail("Failed to parse '{}'".format(r))
 
-def compose_select_value(items):
-    # Start at a select so nullable prefixes never require None + None.
-    first_select = 0
-    for i, (in_select, _) in enumerate(items):
-        if in_select:
-            first_select = i
-            break
-
-    # Bazel chooses a selector's operator from its first branch, even when later
-    # branches have another type. Use the anchor's mapped representative value.
-    anchor_selected, anchor_element = items[first_select]
-    if anchor_selected:
-        result = select(anchor_element)
-        representative = anchor_element.values()[0]
-    else:
-        result = anchor_element
-        representative = anchor_element
-    combine_as_dict = is_dict(representative)
-    for _, part in reversed(items[:first_select]):
-        if combine_as_dict:
-            result = part | result
-        else:
-            result = part + result
-    for suffix_selected, suffix_element in items[first_select + 1:]:
-        part = select(suffix_element) if suffix_selected else suffix_element
-        if combine_as_dict:
-            result |= part
-        else:
-            result += part
-    return result
+def _compose(items, embed, combine):
+    # Every operation includes the selected accumulator, including prefixes.
+    for index, item in enumerate(items):
+        if item[0] == True:
+            result = item[1]
+            for piece in reversed(items[:index]):
+                result = combine(embed(piece), result, True)
+            for piece in items[index + 1:]:
+                result = combine(embed(piece), result, False)
+            return result
+    fail("Expected at least one selected piece")
 
 def _consume_compound_value(r, pos):
     c = r[pos]
@@ -183,7 +271,7 @@ def consume_single_value(r, pos):
         return Label(string), after_string + 1
     elif c == "-" or c.isdigit():
         start = pos
-        for _ in range(len(r)):
+        for _ in range(start, len(r)):
             c = r[pos]
             if not c.isdigit() and c != "-":
                 if c == ".":

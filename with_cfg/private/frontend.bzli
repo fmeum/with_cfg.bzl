@@ -1,0 +1,83 @@
+"""The frontend forwards providers from its transitioned target."""
+
+type _Strings = Iterable[str] | depset[str]
+type _Labels = Iterable[str | Label] | depset[str | Label]
+
+def filter_exec_properties(value: object) -> ExactDict[str, str] | select[dict[str, str], Literal["dict"]]: ...
+def _filter_exec_property_dict(value: object) -> ExactDict[str, str]: ...
+
+class _CommonKwargs(TypedDict):
+    applicable_licenses: NotRequired[_Labels | None]
+    aspect_hints: NotRequired[_Labels | select[_Labels | None] | None]
+    compatible_with: NotRequired[_Labels | None]
+    deprecation: NotRequired[str | None]
+    features: NotRequired[_Strings | select[_Strings | None] | None]
+    generator_function: NotRequired[str | None]
+    generator_location: NotRequired[str | None]
+    generator_name: NotRequired[str | None]
+    package_metadata: NotRequired[_Labels | None]
+    restricted_to: NotRequired[_Labels | None]
+    tags: NotRequired[_Strings | None]
+    target_compatible_with: NotRequired[_Labels | select[_Labels | None] | None]
+    testonly: NotRequired[bool | Literal[0, 1] | None]
+    transitive_configs: NotRequired[_Labels | None]
+    visibility: NotRequired[_Labels | None]
+
+class _AliasKwargs(_CommonKwargs, closed=True):
+    pass
+
+type _Export = str | Label | select[str | Label | None]
+type _StringMap = Mapping[str, str]
+
+class _RuleKwargs(_CommonKwargs):
+    exec_compatible_with: NotRequired[_Labels | None]
+    exec_group_compatible_with: NotRequired[Mapping[str, _Labels] | None]
+    exec_properties: NotRequired[_StringMap | select[_StringMap | None] | None]
+    expect_failure: NotRequired[str | select[str | None] | None]
+    toolchains: NotRequired[_Labels | select[_Labels | None] | None]
+    data: NotRequired[_Labels | select[_Labels | None] | None]
+    env: NotRequired[_StringMap | select[_StringMap | None] | None]
+    env_inherit: NotRequired[_Strings | select[_Strings | None] | None]
+
+class _ExecutableKwargs(_RuleKwargs, closed=True):
+    args: NotRequired[_Strings | select[_Strings | None] | None]
+    output_licenses: NotRequired[_Strings | select[_Strings | None] | None]
+
+class _TestKwargs(_RuleKwargs, closed=True):
+    args: NotRequired[_Strings | select[_Strings | None] | None]
+    flaky: NotRequired[bool | Literal[0, 1] | None]
+    local: NotRequired[bool | Literal[0, 1] | None]
+    shard_count: NotRequired[int | select[int | None] | None]
+    size: NotRequired[str | None]
+    timeout: NotRequired[str | None]
+
+class _AliasFrontend(Protocol):
+    def __call__(self, *, name: str, exports: _Export, **kwargs: Unpack[_AliasKwargs]) -> None: ...
+
+class _ExecutableFrontend(Protocol):
+    def __call__(self, *, name: str, exports: _Export, **kwargs: Unpack[_ExecutableKwargs]) -> None: ...
+
+class _TestFrontend(Protocol):
+    def __call__(self, *, name: str, exports: _Export, **kwargs: Unpack[_TestKwargs]) -> None: ...
+
+def _frontend_executable(*, name: str, exports: _Export, **kwargs: Unpack[_ExecutableKwargs]) -> None: ...
+def _frontend_test(*, name: str, exports: _Export, **kwargs: Unpack[_TestKwargs]) -> None: ...
+
+@overload
+def get_frontend(*, executable: bool, test: Literal[True]) -> _TestFrontend: ...
+@overload
+def get_frontend(*, executable: Literal[True], test: Literal[False]) -> _ExecutableFrontend: ...
+@overload
+def get_frontend(*, executable: Literal[False], test: Literal[False]) -> _AliasFrontend: ...
+@overload
+def get_frontend(*, executable: bool, test: bool) -> _AliasFrontend | _ExecutableFrontend | _TestFrontend: ...
+def get_frontend(*, executable: bool, test: bool) -> _AliasFrontend | _ExecutableFrontend | _TestFrontend: ...
+
+def _frontend_impl(ctx) -> list[ProviderInstance]: ...
+
+def _frontend_default(
+        *,
+        name: str,
+        exports: _Export,
+        **kwargs: Unpack[_AliasKwargs],
+) -> None: ...

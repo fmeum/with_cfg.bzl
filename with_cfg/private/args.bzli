@@ -1,0 +1,73 @@
+"""Providers returned by the argument-expansion aspect."""
+
+load(":providers.bzl", "ArgsInfo")
+
+class _ArgsRule(Protocol):
+    @property
+    def attr(self) -> struct[object]: ...
+
+class _ArgsAspectContext(Protocol):
+    @property
+    def rule(self) -> _ArgsRule: ...
+
+    @property
+    def expand_location(self) -> Callable[[str, Sequence[Target]], str]: ...
+
+def _args_aspect_impl(target: Target, ctx: _ArgsAspectContext) -> list[OutputGroupInfo | ArgsInfo]: ...
+
+class _MakeFilegroup(Protocol):
+    def __call__(self, *, name: str, srcs: list[str], output_group: str) -> object: ...
+
+@overload
+def rewrite_args(
+        name: str,
+        args: str,
+        make_filegroup: _MakeFilegroup,
+) -> tuple[str, list[Label]]: ...
+
+@overload
+def rewrite_args[M: Mapping[str, object]](
+        name: str,
+        args: M,
+        make_filegroup: _MakeFilegroup,
+) -> tuple[M | dict[str, object], list[Label]]: ...
+
+@overload
+def rewrite_args(
+        name: str,
+        args: tuple[str, ...],
+        make_filegroup: _MakeFilegroup,
+) -> tuple[tuple[str, ...], list[Label]]: ...
+
+@overload
+def rewrite_args(
+        name: str,
+        args: list[str],
+        make_filegroup: _MakeFilegroup,
+) -> tuple[list[str], list[Label]]: ...
+
+@overload
+def rewrite_args(
+        name: str,
+        args: None,
+        make_filegroup: _MakeFilegroup,
+) -> tuple[None, list[Label]]: ...
+
+@overload
+def rewrite_args(
+        name: str,
+        args: select[list[str] | Mapping[str, object] | None],
+        make_filegroup: _MakeFilegroup,
+) -> tuple[select[list[str]], list[Label]]: ...
+
+def rewrite_args(
+        name: str,
+        args: str | list[str] | Mapping[str, object] | tuple[str, ...] | select[list[str] | Mapping[str, object] | None] | None,
+        make_filegroup: _MakeFilegroup,
+) -> tuple[str | list[str] | Mapping[str, object] | tuple[str, ...] | select[list[str]] | None, list[Label]]: ...
+
+def _make_arg_rewriter(name: str, make_filegroup: _MakeFilegroup) -> struct[{
+    "label": Callable[[str], str],
+    "selected_list": Callable[[object], list[str]],
+    "labels": list[Label],
+}]: ...

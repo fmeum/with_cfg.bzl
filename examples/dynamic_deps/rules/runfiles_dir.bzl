@@ -1,5 +1,4 @@
 def _runfiles_dir_impl(ctx):
-    # type: (ctx) -> list
     out_dir = ctx.actions.declare_directory(ctx.label.name)
     default_info = ctx.attr.executable[DefaultInfo]
     executable = default_info.files_to_run.executable
@@ -48,6 +47,7 @@ runfiles_dir = rule(
         "executable": attr.label(
             cfg = "target",
             executable = True,
+            mandatory = True,
         ),
     },
 )

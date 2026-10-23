@@ -1,0 +1,39 @@
+"""Stored fields forwarded between with_cfg rules."""
+
+def ArgsInfo(*, template_variable_info: TemplateVariableInfo) -> record[{
+    "template_variable_info": TemplateVariableInfo,
+}]: ...
+
+def FrontendInfo(
+    *,
+    executable: File | None,
+    providers: Sequence[ProviderKey],
+    run_environment_info: RunEnvironmentInfo | None,
+    template_variable_info: TemplateVariableInfo | None,
+) -> record[{
+    "executable": File | None,
+    "providers": Sequence[ProviderKey],
+    "run_environment_info": RunEnvironmentInfo | None,
+    "template_variable_info": TemplateVariableInfo | None,
+}]: ...
+
+def OriginalSettingsInfo(*, json: str) -> record[{"json": str}]: ...
+
+def RuleInfo[K](
+    *,
+    executable: bool,
+    extension_parent: rule | None,
+    implicit_targets: Iterable[str],
+    kind: K,
+    native: bool,
+    providers: Sequence[ProviderKey],
+    test: bool,
+) -> record[{
+    "executable": bool,
+    "extension_parent": rule | None,
+    "implicit_targets": Iterable[str],
+    "kind": K,
+    "native": bool,
+    "providers": Sequence[ProviderKey],
+    "test": bool,
+}]: ...

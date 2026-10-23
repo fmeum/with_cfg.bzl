@@ -1,0 +1,38 @@
+name: Starlark types
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sty:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: with_cfg
+            directory: .
+            files: with_cfg/private/original_settings.bzl
+          - name: examples
+            directory: examples
+            files: ''
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: tamird/sty@3e6e9b0b54ce2455218b7634b9b89197f701041a
+        with:
+          audit-loads: true
+          files: ${{ matrix.files }}
+          working-directory: ${{ matrix.directory }}
+          artifact-name: sty-${{ matrix.name }}

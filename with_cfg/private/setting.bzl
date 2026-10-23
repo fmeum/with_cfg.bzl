@@ -1,5 +1,5 @@
-load(":select.bzl", "decompose_select_elements")
-load(":utils.bzl", "is_bool", "is_int", "is_label", "is_list", "is_select", "is_string")
+load(":select.bzl", "decompose_select_elements", "map_parsed_select")
+load(":utils.bzl", "is_bool", "is_int", "is_label", "is_select", "is_string")
 
 visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
 
@@ -23,7 +23,7 @@ def make_valid_identifier(name):
     return "s_{}".format(identifier)
 
 def validate_and_get_attr_name(setting):
-    if is_label(setting):
+    if type(setting) == "Label":
         # Trigger an early error if the label refers to an invalid repo name.
         # buildifier: disable=no-effect
         setting.repo_name
@@ -73,7 +73,7 @@ def _get_type_as_attr_type(value):
         return None
 
     suffix = ""
-    if is_list(value):
+    if type(value) == "list":
         if not value:
             return None
         inner_value = value[0]
@@ -91,3 +91,16 @@ def _get_type_as_attr_type(value):
         return "bool"
 
     fail("Failed to determine type of '{}'".format(value))
+
+def clone_setting_value(value):
+    if is_select(value):
+        return map_parsed_select(_clone_parsed_setting_value, value)
+    if type(value) == "list":
+        return list(value)
+    return value
+
+def _clone_parsed_setting_value(value):
+    # Setting lists must not share mutable state with the builder's caller.
+    if type(value) == "list":
+        return list(value)
+    return value
