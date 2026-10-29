@@ -11,11 +11,33 @@ load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load("@rules_testing//lib:analysis_test.bzl", "analysis_test")
 load("@rules_testing//lib:test_suite.bzl", "test_suite")
 load("@rules_testing//lib:unit_test.bzl", "unit_test")
+load("@rules_testing//lib:util.bzl", "testing_aspect")
 load("//:with_cfg.bzl", "with_cfg")
 load("//with_cfg/private:with_cfg.bzl", "get_rule_name", "is_executable", "is_test")
 load("//with_cfg/private:wrapper.bzl", "make_wrapper")
 
 _filegroup, _filegroup_reset = with_cfg(native.filegroup).resettable(Label(":original_settings")).build()
+
+def _legacy_filegroup(name, **kwargs):
+    native.filegroup(name = name, **kwargs)
+
+_wrapped_filegroup, _ = with_cfg(_legacy_filegroup).build()
+
+def _collection_tags_test(name):
+    originals = []
+    for kind, tags in [("depset", depset(["example"])), ("tuple", ("example",))]:
+        subject = name + "_" + kind
+        _wrapped_filegroup(name = subject, tags = tags)
+        originals.append(subject + "_/" + subject)
+    unit_test(
+        name = name,
+        impl = _collection_tags_test_impl,
+        attrs = {"originals": attr.label_list(default = originals, aspects = [testing_aspect])},
+    )
+
+def _collection_tags_test_impl(env):
+    for original in env.ctx.attr.originals:
+        env.expect.that_target(original).tags().contains_exactly(["example", "manual"])
 
 def _noop_impl(ctx):
     pass
@@ -218,6 +240,7 @@ def rule_test_suite(name):
     test_suite(
         name = name,
         tests = [
+            _collection_tags_test,
             _default_frontend_exec_properties_test,
             _execution_attrs_test,
             _is_executable_test,
