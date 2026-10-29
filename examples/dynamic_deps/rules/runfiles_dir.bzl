@@ -1,5 +1,5 @@
 def _runfiles_dir_impl(ctx):
-    # type: (ctx) -> list
+    # type: (...) -> list[DefaultInfo]
     out_dir = ctx.actions.declare_directory(ctx.label.name)
     default_info = ctx.attr.executable[DefaultInfo]
     executable = default_info.files_to_run.executable
@@ -37,6 +37,7 @@ cp {path} {out_dir}/{name}.runfiles/{rlocationpath}
     ]
 
 def _rlocationpath(ctx, f):
+    # type: (_WorkspaceContext, File) -> str
     if f.short_path.startswith("../"):
         return f.short_path[3:]
     else:
@@ -48,6 +49,7 @@ runfiles_dir = rule(
         "executable": attr.label(
             cfg = "target",
             executable = True,
+            mandatory = True,
         ),
     },
 )

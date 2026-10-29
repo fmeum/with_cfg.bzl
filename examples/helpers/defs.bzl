@@ -1,4 +1,5 @@
 def _untransitioned_target_impl(ctx):
+    # type: (...) -> None
     if "-ST-" in ctx.bin_dir.path:
         fail("This target has been subject to a transition: " + ctx.bin_dir.path)
 
