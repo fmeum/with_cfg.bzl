@@ -6,6 +6,7 @@ load(
     "consume_single_value",
     "decompose_select_elements",
     "map_attr",
+    "map_parsed_select",
 )
 
 _CONSUME_SINGLE_VALUE_TEST_CASES = [
@@ -21,14 +22,15 @@ _CONSUME_SINGLE_VALUE_TEST_CASES = [
 
 def _consume_single_value_test(env):
     for case in _CONSUME_SINGLE_VALUE_TEST_CASES:
-        r = repr(case)
+        for start in [0, 3]:
+            r = " " * start + repr(case)
 
-        # TODO: rules_testing doesn't accept tuples as collection subjects.
-        env.expect.that_collection(
-            list(consume_single_value(r, 0)),
-        ).contains_exactly(
-            [case, len(r)],
-        ).in_order()
+            # TODO: rules_testing doesn't accept tuples as collection subjects.
+            env.expect.that_collection(
+                list(consume_single_value(r, start)),
+            ).contains_exactly(
+                [case, len(r)],
+            ).in_order()
 
 def _consume_list_test(env):
     r = repr(_CONSUME_SINGLE_VALUE_TEST_CASES)
@@ -62,7 +64,7 @@ def _decompose_select_value_test(env):
 
 def _map_nullable_select_test(env):
     value = None + (None + select({"//conditions:default": None})) + None + None
-    mapped = map_attr(lambda value: value, value)
+    mapped = map_parsed_select(lambda value: value, value)
     env.expect.that_collection(decompose_select_elements(mapped)).contains_exactly([
         (False, None),
         (False, None),
@@ -73,24 +75,42 @@ def _map_nullable_select_test(env):
 
 def _map_integer_suffix_test(env):
     value = select({"//conditions:default": 1}) + 42
-    mapped = map_attr(lambda n: n + 1, value)
+    mapped = map_attr(lambda n: n + 1 if type(n) == "int" else fail("expected an integer"), value)
     env.expect.that_str(repr(mapped)).equals(repr(select({"//conditions:default": 2}) + 43))
 
+def _string(value):
+    # type: (object) -> str
+    if type(value) != "string":
+        fail("expected a string, got {}".format(value))
+    return value
+
 def _map_select_order_test(env):
-    values = ["first"] + (["second"] + select({"//conditions:default": ["selected"]})) + ["last"]
-    mapped = map_attr(lambda values: [value.upper() for value in values], values)
+    values = ["first"] + (["second"] + select({"//conditions:default": ["selected"], ":unset": None, ":other": ["other"]})) + ["last"]
+    calls = []  # type: list[object]
+
+    def uppercase(value):
+        # type: (object) -> list[str]
+        calls.append(value)
+        if value == None:
+            return []
+        if type(value) != "list":
+            fail("expected a list of strings, got {}".format(value))
+        return [_string(item).upper() for item in value]
+
+    mapped = map_parsed_select(uppercase, values)
+    env.expect.that_collection(calls).contains_exactly([
+        ["first"],
+        ["second"],
+        ["selected"],
+        None,
+        ["other"],
+        ["last"],
+    ]).in_order()
     env.expect.that_collection([
         value
         for in_select, element in decompose_select_elements(mapped)
         for value in (element["//conditions:default"] if in_select else element)
     ]).contains_exactly(["FIRST", "SECOND", "SELECTED", "LAST"]).in_order()
-
-    value = "first" + ("second" + select({"//conditions:default": "selected"})) + "last"
-    mapped = map_attr(lambda value: value.upper(), value)
-    env.expect.that_str("".join([
-        element["//conditions:default"] if in_select else element
-        for in_select, element in decompose_select_elements(mapped)
-    ])).equals("FIRSTSECONDSELECTEDLAST")
 
 def _map_select_dict_test(env):
     first = {"first": "one", "prefix": "first", "shared": "first"}
@@ -98,7 +118,22 @@ def _map_select_dict_test(env):
     selected = select({"//conditions:default": {"selected": "three", "shared": "selected"}})
     last = {"last": "four", "shared": "last"}
     value = first | (second | selected) | last
-    mapped = map_attr(lambda value: {key: item.upper() for key, item in value.items()}, value)
+    calls = []  # type: list[object]
+
+    def uppercase(value):
+        # type: (object) -> dict[str, str]
+        calls.append(value)
+        if type(value) != "dict":
+            fail("expected a dictionary of strings, got {}".format(value))
+        return {_string(key): _string(item).upper() for key, item in value.items()}
+
+    mapped = map_attr(uppercase, value)
+    env.expect.that_collection(calls).contains_exactly([
+        first,
+        second,
+        {"selected": "three", "shared": "selected"},
+        last,
+    ]).in_order()
     env.expect.that_dict(dict([
         pair
         for in_select, element in decompose_select_elements(mapped)
@@ -109,6 +144,24 @@ _SelectedValueInfo = provider(fields = ["values"])
 
 def _selected_value_impl(ctx):
     return [_SelectedValueInfo(values = ctx.attr.values)]
+
+_selected_string = rule(
+    implementation = _selected_value_impl,
+    attrs = {"values": attr.string()},
+)
+
+def _always_x(_value):
+    # type: (object) -> Literal["x"]
+    return "x"
+
+def _map_string_attribute_test(name):
+    subject = name + "_subject"
+    value = select({"//conditions:default": "a"}) + "b"
+    _selected_string(name = subject, values = map_parsed_select(_always_x, value))
+    analysis_test(name = name, target = subject, impl = _map_string_attribute_test_impl)
+
+def _map_string_attribute_test_impl(env, target):
+    env.expect.that_str(target[_SelectedValueInfo].values).equals("xx")
 
 _selected_dict = rule(
     implementation = _selected_value_impl,
@@ -125,7 +178,7 @@ def _map_list_attribute_test(name):
     value = select({"//conditions:default": "selected"}) + "suffix"
     _selected_string_list(
         name = subject,
-        values = map_attr(lambda value: ["a"] if value == "selected" else ["b"], value),
+        values = map_parsed_select(lambda value: ["a"] if value == "selected" else ["b"], value),
     )
     analysis_test(
         name = name,
@@ -152,7 +205,7 @@ def _none_first_dict_attribute_test(name):
     })
     _selected_dict(
         name = subject,
-        values = map_attr(lambda value: value, value),
+        values = map_parsed_select(lambda value: value, value),
     )
     analysis_test(
         name = name,
@@ -171,13 +224,20 @@ def _map_none_first_dict_test(env):
     first = {":first": None, "//conditions:default": {"first": "one"}}
     second = {":second": None, "//conditions:default": {"second": "two"}}
     value = select(first) + select(second)
-    mapped = map_attr(lambda value: value, value)
+    mapped = map_parsed_select(lambda value: value, value)
     env.expect.that_collection(decompose_select_elements(mapped)).contains_exactly([
         (True, first),
         (True, second),
     ]).in_order()
 
-    mapped = map_attr(lambda value: {} if value == None else value, value)
+    calls = []
+
+    def normalize(value):
+        calls.append(value)
+        return {} if value == None else value
+
+    mapped = map_attr(normalize, value)
+    env.expect.that_collection(calls).contains_exactly([None, {"first": "one"}, None, {"second": "two"}]).in_order()
     env.expect.that_collection(decompose_select_elements(mapped)).contains_exactly([
         (True, {":first": {}, "//conditions:default": {"first": "one"}}),
         (True, {":second": {}, "//conditions:default": {"second": "two"}}),
@@ -188,6 +248,7 @@ def select_test_suite(name):
         name = name,
         tests = [
             _map_list_attribute_test,
+            _map_string_attribute_test,
             _none_first_dict_attribute_test,
         ],
         basic_tests = [

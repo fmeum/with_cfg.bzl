@@ -1,5 +1,9 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
+exports_files([
+    "select.bzli",
+])
+
 bzl_library(
     name = "args",
     srcs = ["args.bzl"],
