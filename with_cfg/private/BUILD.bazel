@@ -4,6 +4,7 @@ exports_files([
     "args.bzli",
     "rewrite.bzli",
     "select.bzli",
+    "setting.bzli",
 ])
 
 bzl_library(
