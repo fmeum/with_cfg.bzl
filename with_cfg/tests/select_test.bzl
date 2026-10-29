@@ -71,6 +71,11 @@ def _map_nullable_select_test(env):
         (False, None),
     ]).in_order()
 
+def _map_integer_suffix_test(env):
+    value = select({"//conditions:default": 1}) + 42
+    mapped = map_attr(lambda n: n + 1, value)
+    env.expect.that_str(repr(mapped)).equals(repr(select({"//conditions:default": 2}) + 43))
+
 def _map_select_order_test(env):
     values = ["first"] + (["second"] + select({"//conditions:default": ["selected"]})) + ["last"]
     mapped = map_attr(lambda values: [value.upper() for value in values], values)
@@ -189,6 +194,7 @@ def select_test_suite(name):
             _consume_list_test,
             _consume_single_value_test,
             _decompose_select_value_test,
+            _map_integer_suffix_test,
             _map_nullable_select_test,
             _map_select_order_test,
             _map_select_dict_test,
