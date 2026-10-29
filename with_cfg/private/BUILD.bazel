@@ -1,6 +1,7 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 exports_files([
+    "args.bzli",
     "rewrite.bzli",
     "select.bzli",
 ])
@@ -11,6 +12,8 @@ bzl_library(
     visibility = ["//with_cfg:__subpackages__"],
     deps = [
         ":rewrite",
+        ":select",
+        ":utils",
     ],
 )
 
