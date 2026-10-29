@@ -128,12 +128,12 @@ def with_cfg(
         implicit_targets = implicit_targets,
         providers = _all_providers(extra_providers),
         native = _is_native(kind),
-        supports_inheritance = _supports_inheritance(kind),
-        supports_extension = _supports_extension(kind),
+        extension_parent = get_extension_parent(kind),
     )
     return make_builder(rule_info)
 
 def get_rule_name(kind):
+    # type: (object) -> str
     s = str(kind)
     if s.startswith("<rule "):
         return s.removeprefix("<rule ").removesuffix(">")
@@ -147,20 +147,19 @@ def get_rule_name(kind):
         fail("Not a rule or macro: " + s)
 
 def is_executable(rule_name):
+    # type: (str) -> bool
     return rule_name.endswith("_binary")
 
 def is_test(rule_name):
+    # type: (str) -> bool
     # rules_go's go_test is a macro called go_test_macro. Macro wrappers should
     # generally try to have the same name as the rule they are wrapping, so this
     # shouldn't become configurable.
     return rule_name.endswith("_test") or rule_name == "go_test_macro"
 
 def _is_native(kind):
+    # type: (object) -> bool
     return str(kind).startswith("<built-in rule ")
-
-def _supports_inheritance(kind):
-    # Legacy macros don't support inheritance.
-    return not str(kind).startswith("<function ")
 
 # Rules that need https://github.com/bazelbuild/bazel/pull/24778 to be extendable.
 _NOT_EXTENDABLE = [
@@ -169,11 +168,17 @@ _NOT_EXTENDABLE = [
     "cc_test",
 ] if not bazel_features.cc.rules_support_extension else []
 
-def _supports_extension(kind):
+def get_extension_parent(kind):
+    # type: (object) -> rule | None
+    if type(kind) != "rule":
+        return None
     kind_str = str(kind)
-    return kind_str.startswith("<rule ") and get_rule_name(kind_str) not in _NOT_EXTENDABLE
+    if kind_str.startswith("<rule ") and get_rule_name(kind_str) not in _NOT_EXTENDABLE:
+        return kind
+    return None
 
 def get_implicit_targets(rule_name):
+    # type: (str) -> list[str]
     return IMPLICIT_TARGETS.get(rule_name, [])
 
 def _all_providers(extra_providers):

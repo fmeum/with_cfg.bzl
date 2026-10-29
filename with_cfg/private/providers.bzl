@@ -5,12 +5,11 @@ SettingInfo = provider(fields = ["operation", "value"])
 RuleInfo = provider(fields = [
     # keep sorted
     "executable",
+    "extension_parent",
     "implicit_targets",
     "kind",
     "native",
     "providers",
-    "supports_extension",
-    "supports_inheritance",
     "test",
 ])
 
