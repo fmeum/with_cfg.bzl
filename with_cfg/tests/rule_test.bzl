@@ -1,3 +1,4 @@
+load("@bazel_features//:features.bzl", "bazel_features")
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
@@ -45,6 +46,57 @@ def _noop_impl(ctx):
 my_binary = rule(_noop_impl, executable = True)
 my_library = rule(_noop_impl)
 my_test = rule(_noop_impl, test = True)
+
+_string_data = rule(
+    _noop_impl,
+    attrs = {
+        "args": attr.string_list(),
+        "data": attr.string_list(),
+        "srcs": attr.label_list(allow_files = True),
+    },
+)
+
+def _args_rule(name, kind, **kwargs):
+    kind(name = name, **kwargs)
+
+_wrapped_args_rule, _args_rule_alias = with_cfg(_args_rule).build()
+
+def _args_non_dependency_test(name):
+    subject = name + "_subject"
+    _wrapped_args_rule(
+        name = subject,
+        kind = _string_data,
+        args = ["$(location :BUILD.bazel)"],
+        data = ["not a target"],
+        srcs = ["BUILD.bazel"],
+    )
+    analysis_test(name = name, target = subject, impl = _args_non_dependency_test_impl)
+
+def _args_non_dependency_test_impl(env, target):
+    expanded = getattr(target[OutputGroupInfo], "_with_cfg.bzl_args__:BUILD.bazel")
+    env.expect.that_depset_of_files(expanded).contains_exactly(["with_cfg/tests/BUILD.bazel"])
+
+_int_args = rule(_noop_impl, attrs = {"args": attr.int()})
+
+# Bazel 8 introduced both symbolic macros and dependency-resolution rules.
+_string_toolchains = rule(
+    _noop_impl,
+    attrs = {"args": attr.string_list(), "toolchains": attr.string_list()},
+    dependency_resolution_rule = True,
+) if bazel_features.globals.macro else None
+
+def _args_string_toolchains_test(name):
+    subject = name + "_subject"
+    _wrapped_args_rule(name = subject, kind = _string_toolchains, args = ["constant"], toolchains = ["not a target"])
+    analysis_test(name = name, target = subject, impl = _empty_files)
+
+def _args_non_list_test(name):
+    subject = name + "_subject"
+    _wrapped_args_rule(name = subject, kind = _int_args, args = 42)
+    analysis_test(name = name, target = subject, impl = _empty_files)
+
+def _empty_files(env, target):
+    env.expect.that_depset_of_files(target[DefaultInfo].files).contains_exactly([])
 
 def my_macro_binary():
     pass
@@ -237,14 +289,17 @@ def _reset_files_test_impl(env):
     env.expect.that_depset_of_files(env.ctx.attr.empty_reset[DefaultInfo].files).contains_exactly([])
 
 def rule_test_suite(name):
+    toolchain_tests = [_args_string_toolchains_test] if _string_toolchains != None else []
     test_suite(
         name = name,
         tests = [
+            _args_non_dependency_test,
+            _args_non_list_test,
             _collection_tags_test,
             _default_frontend_exec_properties_test,
             _execution_attrs_test,
             _is_executable_test,
             _is_test_test,
             _reset_files_test,
-        ],
+        ] + toolchain_tests,
     )

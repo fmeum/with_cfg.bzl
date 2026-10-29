@@ -61,7 +61,8 @@ def rewrite_args(name, args, make_filegroup):
 
 def _args_aspect_impl(target, ctx):
     # type: (Target, ctx) -> list[Provider]
-    if not hasattr(ctx.rule.attr, "args"):
+    args = getattr(ctx.rule.attr, "args", None)
+    if type(args) != "list":
         return []
 
     execpaths_expansion_to_files = {}
@@ -73,6 +74,8 @@ def _args_aspect_impl(target, ctx):
         if type(deps) != type([]):
             continue
         for target in deps:
+            if type(target) != "Target":
+                continue
             default_info = target[DefaultInfo]
             if default_info.files_to_run and default_info.files_to_run.executable:
                 files = depset([default_info.files_to_run.executable])
@@ -89,7 +92,7 @@ def _args_aspect_impl(target, ctx):
     toolchains = getattr(ctx.rule.attr, "toolchains", [])
     if type(toolchains) == type([]):
         for toolchain in toolchains:
-            if platform_common.TemplateVariableInfo in toolchain:
+            if type(toolchain) == "Target" and platform_common.TemplateVariableInfo in toolchain:
                 template_variables.update(
                     toolchain[platform_common.TemplateVariableInfo].variables,
                 )
@@ -100,7 +103,7 @@ def _args_aspect_impl(target, ctx):
         labels[label] = None
         return label
 
-    for arg in ctx.rule.attr.args:
+    for arg in args:
         rewrite_locations_in_single_value(arg, collect_label)
 
     labels_to_files = {}
