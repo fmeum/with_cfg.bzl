@@ -1,0 +1,25 @@
+"""Providers returned by the argument-expansion aspect."""
+
+load(":providers.bzl", "ArgsInfo")
+
+class _ArgsRule(Protocol):
+    @property
+    def attr(self) -> struct[object]: ...
+
+class _ArgsAspectContext(Protocol):
+    @property
+    def rule(self) -> _ArgsRule: ...
+
+    @property
+    def expand_location(self) -> Callable[[str, Sequence[Target]], str]: ...
+
+class _MakeFilegroup(Protocol):
+    def __call__(self, *, name: str, srcs: list[str], output_group: str) -> object: ...
+
+type _PlainArgs = str | list[str] | Mapping[str, object] | tuple[str, ...] | None
+
+def _make_arg_rewriter(name: str, make_filegroup: _MakeFilegroup) -> struct[{
+    "label": Callable[[str], str],
+    "selected_list": Callable[[object], list[str]],
+    "labels": list[Label],
+}]: ...

@@ -1,0 +1,47 @@
+name: Starlark types
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sty:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: with_cfg
+            directory: .
+            files: |
+              with_cfg/private/original_settings.bzl
+              with_cfg/private/original_settings_rule.bzl
+              with_cfg/private/rule_defaults.bzl
+              with_cfg/private/utils.bzl
+          - name: examples
+            directory: examples
+            files: helpers/defs.bzl
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: List implementations in each Bazel workspace
+        run: |
+          git -c core.quotePath=false ls-files -- '*.bzl' ':(exclude)examples/**' > "$RUNNER_TEMP/sty-with_cfg-files"
+          git -C examples -c core.quotePath=false ls-files -- '*.bzl' > "$RUNNER_TEMP/sty-examples-files"
+      - uses: tamird/sty@2ab74c830937d3ca85165ca0e9a02a42400ad9e5
+        with:
+          audit-loads: true
+          advisory-files-from: ${{ runner.temp }}/sty-${{ matrix.name }}-files
+          files: ${{ matrix.files }}
+          working-directory: ${{ matrix.directory }}
+          artifact-name: sty-${{ matrix.name }}

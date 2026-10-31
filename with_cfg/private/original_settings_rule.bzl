@@ -3,6 +3,7 @@ load(":providers.bzl", "OriginalSettingsInfo")
 visibility("private")
 
 def _original_settings_impl(ctx):
+    # type: (...) -> list[OriginalSettingsInfo]
     return [
         OriginalSettingsInfo(
             json = ctx.build_setting_value,

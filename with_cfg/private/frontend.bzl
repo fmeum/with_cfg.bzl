@@ -1,9 +1,32 @@
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load(":providers.bzl", "FrontendInfo")
+load(":select.bzl", "map_attr")
 
 visibility("private")
 
+def filter_exec_properties(value):
+    # type: (object) -> ExactDict[str, str] | select[dict[str, str]]
+    return map_attr(_filter_exec_property_dict, value)
+
+def _filter_exec_property_dict(value):
+    # type: (object) -> ExactDict[str, str]
+    # Macro inheritance can supply None for the whole attribute or a branch.
+    if not value:
+        return {}
+    if type(value) != "dict":
+        fail("Expected execution properties to be a dictionary, got {}".format(type(value)))
+    result = {}  # type: dict[str, str]
+    for key, item in value.items():
+        if type(key) != "string":
+            fail("Expected an execution property name to be a string, got {}".format(type(key)))
+        if "." not in key or key.startswith("test."):
+            if type(item) != "string":
+                fail("Expected execution property '{}' to be a string, got {}".format(key, type(item)))
+            result[key] = item
+    return result
+
 def get_frontend(*, executable, test):
+    # type: (bool, bool) -> _AliasFrontend | _ExecutableFrontend | _TestFrontend
     if test:
         return _frontend_test
     elif executable:
@@ -23,10 +46,12 @@ unwrap_template_variable_info = rule(
 )
 
 def _frontend_impl(ctx):
-    # type: (ctx) -> list
+    # type: (...) -> list[ProviderInstance]
     target = ctx.attr.exports
 
     original_executable = target[FrontendInfo].executable
+    if original_executable == None:
+        fail("Expected exports to provide an executable, got: {}".format(target.label))
     executable_basename = original_executable.basename
 
     # Create the executable in a subdirectory to ensure that its path depth below the exec root
@@ -104,6 +129,7 @@ _frontend_executable = rule(_frontend_impl, attrs = _frontend_attrs, executable 
 _frontend_test = rule(_frontend_impl, attrs = _frontend_attrs | _frontend_test_attrs, test = True)
 
 def _frontend_default(*, name, exports, **kwargs):
+    # type: (str, _Export, **Unpack[_AliasKwargs]) -> None
     native.alias(
         name = name,
         actual = exports,

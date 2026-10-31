@@ -1,0 +1,42 @@
+"""Label callbacks used while rewriting location expressions."""
+
+load(
+    ":select.bzli",
+    _Dependency = "DependencyLabel",
+    _LocationValue = "LocationValue",
+    _ReplacedDependency = "DependencyValue",
+)
+
+def rewrite_locations_in_attr[T](value: T, label_rewriter: Callable[[str], str]) -> T | str | list[object] | dict[object, object] | select[_LocationValue]: ...
+
+def _rewrite_locations_in_value[T](
+        value: T,
+        label_rewriter: Callable[[str], str],
+) -> T | str | list[object] | dict[object, object]: ...
+
+def _rewrite_locations_in_list_or_single_value[T](
+        value: T,
+        label_rewriter: Callable[[str], str],
+) -> T | str | list[object]: ...
+
+def rewrite_locations_in_single_value[T](
+        expression: T,
+        label_rewriter: Callable[[str], str],
+) -> T | str: ...
+
+def _rewrite_locations_in_list[T](value: Sequence[T], label_rewriter: Callable[[str], str]) -> list[T | str]: ...
+
+class _ResetTarget(Protocol):
+    def __call__(self, *, name: str, exports: Label) -> object: ...
+
+def _replace_dep_list[R](value: Sequence[object], replace: Callable[[object], R]) -> list[R]: ...
+
+def _replace_dep_dict[V, R](items: Collection[tuple[object, V]], replace: Callable[[object], R]) -> ExactDict[R, V]: ...
+
+def rewrite_dependency_attrs[M: Mapping[str, object]](
+        *,
+        attrs: M,
+        attrs_to_reset: Sequence[str],
+        reset_target: _ResetTarget,
+        name: str,
+) -> M | dict[str, object]: ...

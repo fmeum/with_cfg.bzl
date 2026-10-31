@@ -1,0 +1,8 @@
+"""Setting names and the native attribute constructors they select."""
+
+load(":select.bzli", _ParsedElement = "ParsedElement")
+
+# TODO(https://github.com/bazelbuild/bazel/issues/32104): Use this finite set of attribute names in source annotations.
+type _AttrType = Literal["bool", "int", "int_list", "label", "label_list", "string", "string_list"]
+
+def clone_setting_value[T](value: T) -> T | list[object] | select[_ParsedElement]: ...

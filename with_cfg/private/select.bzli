@@ -1,0 +1,26 @@
+"""Values decoded from Starlark repr output."""
+
+# TODO(https://github.com/bazelbuild/bazel/pull/30373): Declare Scalar in select.bzl once the minimum Bazel parses type aliases.
+type Scalar = str | int | bool | Label | None
+type ListOrScalar = list[Scalar] | Scalar
+type CompoundValue = ExactDict[Scalar, ListOrScalar] | ListOrScalar
+type ParsedElement = CompoundValue | ExactDict[Scalar, CompoundValue]
+# Dictionary pieces can have either tag; other values require the plain tag.
+type _SelectPiece = tuple[Literal[True], ExactDict[Scalar, CompoundValue]] | tuple[Literal[False], ParsedElement]
+
+type LocationValue = ParsedElement | list[object] | dict[object, object]
+type DependencyLabel = str | Label
+type DependencyValue = None | DependencyLabel | list[DependencyLabel] | ExactDict[DependencyLabel, object]
+
+type _Piece[P, S] = tuple[Literal[True], S] | tuple[Literal[False], P]
+def _map_selected[T, R](func: Callable[[T], R], branches: Mapping[Scalar, T]) -> dict[str | Label, R]: ...
+
+# Bazel concatenates the mapped pieces: two "x" results can produce "xx".
+# Promote the result to a type that includes the concatenation.
+def map_attr[
+        R: (str, list[str], ExactDict[str, str], ParsedElement, DependencyValue, LocationValue, object),
+](func: Callable[[object], R], attribute: object) -> R | select[R]: ...
+
+def map_parsed_select[
+        R: (str, list[str], ExactDict[str, str], ParsedElement, DependencyValue, LocationValue, object),
+](func: Callable[[ParsedElement], R], value: select[object]) -> select[R]: ...

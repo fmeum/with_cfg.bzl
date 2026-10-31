@@ -1,13 +1,15 @@
-load(":select.bzl", "map_attr")
-load(":utils.bzl", "is_dict", "is_list", "is_string")
+load(":select.bzl", "map_parsed_select")
+load(":utils.bzl", "is_label", "is_select", "is_string")
 
 visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
 
 # buildifier: disable=unnamed-macro
 def make_label_rewriter(label_map):
+    # type: (Mapping[Label, str | Label]) -> Callable[[str], str]
     return lambda label: _label_rewriter_base(label, label_map = label_map)
 
 def _label_rewriter_base(label_string, *, label_map):
+    # type: (str, Mapping[Label, str | Label]) -> str
     label = native.package_relative_label(label_string)
     rewritten_label = label_map.get(label)
     if not rewritten_label:
@@ -15,12 +17,43 @@ def _label_rewriter_base(label_string, *, label_map):
     return str(rewritten_label)
 
 def rewrite_locations_in_attr(value, label_rewriter):
-    return map_attr(lambda v: _rewrite_locations_in_value(v, label_rewriter), value)
+    if not is_select(value):
+        return _rewrite_locations_in_value(value, label_rewriter)
+
+    return map_parsed_select(lambda item: _rewrite_locations_in_value(item, label_rewriter), value)
+
+def rewrite_locations_in_string_list(value, label_rewriter):
+    # type: (object, Callable[[str], str]) -> list[str]
+    if type(value) == "dict":
+        # Bazel converts each selector piece to STRING_LIST before concatenation.
+        return rewrite_locations_in_string_dict(value, label_rewriter).keys()
+    if type(value) != "list":
+        fail("Expected a list or dictionary of argument strings, got {}".format(type(value)))
+    result = []  # type: list[str]
+    for item in value:
+        if type(item) != "string":
+            fail("Expected an argument string, got {}".format(type(item)))
+        result.append(rewrite_locations_in_single_value(item, label_rewriter))
+    return result
+
+def rewrite_locations_in_string_dict(value, label_rewriter):
+    # type: (object, Callable[[str], str]) -> dict[str, object]
+    if type(value) != "dict":
+        fail("Expected a dictionary of argument strings, got {}".format(type(value)))
+    result = {}  # type: dict[str, object]
+
+    # Rewrite keys before values; an overwritten key keeps its original position.
+    for key, item in value.items():
+        if type(key) != "string":
+            fail("Expected an argument string, got {}".format(type(key)))
+        rewritten_key = rewrite_locations_in_single_value(key, label_rewriter)
+        result[rewritten_key] = _rewrite_locations_in_list_or_single_value(item, label_rewriter)
+    return result
 
 def _rewrite_locations_in_value(value, label_rewriter):
     if not value:
         return value
-    if is_dict(value):
+    if type(value) == "dict":
         return {
             rewrite_locations_in_single_value(k, label_rewriter): _rewrite_locations_in_list_or_single_value(v, label_rewriter)
             for k, v in value.items()
@@ -30,8 +63,8 @@ def _rewrite_locations_in_value(value, label_rewriter):
 def _rewrite_locations_in_list_or_single_value(value, label_rewriter):
     if not value:
         return value
-    if is_list(value):
-        return [rewrite_locations_in_single_value(v, label_rewriter) for v in value]
+    if type(value) == "list":
+        return _rewrite_locations_in_list(value, label_rewriter)
     return rewrite_locations_in_single_value(value, label_rewriter)
 
 # Based on:
@@ -98,7 +131,112 @@ def rewrite_locations_in_single_value(expression, label_rewriter):
     return "".join(result)
 
 def _rewrite_location(expr, label_rewriter):
+    # type: (str, Callable[[str], str]) -> str
     type, _, label = expr.partition(" ")
     if not label:
         return expr
     return type + " " + label_rewriter(label)
+
+def _rewrite_locations_in_list(value, label_rewriter):
+    return [rewrite_locations_in_single_value(v, label_rewriter) for v in value]
+
+def rewrite_dependency_labels(value, *, label_map, reset_target, name):
+    # type: (object, dict[Label, str], _ResetTarget, str) -> _ReplacedDependency | select[_ReplacedDependency]
+    mutable_num_calls = [0]
+
+    def replace(label_string):
+        # type: (object) -> str | Label
+        return _replace_single_dep(
+            label_string = label_string,
+            label_map = label_map,
+            reset_target = reset_target,
+            name_prefix = name,
+            mutable_num_calls = mutable_num_calls,
+        )
+
+    if not is_select(value):
+        return _replace_dep_value(value, replace)
+
+    return map_parsed_select(lambda dep: _replace_dep_value(dep, replace), value)
+
+def _replace_dep_value(value, replace):
+    # type: (object, Callable[[object], _Dependency]) -> _ReplacedDependency
+    if value == None:
+        return None
+    if type(value) == "list":
+        return _replace_dep_list(value, replace)
+    if type(value) == "dict":
+        return _replace_dep_dict(value.items(), replace)
+    return replace(value)
+
+def _replace_dep_list(value, replace):
+    return [replace(dep) for dep in value]
+
+def _replace_dep_dict(items, replace):
+    return {replace(key): item for key, item in items}
+
+def _replace_single_dep(
+        *,
+        label_string,
+        label_map,
+        reset_target,
+        name_prefix,
+        mutable_num_calls):
+    # type: (object, dict[Label, str], _ResetTarget, str, list[int]) -> _Dependency
+    use_label = is_label(label_string)
+    if not use_label and not is_string(label_string):
+        fail("Expected dependency, got '{}' of type {}".format(label_string, type(label_string)))
+    label = native.package_relative_label(label_string)
+    if label in label_map:
+        target_label_string = label_map[label]
+    else:
+        # Multiple targets can be referenced in a single logical dep if that dep is a select.
+        target_name = name_prefix + "_" + str(mutable_num_calls[0])
+        reset_target(
+            name = target_name,
+            exports = label,
+        )
+        target_label_string = ":" + target_name
+        label_map[label] = target_label_string
+        mutable_num_calls[0] += 1
+
+    return native.package_relative_label(target_label_string) if use_label else target_label_string
+
+def rewrite_dependency_attrs(*, attrs, attrs_to_reset, reset_target, name):
+    """Resets dependency attributes and rewrites locations across all attributes.
+
+    Args:
+        attrs: Original target attributes, returned unchanged when no reset is requested.
+        attrs_to_reset: Dependency attributes to reset, in first-use naming order.
+        reset_target: Creates a reset target from name and exports keyword arguments.
+        name: Prefix for generated reset targets.
+
+    Returns:
+        Attributes with shared dependency replacements and matching location expressions.
+    """
+    if not attrs_to_reset:
+        return attrs
+
+    # In a first pass over only the attributes to reset, replace all labels representing
+    # dependencies with labels of a `reset_target` target that forwards the dep's providers while
+    # applying the reset transition. Along the way collect a map of original to new labels.
+    label_map = {}  # type: dict[Label, str]
+    first_pass_attrs = dict(attrs)  # type: dict[str, object]
+    for attr in attrs_to_reset:
+        if not attr in attrs:
+            continue
+        first_pass_attrs[attr] = rewrite_dependency_labels(
+            attrs[attr],
+            label_map = label_map,
+            reset_target = reset_target,
+            name = name + "__" + attr,
+        )
+
+    # In a second pass, now over all attributes, rewrite all $(location ...) expressions. These can
+    # even appear in attributes that are reset (as values in attr.label_keyed_string_dict).
+    second_pass_attrs = {}  # type: dict[str, object]
+    label_rewriter = make_label_rewriter(label_map)
+    for attr, value in first_pass_attrs.items():
+        second_pass_attrs[attr] = rewrite_locations_in_attr(value, label_rewriter)
+
+    return second_pass_attrs
