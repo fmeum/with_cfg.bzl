@@ -150,6 +150,8 @@ _selected_string = rule(
     attrs = {"values": attr.string()},
 )
 
+# TODO(https://github.com/bazelbuild/bazel/issues/32104): Annotate the literal
+# return natively when Bazel can preserve the selected string value.
 def _always_x(_value):
     # type: (object) -> Literal["x"]
     return "x"

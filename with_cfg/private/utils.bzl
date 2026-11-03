@@ -12,6 +12,9 @@ def is_int(value):
     # type: (object) -> bool
     return type(value) == _INT_TYPE
 
+# TODO(https://github.com/tamird/sty/blob/sty-action-v0.2.0/docs/type-interfaces.md#materialized-types):
+# Use native predicate annotations when the checker can narrow a caller’s
+# value after a test for a Label, list, select, or string.
 def is_label(value):
     # type: (object) -> TypeIs[Label]
     return type(value) == _LABEL_TYPE

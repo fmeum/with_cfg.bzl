@@ -4,6 +4,9 @@ load(":select.bzl", "map_attr")
 
 visibility("private")
 
+# TODO(https://github.com/tamird/sty/blob/sty-action-v0.2.0/docs/type-interfaces.md#dictionaries):
+# Use native return annotations when Bazel can distinguish a concrete dictionary
+# from a configurable dictionary. This callback allocates a fresh dictionary.
 def filter_exec_properties(value):
     # type: (object) -> ExactDict[str, str] | select[dict[str, str]]
     return map_attr(_filter_exec_property_dict, value)
@@ -128,6 +131,8 @@ _frontend_test_attrs = {
 _frontend_executable = rule(_frontend_impl, attrs = _frontend_attrs, executable = True)
 _frontend_test = rule(_frontend_impl, attrs = _frontend_attrs | _frontend_test_attrs, test = True)
 
+# TODO(https://github.com/bazelbuild/bazel/issues/32343): Annotate these
+# forwarded keywords when Bazel can describe the alias rule’s arguments.
 def _frontend_default(*, name, exports, **kwargs):
     # type: (str, _Export, **Unpack[_AliasKwargs]) -> None
     native.alias(
