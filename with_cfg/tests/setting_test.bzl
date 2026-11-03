@@ -1,5 +1,6 @@
 load("@rules_testing//lib:test_suite.bzl", "test_suite")
-load("//with_cfg/private:setting.bzl", "get_attr_type", "validate_and_get_attr_name")
+load("//with_cfg/private:select.bzl", "decompose_select_elements")
+load("//with_cfg/private:setting.bzl", "clone_setting_value", "get_attr_type", "validate_and_get_attr_name")
 
 _GET_ATTR_TYPE_TEST_CASES = [
     (None, "string_list"),
@@ -81,10 +82,47 @@ def _validate_attr_name_test(env):
         env.expect.that_bool(_is_valid_identifier(str(hash(str(value))))).equals(hash_is_valid)
         env.expect.that_bool(_is_valid_identifier(validate_and_get_attr_name(value))).equals(True)
 
+def _clone_setting_value_test(env):
+    for value in [[], ["original"]]:
+        expected = list(value)
+        cloned = clone_setting_value(value)
+        env.expect.that_collection(cloned).contains_exactly(expected).in_order()
+        cloned.append("changed")
+        env.expect.that_collection(value).contains_exactly(expected).in_order()
+
+    nested = []
+    plain_tuple = (nested,)
+    cloned = clone_setting_value(plain_tuple)
+    cloned[0].append("shared")
+    env.expect.that_str(type(cloned)).equals("tuple")
+    env.expect.that_collection(nested).contains_exactly(["shared"])
+
+    plain_dict = {}
+    clone_setting_value(plain_dict)["shared"] = True
+    env.expect.that_dict(plain_dict).contains_exactly({"shared": True})
+
+    prefix = ["prefix"]
+    branch = ["selected"]
+    suffix = ["suffix"]
+    selected = prefix + select({"//conditions:default": branch}) + suffix
+    cloned = clone_setting_value(selected)
+    prefix.append("changed")
+    branch.append("changed")
+    suffix.append("changed")
+    env.expect.that_collection(decompose_select_elements(cloned)).contains_exactly([
+        (False, ["prefix"]),
+        (True, {"//conditions:default": ["selected"]}),
+        (False, ["suffix"]),
+    ]).in_order()
+
+    nullable = None + select({"//conditions:default": None}) + None
+    env.expect.that_str(repr(clone_setting_value(nullable))).equals(repr(nullable))
+
 def setting_test_suite(name):
     test_suite(
         name = name,
         basic_tests = [
+            _clone_setting_value_test,
             _get_attr_name_test,
             _get_attr_type_test,
             _validate_attr_name_test,

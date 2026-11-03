@@ -15,7 +15,7 @@ SPECIAL_CASED_PROVIDERS = [
     # RunEnvironmentInfo can't be returned from a non-executable, non-test rule and thus requires
     # special handling so that it isn't returned by the transitioning alias.
     RunEnvironmentInfo,
-]
+]  # type: list[ProviderKey]
 
 DEFAULT_PROVIDERS = [
     p
@@ -37,7 +37,7 @@ DEFAULT_PROVIDERS = [
         platform_common.ToolchainInfo,
     ]
     if p
-]
+]  # type: list[ProviderKey]
 
 IMPLICIT_TARGETS = {
     "cc_binary": [
@@ -63,4 +63,4 @@ IMPLICIT_TARGETS = {
     "java_test": [
         "{name}.jar",
     ],
-}
+}  # type: dict[str, list[str]]

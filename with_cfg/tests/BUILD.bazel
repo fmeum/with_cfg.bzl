@@ -1,8 +1,11 @@
 load("//:with_cfg.bzl", "original_settings")
+load("//with_cfg/private:args_test.bzl", "args_test_suite")
 load(":rewrite_test.bzl", "rewrite_test_suite")
 load(":rule_test.bzl", "rule_test_suite")
 load(":select_test.bzl", "select_test_suite")
 load(":setting_test.bzl", "setting_test_suite")
+
+args_test_suite(name = "args_test")
 
 rewrite_test_suite(name = "rewrite_test")
 

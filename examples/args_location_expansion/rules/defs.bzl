@@ -1,7 +1,7 @@
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 
 def _write_settings_rule_impl(ctx):
-    # type: (ctx) -> None
+    # type: (...) -> list[DefaultInfo | TemplateVariableInfo]
     rule_setting = ctx.attr._rule_setting[BuildSettingInfo].value
     if rule_setting == "unset":
         fail("rule_setting is unset")
@@ -38,7 +38,7 @@ _data_transition = transition(
 )
 
 def _transitioned_test_impl(ctx):
-    # type: (ctx) -> None
+    # type: (...) -> list[DefaultInfo | RunEnvironmentInfo]
     executable = ctx.actions.declare_file(ctx.label.name)
     ctx.actions.symlink(output = executable, target_file = ctx.executable.binary)
     runfiles = ctx.runfiles()

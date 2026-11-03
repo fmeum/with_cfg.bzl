@@ -3,6 +3,7 @@ load(":original_settings_rule.bzl", _original_settings = "original_settings")
 visibility("//with_cfg")
 
 def original_settings(*, name):
+    # type: (str) -> None
     """Stores the original settings modified by a "resettable" rule constructed with `with_cfg`.
 
     Targets of this rule are only created for [`with_cfg`](#with_cfg)'s `resettable()` method. A

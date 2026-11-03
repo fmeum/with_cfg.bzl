@@ -1,30 +1,60 @@
-load(":utils.bzl", "is_dict", "is_select")
+load(":utils.bzl", "is_select")
 
 visibility(["//with_cfg/private/...", "//with_cfg/tests/..."])
+
+def _map_selected(func, branches):
+    return {_condition(key): func(value) for key, value in branches.items()}
 
 def map_attr(func, attribute):
     if not is_select(attribute):
         return func(attribute)
+    return map_parsed_select(func, attribute)
 
-    return compose_select_value([
-        _apply_func(func, item)
-        for item in decompose_select_elements(attribute)
-    ])
+def _condition(key):
+    # type: (Scalar) -> str | Label
+    if type(key) == "string" or type(key) == "Label":
+        return key
+    fail("Expected a select condition, got {}".format(key))
 
-def _apply_func(func, item):
-    in_select, element = item
-    if in_select:
-        return (True, {
-            k: func(v)
-            for k, v in element.items()
-        })
-    else:
-        return (False, func(element))
+def map_parsed_select(func, value):
+    items = [
+        (True, _map_selected(func, item[1])) if item[0] == True else (False, func(item[1]))
+        for item in decompose_select_elements(value)
+    ]  # type: list[_Piece[R, dict[str | Label, R]]]
+
+    # The first selected branch fixes the operator Bazel uses for the whole value.
+    anchor = None
+    for index, item in enumerate(items):
+        if item[0] == True:
+            anchor = (index, item[1])
+            break
+    if anchor == None:
+        fail("Expected a select")
+    index, branches = anchor
+    result = select(branches)
+    use_union = type(branches.values()[0]) == "dict"
+
+    def join(result, part, prepend):
+        # type: (select[R], R | select[R], bool) -> select[R]
+        # Bazel chooses the operator from the first branch. Its kind is known only
+        # after decoding the select; the type of each individual piece is a union.
+        if use_union:
+            return part | result if prepend else result | part  # ty: ignore[unsupported-operator, unsound-return-statement, non-static-type]
+        return part + result if prepend else result + part  # ty: ignore[unsupported-operator, unsound-return-statement, non-static-type]
+
+    for piece in reversed(items[:index]):
+        if piece[0] == False:
+            result = join(result, piece[1], True)
+    for piece in items[index + 1:]:
+        part = select(piece[1]) if piece[0] == True else piece[1]
+        result = join(result, part, False)
+    return result
 
 def decompose_select_elements(value):
+    # type: (object) -> list[_SelectPiece]
     r = repr(value)
     pos = 0
-    items = []
+    items = []  # type: list[_SelectPiece]
     in_select = False
     for _ in range(len(r)):
         c = r[pos]
@@ -54,10 +84,10 @@ def decompose_select_elements(value):
                 pos += 2
                 value, pos = _consume_compound_value(r, pos)
                 element[key] = value
+            items.append((True, element) if in_select else (False, element))
         else:
             element, pos = _consume_compound_value(r, pos)
-
-        items.append((in_select, element))
+            items.append((False, element))
 
         if in_select:
             # Skip over `)`.
@@ -72,38 +102,8 @@ def decompose_select_elements(value):
 
     fail("Failed to parse '{}'".format(r))
 
-def compose_select_value(items):
-    # Start at a select so nullable prefixes never require None + None.
-    first_select = 0
-    for i, (in_select, _) in enumerate(items):
-        if in_select:
-            first_select = i
-            break
-
-    # Bazel chooses a selector's operator from its first branch, even when later
-    # branches have another type. Use the anchor's mapped representative value.
-    anchor_selected, anchor_element = items[first_select]
-    if anchor_selected:
-        result = select(anchor_element)
-        representative = anchor_element.values()[0]
-    else:
-        result = anchor_element
-        representative = anchor_element
-    combine_as_dict = is_dict(representative)
-    for _, part in reversed(items[:first_select]):
-        if combine_as_dict:
-            result = part | result
-        else:
-            result = part + result
-    for suffix_selected, suffix_element in items[first_select + 1:]:
-        part = select(suffix_element) if suffix_selected else suffix_element
-        if combine_as_dict:
-            result |= part
-        else:
-            result += part
-    return result
-
 def _consume_compound_value(r, pos):
+    # type: (str, int) -> tuple[CompoundValue, int]
     c = r[pos]
     if c == "{":
         # Skip over `{`.
@@ -128,6 +128,7 @@ def _consume_compound_value(r, pos):
         return _consume_list_or_single_value(r, pos)
 
 def _consume_list_or_single_value(r, pos):
+    # type: (str, int) -> tuple[ListOrScalar, int]
     c = r[pos]
     if c == "[":
         return consume_list(r, pos)
@@ -135,6 +136,7 @@ def _consume_list_or_single_value(r, pos):
         return consume_single_value(r, pos)
 
 def consume_list(r, pos):
+    # type: (str, int) -> tuple[list[Scalar], int]
     """Consume the rest of a list of single values if positioned at the opening bracket.
 
     Args:
@@ -159,6 +161,7 @@ def consume_list(r, pos):
     fail("Should not have been reached while parsing list literal in: " + r)
 
 def consume_single_value(r, pos):
+    # type: (str, int) -> tuple[Scalar, int]
     c = r[pos]
     if c == "\"":
         return _consume_string(r, pos)
@@ -195,6 +198,7 @@ def consume_single_value(r, pos):
         fail("Unexpected token at {} in '{}'".format(pos, r))
 
 def _consume_string(r, pos):
+    # type: (str, int) -> tuple[str, int]
     """Consume the rest of a string literal if positioned at the opening quote."""
     chunks = []
     pos += 1

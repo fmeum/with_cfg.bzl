@@ -1,0 +1,49 @@
+name: Starlark types
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sty:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: with_cfg
+            directory: .
+            advisory: |
+              *.bzl
+              :(exclude)examples/**
+            files: |
+              with_cfg/private/original_settings.bzl
+              with_cfg/private/original_settings_rule.bzl
+              with_cfg/private/rule_defaults.bzl
+              with_cfg/private/utils.bzl
+          - name: examples
+            directory: examples
+            advisory: "*.bzl"
+            files: |
+              dynamic_deps/rules/runfiles_dir.bzl
+              helpers/defs.bzl
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: tamird/sty@sty-action-v0.2.0
+        with:
+          audit-loads: true
+          advisory-pathspecs: ${{ matrix.advisory }}
+          files: ${{ matrix.files }}
+          working-directory: ${{ matrix.directory }}
+          artifact-name: sty-${{ matrix.name }}

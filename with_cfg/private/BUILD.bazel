@@ -1,11 +1,24 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
+exports_files([
+    "args.bzli",
+    "extend.bzli",
+    "frontend.bzli",
+    "providers.bzli",
+    "rewrite.bzli",
+    "select.bzli",
+    "setting.bzli",
+    "transitioning_alias.bzli",
+])
+
 bzl_library(
     name = "args",
     srcs = ["args.bzl"],
     visibility = ["//with_cfg:__subpackages__"],
     deps = [
         ":rewrite",
+        ":select",
+        ":utils",
     ],
 )
 
@@ -38,6 +51,7 @@ bzl_library(
     visibility = ["//with_cfg:__subpackages__"],
     deps = [
         ":providers",
+        ":select",
         "@rules_cc//cc/common",
     ],
 )
@@ -145,9 +159,7 @@ bzl_library(
     deps = [
         ":args",
         ":rewrite",
-        ":select",
         ":setting",
-        ":utils",
         "@bazel_features//:features",
     ],
 )

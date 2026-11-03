@@ -1,6 +1,8 @@
 module(
     name = "with_cfg.bzl",
     version = "0.0.0",
+    # TODO(https://github.com/bazelbuild/bazel/pull/30373): Convert simple .bzl type
+    # comments to annotations once every supported Bazel parses them (8.8+ on 8.x).
     bazel_compatibility = [">=7.6.1"],
     compatibility_level = 1,
 )

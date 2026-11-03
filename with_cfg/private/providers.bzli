@@ -1,0 +1,21 @@
+# TODO(https://github.com/bazelbuild/bazel/issues/32207): Move RuleInfo to
+# providers.bzl when a field can preserve its constructor argument's type K.
+# A field comment alone cannot bind K for the constructor.
+def RuleInfo[K](
+    *,
+    executable: bool,
+    extension_parent: rule | None,
+    implicit_targets: Collection[str],
+    kind: K,
+    native: bool,
+    providers: Sequence[ProviderKey],
+    test: bool,
+) -> record[{
+    "executable": bool,
+    "extension_parent": rule | None,
+    "implicit_targets": Collection[str],
+    "kind": K,
+    "native": bool,
+    "providers": Sequence[ProviderKey],
+    "test": bool,
+}]: ...
