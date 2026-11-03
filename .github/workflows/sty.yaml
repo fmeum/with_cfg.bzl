@@ -37,10 +37,10 @@ jobs:
               dynamic_deps/rules/runfiles_dir.bzl
               helpers/defs.bzl
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
-      - uses: tamird/sty@d400a00807b3c7f7b2ac82bf1e1e6a16db0290e3
+      - uses: tamird/sty@sty-action-v0.2.0
         with:
           audit-loads: true
           advisory-pathspecs: ${{ matrix.advisory }}
