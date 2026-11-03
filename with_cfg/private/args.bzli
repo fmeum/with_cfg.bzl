@@ -2,6 +2,8 @@
 
 load(":providers.bzl", "ArgsInfo")
 
+# TODO(https://github.com/bazelbuild/bazel/issues/32343): Move the filegroup callback into
+# args.bzl when a source type can require its named arguments (name, srcs, output_group).
 class _ArgsRule(Protocol):
     @property
     def attr(self) -> struct[object]: ...

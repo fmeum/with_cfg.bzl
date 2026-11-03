@@ -1,5 +1,8 @@
 """Inherited rule creation and transition setting initialization."""
 
+# TODO(https://github.com/bazelbuild/bazel/pull/30373): Move the generic parent and
+# initializer signatures into extend.bzl once Bazel 7 support ends and the minimum accepts
+# type parameters on def. A signature comment cannot bind R or K.
 def make_transitioned_rule[K: str | Label](
         *,
         parent: rule,

@@ -1,5 +1,8 @@
 """The frontend forwards providers from its transitioned target."""
 
+# TODO(https://github.com/bazelbuild/bazel/issues/32343): Move the callable contracts into
+# frontend.bzl when source annotations can type the distinct forwarded keyword sets for
+# aliases, executables and tests.
 type _Strings = Collection[str] | depset[str]
 type _Labels = Collection[str | Label] | depset[str | Label]
 

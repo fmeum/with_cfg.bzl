@@ -1,25 +1,6 @@
-"""Stored fields forwarded between with_cfg rules."""
-
-# TODO(https://github.com/bazelbuild/bazel/issues/32207): Declare these field types on the providers.
-def ArgsInfo(*, template_variable_info: TemplateVariableInfo) -> record[{
-    "template_variable_info": TemplateVariableInfo,
-}]: ...
-
-def FrontendInfo(
-    *,
-    executable: File | None,
-    providers: Sequence[ProviderKey],
-    run_environment_info: RunEnvironmentInfo | None,
-    template_variable_info: TemplateVariableInfo | None,
-) -> record[{
-    "executable": File | None,
-    "providers": Sequence[ProviderKey],
-    "run_environment_info": RunEnvironmentInfo | None,
-    "template_variable_info": TemplateVariableInfo | None,
-}]: ...
-
-def OriginalSettingsInfo(*, json: str) -> record[{"json": str}]: ...
-
+# TODO(https://github.com/bazelbuild/bazel/issues/32207): Move RuleInfo to
+# providers.bzl when a field can preserve its constructor argument's type K.
+# A field comment alone cannot bind K for the constructor.
 def RuleInfo[K](
     *,
     executable: bool,

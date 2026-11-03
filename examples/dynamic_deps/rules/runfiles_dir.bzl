@@ -26,7 +26,7 @@ cp {path} {out_dir}/{name}.runfiles/{rlocationpath}
                 name = name,
                 out_dir = out_dir.path,
                 path = f.path,
-                rlocationpath = _rlocationpath(ctx, f),
+                rlocationpath = _rlocationpath(ctx.workspace_name, f),
             )
             for f in default_info.default_runfiles.files.to_list()
         ]),
@@ -36,12 +36,12 @@ cp {path} {out_dir}/{name}.runfiles/{rlocationpath}
         DefaultInfo(files = depset([out_dir])),
     ]
 
-def _rlocationpath(ctx, f):
-    # type: (_WorkspaceContext, File) -> str
+def _rlocationpath(workspace_name, f):
+    # type: (str, File) -> str
     if f.short_path.startswith("../"):
         return f.short_path[3:]
     else:
-        return ctx.workspace_name + "/" + f.short_path
+        return workspace_name + "/" + f.short_path
 
 runfiles_dir = rule(
     implementation = _runfiles_dir_impl,

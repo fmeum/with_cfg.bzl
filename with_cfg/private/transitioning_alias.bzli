@@ -1,5 +1,8 @@
 """Provider forwarding through a single-output split transition."""
 
+# TODO(https://github.com/bazelbuild/bazel/pull/30373): Move make_transitioning_alias into
+# its implementation when the minimum Bazel accepts the key type parameter on def; a comment
+# cannot bind K.
 type _Attrs = struct[{"exports": Sequence[Target]}, ...]
 type _Context = ctx[object, _Attrs]
 

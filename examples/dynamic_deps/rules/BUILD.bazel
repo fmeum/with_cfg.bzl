@@ -1,1 +1,0 @@
-exports_files(["runfiles_dir.bzli"])

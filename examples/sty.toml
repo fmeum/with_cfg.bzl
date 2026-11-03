@@ -2,9 +2,6 @@
 require-valid-suppressions = true
 strict-generic-narrowing = true
 
-[type-interfaces]
-"dynamic_deps/rules/runfiles_dir.bzl" = "dynamic_deps/rules/runfiles_dir.bzli"
-
 [rules]
 missing-parameter-annotation = "error"
 missing-return-annotation = "error"

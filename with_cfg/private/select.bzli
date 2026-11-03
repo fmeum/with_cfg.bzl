@@ -1,6 +1,8 @@
 """Values decoded from Starlark repr output."""
 
-# TODO(https://github.com/bazelbuild/bazel/pull/30373): Declare Scalar in select.bzl once the minimum Bazel parses type aliases.
+# TODO(https://github.com/bazelbuild/bazel/pull/30373): Move the generic mappers into
+# select.bzl once all supported Bazel versions accept type parameters on def. The exported
+# value aliases also have to be visible to rewrite.bzl and setting.bzl.
 type Scalar = str | int | bool | Label | None
 type ListOrScalar = list[Scalar] | Scalar
 type CompoundValue = ExactDict[Scalar, ListOrScalar] | ListOrScalar

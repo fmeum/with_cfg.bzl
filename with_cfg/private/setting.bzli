@@ -2,6 +2,9 @@
 
 load(":select.bzli", _ParsedElement = "ParsedElement")
 
+# TODO(https://github.com/bazelbuild/bazel/pull/30373): Move clone_setting_value to
+# setting.bzl once the minimum Bazel supports def with type parameters; a signature comment
+# cannot bind T.
 # TODO(https://github.com/bazelbuild/bazel/issues/32104): Use this finite set of attribute names in source annotations.
 type _AttrType = Literal["bool", "int", "int_list", "label", "label_list", "string", "string_list"]
 

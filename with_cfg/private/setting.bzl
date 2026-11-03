@@ -52,6 +52,8 @@ def validate_and_get_attr_name(setting):
     else:
         fail("Expected setting to be a Label or a string, got: {} ({})".format(repr(setting), type(setting)))
 
+# TODO(https://github.com/bazelbuild/bazel/issues/32104): Use a native return
+# annotation when Bazel can express the supported attr names as literal strings.
 def get_attr_type(attr):
     # type: (object) -> _AttrType
     if is_select(attr):

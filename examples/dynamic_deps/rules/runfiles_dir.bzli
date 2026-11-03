@@ -1,5 +1,0 @@
-"""The runfiles directory rule returns its output files."""
-
-class _WorkspaceContext(Protocol):
-    @property
-    def workspace_name(self) -> str: ...

@@ -7,6 +7,9 @@ load(
     _ReplacedDependency = "DependencyValue",
 )
 
+# TODO(https://github.com/bazelbuild/bazel/pull/30373): Move the generic rewrite signatures
+# to rewrite.bzl once the minimum Bazel accepts type parameters on def. Signature comments
+# cannot bind T at each call.
 def rewrite_locations_in_attr[T](value: T, label_rewriter: Callable[[str], str]) -> T | str | list[object] | dict[object, object] | select[_LocationValue]: ...
 
 def _rewrite_locations_in_value[T](
