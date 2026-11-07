@@ -1,1 +1,2 @@
 docs/*.md linguist-generated=true
+examples/prepend/expected.txt text eol=lf
