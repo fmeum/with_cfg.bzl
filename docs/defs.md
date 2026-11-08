@@ -101,6 +101,8 @@ A builder with the following methods:
   entries of `value` are appended to the current value if it doesn't already have them as a
   suffix. `value` has to be a list or a `select` expression evaluating to a list. This is
   useful for repeatable settings such as `copt`.
+* `prepend(setting, value)`: Like `extend`, but inserts the entries of `value` before the
+  current value unless they already form its prefix. An empty list preserves the current value.
 * `resettable(original_settings_label)`: If called on the builder, the resulting rule will
   store the original values of the settings it modifies in the
   [`original_settings`](#original_settings) target referenced by the `Label`

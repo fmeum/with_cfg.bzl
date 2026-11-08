@@ -23,6 +23,17 @@ def _make_builder(rule_info, *, values = {}, operations = {}):
     attrs_to_reset = []
     overrides_allowed = {k: None for k in values}
 
+    record_setting = lambda operation, setting, value: _record_setting(
+        operation,
+        setting,
+        value,
+        self = self,
+        values = values,
+        operations = operations,
+        mutable_has_been_built = mutable_has_been_built,
+        overrides_allowed = overrides_allowed,
+    )
+
     self = struct(
         build = lambda: _build(
             rule_info = rule_info,
@@ -32,24 +43,9 @@ def _make_builder(rule_info, *, values = {}, operations = {}):
             mutable_original_settings_label = mutable_original_settings_label,
             attrs_to_reset = attrs_to_reset,
         ),
-        extend = lambda setting, value: _extend(
-            setting,
-            value,
-            self = self,
-            values = values,
-            operations = operations,
-            mutable_has_been_built = mutable_has_been_built,
-            overrides_allowed = overrides_allowed,
-        ),
-        set = lambda setting, value: _set(
-            setting,
-            value,
-            self = self,
-            values = values,
-            operations = operations,
-            mutable_has_been_built = mutable_has_been_built,
-            overrides_allowed = overrides_allowed,
-        ),
+        extend = lambda setting, value: record_setting("extend", setting, value),
+        prepend = lambda setting, value: record_setting("prepend", setting, value),
+        set = lambda setting, value: record_setting("set", setting, value),
         resettable = lambda label: _resettable(
             label,
             self = self,
@@ -126,36 +122,20 @@ def _build(*, rule_info, values, operations, mutable_has_been_built, mutable_ori
 
     return wrapper, transitioning_alias
 
-def _extend(setting, value, *, self, values, operations, mutable_has_been_built, overrides_allowed):
+def _record_setting(operation, setting, value, *, self, values, operations, mutable_has_been_built, overrides_allowed):
     if mutable_has_been_built[0]:
-        fail("extend() can only be called before build()")
+        fail("{}() can only be called before build()".format(operation))
     validate_and_get_attr_name(setting)
     if setting in values:
         if setting in overrides_allowed:
             overrides_allowed.pop(setting)
         else:
-            fail("Cannot extend setting '{}' because it has already been added to this builder (consider using clone())".format(setting))
+            fail("Cannot {} setting '{}' because it has already been added to this builder (consider using clone())".format(operation, setting))
 
     # Make a deep copy so that subsequent modification doesn't affect the builder state.
     # This improves readability but is also necessary for clone() to work correctly.
     values[setting] = map_attr(_clone_value_deeply, value)
-    operations[setting] = "extend"
-    return self
-
-def _set(setting, value, *, self, values, operations, mutable_has_been_built, overrides_allowed):
-    if mutable_has_been_built[0]:
-        fail("set() can only be called before build()")
-    validate_and_get_attr_name(setting)
-    if setting in values:
-        if setting in overrides_allowed:
-            overrides_allowed.pop(setting)
-        else:
-            fail("Cannot set setting '{}' because it has already been added to this builder (consider using clone())".format(setting))
-
-    # Make a deep copy so that subsequent modification doesn't affect the builder state.
-    # This improves readability but is also necessary for clone() to work correctly.
-    values[setting] = map_attr(_clone_value_deeply, value)
-    operations[setting] = "set"
+    operations[setting] = operation
     return self
 
 def _resettable(label, *, self, mutable_original_settings_label, mutable_has_been_built):

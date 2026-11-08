@@ -1,0 +1,34 @@
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load(":defs.bzl", "empty_prepend_filegroup", "options", "prepend_filegroup")
+
+options(
+    name = "options",
+    build_setting_default = ["original"],
+)
+
+prepend_filegroup(
+    name = "once",
+    srcs = [":options"],
+)
+
+prepend_filegroup(
+    name = "twice",
+    srcs = [":once"],
+)
+
+diff_test(
+    name = "order_test",
+    file1 = "expected.txt",
+    file2 = ":twice",
+)
+
+empty_prepend_filegroup(
+    name = "empty",
+    srcs = [":options"],
+)
+
+diff_test(
+    name = "empty_test",
+    file1 = ":options",
+    file2 = ":empty",
+)

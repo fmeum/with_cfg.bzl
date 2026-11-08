@@ -10,3 +10,4 @@
 - [opt_filegroup](opt_filegroup/opt_filegroup.bzl): Build all files in a `filegroup` with `--compilation_mode` set to `opt`, for example to speed up an integration test using them.
 - [java_linux_arm64_binary](java_linux_arm64_binary/java_linux_arm64_binary.bzl): A `java_binary` that transitions `--platforms` to Linux arm64 on all platforms.
 - [platform_filegroup_with_reset](platform_filegroup_with_reset/platform_filegroup.bzl): A `filegroup` that transitions `--platforms` to a custom platform and uses `resettable()` to restore the original platform for individual dependencies.
+- [prepend](prepend/defs.bzl) puts options before an existing list and preserves their order when rules are nested.
