@@ -65,11 +65,21 @@ def _args_aspect_impl(target, ctx):
     if type(args) != "list":
         return []
 
+    labels = {}
+
+    def collect_label(label):
+        labels[label] = None
+        return label
+
+    for arg in args:
+        rewrite_locations_in_single_value(arg, collect_label)
+
     execpaths_expansion_to_files = {}
     targets = {}
 
+    # Only location references in args need the mapping from execpaths to files.
     # https://github.com/bazelbuild/bazel/blob/af8deb85cbc627a507605e67aa71e829f7db630f/src/main/java/com/google/devtools/build/lib/analysis/LocationExpander.java#L446-L516
-    for attr in _LOCATION_EXPANSION_ARGS:
+    for attr in (_LOCATION_EXPANSION_ARGS if labels else []):
         deps = getattr(ctx.rule.attr, attr, [])
         if type(deps) != type([]):
             continue
@@ -96,15 +106,6 @@ def _args_aspect_impl(target, ctx):
                 template_variables.update(
                     toolchain[platform_common.TemplateVariableInfo].variables,
                 )
-
-    labels = {}
-
-    def collect_label(label):
-        labels[label] = None
-        return label
-
-    for arg in args:
-        rewrite_locations_in_single_value(arg, collect_label)
 
     labels_to_files = {}
     for label in labels.keys():
